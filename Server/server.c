@@ -130,8 +130,11 @@ char *getProductJson(){
 
         sprintf(tmp, "\"quantitaDisponibile\":%d", serverProductList[i].quantity);
         strcat(json, tmp);
-
-        strcat(json, "},");//TODO remove last "," to json
+        if(i == PRODUCT_NUMBER-1){
+            strcat(json, "}"); //last item without ,
+        }else{
+            strcat(json, "},");
+        }
     }
     strcat(json, "]}\n");
 
