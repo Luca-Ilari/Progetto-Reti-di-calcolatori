@@ -32,6 +32,11 @@ pthread_mutex_t CriticalSection;
 #endif
 
 int main(int argc, char* argv[]){
+    if (argc < 2){
+        timestamp();
+        printf("Can't start server. Please specify port number");
+        return -1;
+    }
     timestamp();
     printf("Starting sever on port %s\n", argv[1]);
     

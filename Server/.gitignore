@@ -5,6 +5,7 @@
 /CMakeScripts
 /Server.xcodeproj
 /CMakeCache.txt
+/Release
 
 /.idea
 /cmake-build-debug
