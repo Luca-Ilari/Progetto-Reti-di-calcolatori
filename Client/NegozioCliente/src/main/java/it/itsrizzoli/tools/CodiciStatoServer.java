@@ -9,4 +9,5 @@ public class CodiciStatoServer {
     public static final int FAIL_SESSION = -1;  // Fallimento sessione
     public static final int FAIL_RIMUOVI_PRODOTTO = -2;  // Fallimento rimozione prodotto dal Negozio
     public static final int FAIL_AGGIUNGI_PRODOTTO = -3;  // Fallimento aggiunta prodotto al Negozio
+    public static final int PRODOTTO_FINITO = -4;  // Fallimento aggiunta prodotto al Negozio
 }
