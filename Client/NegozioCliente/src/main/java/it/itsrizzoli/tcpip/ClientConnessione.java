@@ -3,80 +3,99 @@ package it.itsrizzoli.tcpip;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import it.itsrizzoli.App;
+import it.itsrizzoli.modelli.Prodotto;
+import it.itsrizzoli.modelli.Transazione;
 import it.itsrizzoli.tools.CodiciStatoServer;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static it.itsrizzoli.tools.TypeThread.*;
 
 public class ClientConnessione {
-    private final Socket clientSocket;
+    private Socket clientSocket;
     private BufferedReader in;
     private PrintWriter out;
+    private static final String SERVER_ADDRESS = "localhost";
+    private static final int SERVER_PORT = 5555;
+    List<Transazione> listaTransazioniRandom = new ArrayList<>();
 
 
-    public ClientConnessione(String serverAddress, int serverPort) {
-        clientSocket = getClientSocket(serverAddress, serverPort);
-        in = reader(clientSocket);
-        out = writer(clientSocket);
+    public ClientConnessione() {
+        ExecutorService executor = Executors.newCachedThreadPool();
+        ThreadClient threadClientConnessione = new ThreadClient(this, THREAD_CONNESSIONE);
+        executor.submit(threadClientConnessione);
 
-        startResponseListener();
     }
 
-
-    private Socket getClientSocket(String serverAddress, int serverPort) {
-        Socket clientSocket = null;
+    protected void readLoop() {
+        String risposta;
         try {
-            clientSocket = new Socket(serverAddress, serverPort);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return clientSocket;
-    }
+            while ((risposta = in.readLine()) != null) {
+                System.out.println("- Server: " + risposta);
+                gestioneJsonCodiceStato(risposta);
 
-    private static PrintWriter writer(Socket clientSocket) {
-        PrintWriter out = null;
-        try {
-            out = new PrintWriter(clientSocket.getOutputStream(), true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return out;
-    }
-
-    private static BufferedReader reader(Socket clientSocket) {
-        BufferedReader in = null;
-        try {
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return in;
-    }
-
-
-    private void startResponseListener() {
-        Thread responseThread = new Thread(() -> {
-            try {
-                String response;
-                while ((response = in.readLine()) != null) {
-                    System.out.println("-Server: " + response);
-                    handleResponse(response);
+                if (!listaTransazioniRandom.isEmpty()) {
+                    ExecutorService executor = Executors.newCachedThreadPool();
+                    ThreadClient threadClientConnessione = new ThreadClient(this, THREAD_WRITE);
+                    executor.submit(threadClientConnessione);
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-        });
-        responseThread.start();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
     }
 
-    private void handleResponse(String jsonResponse) {
+    protected void writeTransazioniJson() {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        for (Transazione transazione : listaTransazioniRandom) {
+            try {
+                String jsonString = getJsonTransazione(transazione, objectMapper);
+                out.println(jsonString);// Invia la transazione al server
+                System.out.println("Transazione inviata al server.");
+
+            } catch (JsonProcessingException e) {
+                System.err.println("Errore durante la conversione in JSON");
+            }
+
+            try {
+                // Attendere 5 secondi prima di inviare la prossima transazione
+                Thread.sleep(5_000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Interruzione durante l'attesa", e);
+            }
+        }
+    }
+
+    private static String getJsonTransazione(Transazione transazione, ObjectMapper objectMapper) throws JsonProcessingException {
+        ObjectNode objectNode = objectMapper.createObjectNode();
+
+        objectNode.put("codiceStato", CodiciStatoServer.AGGIUNGI_PRODOTTO);
+
+        String transazioneNode = objectMapper.writeValueAsString(transazione);
+
+        objectNode.put("transazione", transazioneNode);
+
+        String jsonString = objectMapper.writeValueAsString(objectNode);
+
+        System.out.println("Transazione JSON: " + jsonString);
+        return jsonString;
+    }
+
+    private void gestioneJsonCodiceStato(String jsonResponse) {
         JsonNode jsonNode = null;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             jsonNode = objectMapper.readTree(jsonResponse);
         } catch (JsonProcessingException e) {
-            System.out.println(" Attenzione: non è un json");
             return;
         }
 
@@ -93,6 +112,12 @@ public class ClientConnessione {
                 System.out.println("Client riceve codice Status 3: Aggiunta prodotto al Negozio");
                 break;
             case CodiciStatoServer.LISTA_PRODOTTI_AGGIORNATO:
+                List<Prodotto> listaProdotti = recuperoListaProdottiJson(jsonNode);
+                App.negozioClientUI.setProdottiNegozio(listaProdotti);
+
+
+                listaTransazioniRandom = Transazione.creaListaTransazioniRandom(listaProdotti);
+
                 break;
             case CodiciStatoServer.SUCCESSO_TRANSAZIONE:
                 System.out.println("Client riceve codice Status 5 : Successo nella Transazione");
@@ -112,9 +137,27 @@ public class ClientConnessione {
         }
     }
 
+    private List<Prodotto> recuperoListaProdottiJson(JsonNode jsonNode) { // Recupero gli articoli Negozio
+        System.out.println("Client riceve codice Status 4: Lista prodotti aggiornata");
+        JsonNode prodottiNode = jsonNode.get("prodotti");
+        // Creare una lista di prodotti
+        List<Prodotto> prodotti = new ArrayList<>();
 
+        // Iterare su ogni prodotto nell'array JSON
+        for (JsonNode prodottoNode : prodottiNode) {
+            int id = prodottoNode.get("id").asInt();
+            String nome = prodottoNode.get("nome").asText();
+            double prezzo = prodottoNode.get("prezzo").asDouble();
+            int quantitaDisponibile = prodottoNode.get("quantitaDisponibile").asInt();
+            Prodotto prodotto = new Prodotto(id, nome, prezzo, quantitaDisponibile);
+            prodotti.add(prodotto);
+            System.out.println(prodotto);
+        }
 
-    public void closeResources() {
+        return prodotti;
+    }
+
+    public void chiusuraConnessione() {
         try {
             if (out != null) {
                 out.close();
@@ -128,5 +171,32 @@ public class ClientConnessione {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    void tentaConnessione() {
+        boolean connected = false;
+        while (!connected) {
+            try {
+                connessioneAlServer();
+                connected = true;
+            } catch (IOException e) {
+                System.out.println("Errore: Connessione rifiutata!!");
+                System.out.println("Tentativo di riconnessione...");
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ex) {
+                    // Gestisci l'eccezione se il thread viene interrotto durante il sonno
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private void connessioneAlServer() throws IOException {
+        clientSocket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        out = new PrintWriter(clientSocket.getOutputStream(), true);
+        System.out.println("Successo: Connessione avvenuta al server con IP: " + SERVER_ADDRESS + " - PORTA: " + SERVER_PORT);
+
     }
 }
