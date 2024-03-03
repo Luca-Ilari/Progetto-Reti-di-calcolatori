@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef win32
+#ifdef WIN32
 #include <winsock2.h>
 #include <windows.h>
 #else
@@ -25,7 +25,7 @@ struct product serverProductList[PRODUCT_NUMBER] = {
         {1, "Acqua", 5, 1}
 };
 
-#ifdef win32
+#ifdef WIN32
 CRITICAL_SECTION CriticalSection;
 #else
 pthread_mutex_t CriticalSection;
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]){
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(portno);
     
-#ifdef win32
+#ifdef WIN32
     InitializeCriticalSection(&CriticalSection);
 #else
     
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]){
             struct threadParamStruct params;
             params.newsockfd = newsockfd;
             
-#ifdef win32
+#ifdef WIN32
             CreateThread(NULL, 0, ThreadFunc, &params, 0, NULL);
 #else
             pthread_t thread_id = 0;
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]){
             perror("ERROR while accepting new client");
         }
     }
-#ifdef win32
+#ifdef WIN32
     closesocket(sockfd);
 #else
     close(sockfd);

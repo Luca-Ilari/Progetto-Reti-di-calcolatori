@@ -1,7 +1,7 @@
 #ifndef SERVER_SERVER_H
 #define SERVER_SERVER_H
 
-#ifdef win32
+#ifdef WIN32
 #include <windows.h>
 #else
 
@@ -10,7 +10,7 @@
 void timestamp();
 int setupSocket(int argc);
 int acceptNewConnection(int sockfd);
-#ifdef win32
+#ifdef WIN32
 DWORD WINAPI ThreadFunc(void *threadParam);
 #else
 void *ThreadFunc(void *threadParam);

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#ifdef win32
+#ifdef WIN32
 #include <winsock2.h>
 #include <windows.h>
 #include <ws2tcpip.h>
@@ -21,7 +21,7 @@
 
 extern struct product serverProductList[PRODUCT_NUMBER];
 
-#ifdef win32
+#ifdef WIN32
 extern CRITICAL_SECTION CriticalSection;
 #else
 extern pthread_mutex_t CriticalSection;
@@ -41,7 +41,7 @@ int setupSocket(int argc){
         timestamp();
         perror("ERROR, no port provided\n");
     }
-#ifdef win32
+#ifdef WIN32
     WSADATA info;
     if (WSAStartup(MAKEWORD(1, 1), &info) == SOCKET_ERROR) {
         timestamp();
@@ -91,7 +91,7 @@ int handleClient(int sock){
     timestamp();
     printf("<- Received from socket %d : %s",sock ,buffer);
 
-#ifdef win32
+#ifdef WIN32
     EnterCriticalSection(&CriticalSection);
 #else
     pthread_mutex_lock(&CriticalSection);
@@ -99,7 +99,7 @@ int handleClient(int sock){
     //TODO Modify products
     sendToClient(sock, buffer);
 
-#ifdef win32
+#ifdef WIN32
     LeaveCriticalSection(&CriticalSection);
 #else
     pthread_mutex_unlock(&CriticalSection);
@@ -148,7 +148,7 @@ int sendProductListToClient(int sock){
     free(json);
 }
 
-#ifdef win32
+#ifdef WIN32
 DWORD WINAPI ThreadFunc(void *threadParam) {
 #else
 void *ThreadFunc(void *threadParam){
@@ -167,7 +167,7 @@ void *ThreadFunc(void *threadParam){
     }
     timestamp();
     printf("Closing socket %d\n", newsock);
-#ifdef win32
+#ifdef WIN32
     closesocket(newsock);
 #else
     close(newsock);
