@@ -1,3 +1,11 @@
 
+/build
+/debug
+/CMakeFiles
+/CMakeScripts
+/Server.xcodeproj
+/CMakeCache.txt
+
 /.idea
 /cmake-build-debug
+

@@ -1,16 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#ifdef win32
 #include <winsock2.h>
 #include <windows.h>
 #include <ws2tcpip.h>
+#else
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <string.h>
+#include <unistd.h>
+#include <pthread.h>
+#endif
 #include "threadParameter.h"
 #include "headers/define.h"
 #include "headers/product.h"
 
 extern struct product serverProductList[PRODUCT_NUMBER];
 
+#ifdef win32
 extern CRITICAL_SECTION CriticalSection;
+#else
+extern pthread_mutex_t CriticalSection;
+#endif
+
 #define BUFFER_SIZE 1024
 
 void timestamp()
@@ -25,12 +41,15 @@ int setupSocket(int argc){
         timestamp();
         perror("ERROR, no port provided\n");
     }
+#ifdef win32
     WSADATA info;
     if (WSAStartup(MAKEWORD(1, 1), &info) == SOCKET_ERROR) {
         timestamp();
         perror("ERROR, can't start socket\n");
     }
+#endif
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
     if (sockfd < 0){
         timestamp();
         perror("ERROR opening socket\n");
@@ -48,6 +67,7 @@ int acceptNewConnection(int sockfd){
         return -1;
     }
     char *sockIp= inet_ntoa(cli_addr.sin_addr);
+
     timestamp();
     printf("+ New socket %d connected from: %s\n", newsocket, sockIp);
     return newsocket;
@@ -68,21 +88,23 @@ int handleClient(int sock){
     if (n <= 0){
         return -1;
     }
-    //memset(buffer,0,BUFFER_SIZE);
     timestamp();
     printf("<- Received from socket %d : %s",sock ,buffer);
 
+#ifdef win32
     EnterCriticalSection(&CriticalSection);
-
+#else
+    pthread_mutex_lock(&CriticalSection);
+#endif
+    //TODO Modify products
     sendToClient(sock, buffer);
 
-   // n = recv(sock, buffer, BUFFER_SIZE-1, 0);
-   // if(n <= 0){ // if client disconnected
-   //     LeaveCriticalSection(&CriticalSection);
-  //      return -1;
-  //  }
-
+#ifdef win32
     LeaveCriticalSection(&CriticalSection);
+#else
+    pthread_mutex_unlock(&CriticalSection);
+#endif
+    
     return 0;
 }
 
@@ -100,7 +122,7 @@ char *getProductJson(){
         sprintf(tmp, "\"id\":%d,", serverProductList[i].id);
         strcat(json, tmp);
 
-        sprintf(tmp, "\"nome\":%s,", serverProductList[i].name);
+        sprintf(tmp, "\"nome\":\"%s\",", serverProductList[i].name);
         strcat(json, tmp);
 
         sprintf(tmp, "\"prezzo\":%f,", serverProductList[i].price);
@@ -126,7 +148,11 @@ int sendProductListToClient(int sock){
     free(json);
 }
 
+#ifdef win32
 DWORD WINAPI ThreadFunc(void *threadParam) {
+#else
+void *ThreadFunc(void *threadParam){
+#endif
     struct threadParamStruct params = *(struct threadParamStruct*)threadParam;
     int newsock = params.newsockfd; // get socket id from pointer to int socketnumber
 
@@ -141,6 +167,10 @@ DWORD WINAPI ThreadFunc(void *threadParam) {
     }
     timestamp();
     printf("Closing socket %d\n", newsock);
+#ifdef win32
     closesocket(newsock);
+#else
+    close(newsock);
+#endif
     return 0;
 }
