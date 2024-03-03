@@ -5,8 +5,13 @@
 #include <windows.h>
 #include <ws2tcpip.h>
 #include "threadParameter.h"
+#include "headers/define.h"
+#include "headers/product.h"
+
+extern struct product serverProductList[PRODUCT_NUMBER];
+
 extern CRITICAL_SECTION CriticalSection;
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 1024
 
 void timestamp()
 {
@@ -44,28 +49,28 @@ int acceptNewConnection(int sockfd){
     }
     char *sockIp= inet_ntoa(cli_addr.sin_addr);
     timestamp();
-    printf("New socket %d connected from: %s\n", newsocket, sockIp);
+    printf("+ New socket %d connected from: %s\n", newsocket, sockIp);
     return newsocket;
 }
 int sendToClient(int sock, char *buffer) {
     int n = send(sock, buffer, strlen(buffer), 0);
     if (n < 0){
-        perror("ERROR writing to socket");
         return -1;
     }
+    timestamp();
+    printf("-> Sendind to socket %d : %s",sock ,buffer);
     return 0;
 }
-int handleClient(int sock, int *varToIncrement){
+int handleClient(int sock){
     char buffer[BUFFER_SIZE];
     memset(buffer, 0, BUFFER_SIZE);
     int n = recv(sock, buffer, BUFFER_SIZE-1, 0);
     if (n <= 0){
         return -1;
     }
-    timestamp();
-
-    printf("Socket %d sent: %s",sock ,buffer);
     //memset(buffer,0,BUFFER_SIZE);
+    timestamp();
+    printf("<- Received from socket %d : %s",sock ,buffer);
 
     EnterCriticalSection(&CriticalSection);
 
@@ -81,15 +86,58 @@ int handleClient(int sock, int *varToIncrement){
     return 0;
 }
 
+char *getProductJson(){
+    char json[1024];
+    memset(&json, 0, sizeof(json));
+
+    strcat(json, "{\"codiceStato\":4,\"prodotti\":[");
+    for (int i=0; i < PRODUCT_NUMBER; ++i){
+        char tmp[1024];
+        memset(&tmp, 0, sizeof(tmp));
+
+        strcat(json, "{");
+
+        sprintf(tmp, "\"id\":%d,", serverProductList[i].id);
+        strcat(json, tmp);
+
+        sprintf(tmp, "\"nome\":%s,", serverProductList[i].name);
+        strcat(json, tmp);
+
+        sprintf(tmp, "\"prezzo\":%f,", serverProductList[i].price);
+        strcat(json, tmp);
+
+        sprintf(tmp, "\"quantitaDisponibile\":%d", serverProductList[i].quantity);
+        strcat(json, tmp);
+
+        strcat(json, "},");
+    }
+    strcat(json, "]}\n");
+
+    char *heapJson = malloc(strlen(json)+1);
+    memset(heapJson,0,strlen(json)+1);
+    strcpy(heapJson,json);
+
+    return heapJson;
+}
+
+int sendProductListToClient(int sock){
+    char *json = getProductJson();
+    sendToClient(sock, json);
+    free(json);
+}
+
 DWORD WINAPI ThreadFunc(void *threadParam) {
     struct threadParamStruct params = *(struct threadParamStruct*)threadParam;
     int newsock = params.newsockfd; // get socket id from pointer to int socketnumber
-    int *globalVar = params.globalVar;
+
+    sendToClient(newsock,"{\"codiceStato\":1}\n");
+
+    sendProductListToClient(newsock);
 
     int res = 0;
 
     while(res >= 0){
-        res = handleClient(newsock, globalVar);
+        res = handleClient(newsock);
     }
     timestamp();
     printf("Closing socket %d\n", newsock);

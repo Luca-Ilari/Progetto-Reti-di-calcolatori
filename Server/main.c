@@ -1,11 +1,16 @@
-#include <cstdio>
+#include <stdio.h>
 #include <winsock2.h>
 #include <windows.h>
-#include <thread>
-#include "server.h"
-
+#include "headers/server.h"
+#include "headers/define.h"
+#include "headers/product.h"
 #include "threadParameter.h"
-int globalVar = 100000;
+
+struct product serverProductList[PRODUCT_NUMBER] = {
+        {0, "Pane", 10, 2.99},
+        {1, "Acqua", 5, 1}
+};
+
 CRITICAL_SECTION CriticalSection;
 
 
@@ -28,7 +33,6 @@ int main(int argc, char* argv[]){
         perror("ERROR on binding");
         return 0;
     }
-
     timestamp();
     printf("Server started\n");
 
@@ -39,7 +43,6 @@ int main(int argc, char* argv[]){
         if (newsockfd > 0) {
             struct threadParamStruct params;
             params.newsockfd = newsockfd;
-            params.globalVar = &globalVar;
             CreateThread(NULL, 0, ThreadFunc, &params, 0, NULL);
         }else{
             timestamp();

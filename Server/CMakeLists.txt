@@ -4,10 +4,12 @@ project(Server)
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(Server
-        main.cpp
-        server.h
+        main.c
+        headers/server.h
         threadParameter.h
-        server.cpp
+        server.c
+        headers/define.h
+        headers/product.h
 )
 
 if(WIN32)
