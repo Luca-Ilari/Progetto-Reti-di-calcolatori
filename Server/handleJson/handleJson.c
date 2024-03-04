@@ -4,7 +4,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+
+#ifdef WIN32
 #include <windows.h>
+#else
+#include <string.h>
+#endif
 
 #include "handleJson.h"
 #include "../headers/server.h"

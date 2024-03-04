@@ -140,7 +140,7 @@ int sendProductListToClient(int sock){
 #ifdef WIN32
 DWORD WINAPI ThreadFunc(void *newSockParam) {
 #else
-void *ThreadFunc(void *threadParam){
+void *ThreadFunc(void *newSockParam){
 #endif
     int newsock = *(int*)(newSockParam);
 
