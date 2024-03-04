@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
 #ifdef WIN32
 #include <winsock2.h>
 #include <windows.h>
@@ -15,11 +16,13 @@
 #include <unistd.h>
 #include <pthread.h>
 #endif
-#include "threadParameter.h"
-#include "headers/define.h"
-#include "headers/product.h"
 
-extern struct product serverProductList[PRODUCT_NUMBER];
+#include "headers/define.h"
+#include "handleJson/handleJson.h"
+
+extern int nConnectedClient;
+extern int updateAllClients;
+extern int connectedSockets[MAX_CLIENT];
 
 #ifdef WIN32
 extern CRITICAL_SECTION CriticalSection;
@@ -28,6 +31,21 @@ extern pthread_mutex_t CriticalSection;
 #endif
 
 #define BUFFER_SIZE 1024
+
+void customEnterCriticalSection(){
+#ifdef WIN32
+    EnterCriticalSection(&CriticalSection);
+#else
+    pthread_mutex_lock(&CriticalSection);
+#endif
+}
+void customLeaveCriticalSection(){
+#ifdef WIN32
+    LeaveCriticalSection(&CriticalSection);
+#else
+    pthread_mutex_unlock(&CriticalSection);
+#endif
+}
 
 void timestamp()
 {
@@ -59,7 +77,7 @@ int setupSocket(int argc){
 
 int acceptNewConnection(int sockfd){
     struct sockaddr_in cli_addr;
-    listen(sockfd, 5);
+    listen(sockfd, 2);
     socklen_t clientLenght = sizeof(cli_addr);
     int newsocket = accept(sockfd, (struct sockaddr*)&cli_addr, &clientLenght);
 
@@ -77,72 +95,40 @@ int sendToClient(int sock, char *buffer) {
     if (n < 0){
         return -1;
     }
-    timestamp();
-    printf("-> Sendind to socket %d : %s",sock ,buffer);
+//    timestamp();
+//    printf("-> Sendind to socket %d : %s",sock ,buffer);
+
     return 0;
 }
 int handleClient(int sock){
     char buffer[BUFFER_SIZE];
     memset(buffer, 0, BUFFER_SIZE);
+
+    //Receive from client
     int n = recv(sock, buffer, BUFFER_SIZE-1, 0);
     if (n <= 0){
         return -1;
     }
     timestamp();
     printf("<- Received from socket %d : %s",sock ,buffer);
+    if (buffer[0] == '{' && buffer[strlen(buffer)-2] == '}' ){
+        //printf("%llu", strlen(buffer));
 
-#ifdef WIN32
-    EnterCriticalSection(&CriticalSection);
-#else
-    pthread_mutex_lock(&CriticalSection);
-#endif
-    //TODO Modify products
-    sendToClient(sock, buffer);
+        customEnterCriticalSection();
 
-#ifdef WIN32
-    LeaveCriticalSection(&CriticalSection);
-#else
-    pthread_mutex_unlock(&CriticalSection);
-#endif
-    
-    return 0;
-}
+        //TODO Modify products
+        //read json and modify product list
+        //set buffer to status code succefull
+        updateAllClients = 1;
 
-char *getProductJson(){
-    char json[1024];
-    memset(&json, 0, sizeof(json));
+        customLeaveCriticalSection();
 
-    strcat(json, "{\"codiceStato\":4,\"prodotti\":[");
-    for (int i=0; i < PRODUCT_NUMBER; ++i){
-        char tmp[1024];
-        memset(&tmp, 0, sizeof(tmp));
-
-        strcat(json, "{");
-
-        sprintf(tmp, "\"id\":%d,", serverProductList[i].id);
-        strcat(json, tmp);
-
-        sprintf(tmp, "\"nome\":\"%s\",", serverProductList[i].name);
-        strcat(json, tmp);
-
-        sprintf(tmp, "\"prezzo\":%f,", serverProductList[i].price);
-        strcat(json, tmp);
-
-        sprintf(tmp, "\"quantitaDisponibile\":%d", serverProductList[i].quantity);
-        strcat(json, tmp);
-        if(i == PRODUCT_NUMBER-1){
-            strcat(json, "}"); //last item without ,
-        }else{
-            strcat(json, "},");
+        if (sendToClient(sock, buffer) == -1){
+            timestamp();
+            printf("X Error sending to socket %d", sock);
         }
     }
-    strcat(json, "]}\n");
-
-    char *heapJson = malloc(strlen(json)+1);
-    memset(heapJson,0,strlen(json)+1);
-    strcpy(heapJson,json);
-
-    return heapJson;
+    return 0;
 }
 
 int sendProductListToClient(int sock){
@@ -152,24 +138,47 @@ int sendProductListToClient(int sock){
 }
 
 #ifdef WIN32
-DWORD WINAPI ThreadFunc(void *threadParam) {
+DWORD WINAPI ThreadFunc(void *newSockParam) {
 #else
 void *ThreadFunc(void *threadParam){
 #endif
-    struct threadParamStruct params = *(struct threadParamStruct*)threadParam;
-    int newsock = params.newsockfd; // get socket id from pointer to int socketnumber
+    int newsock = *(int*)(newSockParam);
+
+    customEnterCriticalSection();
+    connectedSockets[nConnectedClient] = newsock;
+    nConnectedClient += 1;
+    customLeaveCriticalSection();
 
     sendToClient(newsock,"{\"codiceStato\":1}\n");
 
     sendProductListToClient(newsock);
+    timestamp();
+    printf("-> Sendind item list to socket: %d\n",newsock);
+
 
     int res = 0;
-
     while(res >= 0){
         res = handleClient(newsock);
     }
     timestamp();
     printf("Closing socket %d\n", newsock);
+
+    //TODO remove socket from list of connected sockets
+    int indexSocketToRemove;
+    for (int i = 0; i < nConnectedClient; i++) {
+        if (connectedSockets[i] == newsock) {
+            indexSocketToRemove = i;
+            break;
+        }
+    }
+    customEnterCriticalSection();
+    for(int i = indexSocketToRemove; i < MAX_CLIENT-1 ; i++)
+    {
+        connectedSockets[i] = connectedSockets[i + 1];
+    }
+    nConnectedClient -= 1;
+    customLeaveCriticalSection();
+
 #ifdef WIN32
     closesocket(newsock);
 #else
@@ -177,3 +186,4 @@ void *ThreadFunc(void *threadParam){
 #endif
     return 0;
 }
+

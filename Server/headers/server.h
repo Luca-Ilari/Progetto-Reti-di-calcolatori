@@ -3,17 +3,15 @@
 
 #ifdef WIN32
 #include <windows.h>
-#else
-
-#endif
-
-void timestamp();
-int setupSocket(int argc);
-int acceptNewConnection(int sockfd);
-#ifdef WIN32
 DWORD WINAPI ThreadFunc(void *threadParam);
 #else
 void *ThreadFunc(void *threadParam);
 #endif
+void customEnterCriticalSection();
+void customLeaveCriticalSection();
+void timestamp();
+int sendProductListToClient(int sock);
+int setupSocket(int argc);
+int acceptNewConnection(int sockfd);
 
 #endif //SERVER_SERVER_H

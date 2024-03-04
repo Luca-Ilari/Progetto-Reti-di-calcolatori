@@ -5,6 +5,7 @@
 #ifndef SERVER_DEFINE_H
 #define SERVER_DEFINE_H
 
-#define PRODUCT_NUMBER 2
+#define PRODUCT_NUMBER 5
+#define MAX_CLIENT 20
 
 #endif //SERVER_DEFINE_H

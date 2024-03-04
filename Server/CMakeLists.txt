@@ -6,10 +6,13 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(Server
         main.c
         headers/server.h
-        threadParameter.h
         server.c
         headers/define.h
         headers/product.h
+        handleUpdateClients.c
+        headers/handleUpdateClients.h
+        handleJson/handleJson.c
+        handleJson/handleJson.h
 )
 
 if(WIN32)
