@@ -35,4 +35,9 @@ public class AppTest
     {
         assertTrue( true );
     }
+
+    @org.junit.jupiter.api.Test
+    void main() {
+
+    }
 }

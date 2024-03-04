@@ -8,6 +8,7 @@ import it.itsrizzoli.App;
 import it.itsrizzoli.modelli.Prodotto;
 import it.itsrizzoli.modelli.Transazione;
 import it.itsrizzoli.tools.CodiciStatoServer;
+import it.itsrizzoli.ui.NegozioClientUI;
 
 import java.io.*;
 import java.net.*;
@@ -28,28 +29,31 @@ public class ClientConnessione {
 
 
     public ClientConnessione() {
-        ExecutorService executor = Executors.newCachedThreadPool();
         ThreadClient threadClientConnessione = new ThreadClient(this, THREAD_CONNESSIONE);
-        executor.submit(threadClientConnessione);
-
+        Thread threadConnessione = new Thread(threadClientConnessione);
+        threadConnessione.start();
     }
 
-    protected void readLoop() {
+    protected boolean readLoop() {
         String risposta;
         try {
             while ((risposta = in.readLine()) != null) {
-                System.out.println("- Server: " + risposta);
+                System.out.println(" -Server: " + risposta);
                 gestioneJsonCodiceStato(risposta);
 
                 if (!listaTransazioniRandom.isEmpty()) {
-                    ExecutorService executor = Executors.newCachedThreadPool();
-                    ThreadClient threadClientConnessione = new ThreadClient(this, THREAD_WRITE);
-                    executor.submit(threadClientConnessione);
+                    ThreadClient threadWriting = new ThreadClient(this, THREAD_WRITE);
+                    Thread thread = new Thread(threadWriting);
+                    thread.start();
                 }
+
             }
+
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
+
+        return true;
 
     }
 
@@ -73,6 +77,32 @@ public class ClientConnessione {
                 throw new RuntimeException("Interruzione durante l'attesa", e);
             }
         }
+        listaTransazioniRandom.clear();
+    }
+
+    protected void writeTransazioniJson(NegozioClientUI negozioClientUI) {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        for (Transazione transazione : listaTransazioniRandom) {
+            try {
+                String jsonString = getJsonTransazione(transazione, objectMapper);
+                out.println(jsonString);// Invia la transazione al server
+                System.out.println("Transazione inviata al server.");
+
+                negozioClientUI.addSingleTransazioneAwait(transazione);
+
+            } catch (JsonProcessingException e) {
+                System.err.println("Errore durante la conversione in JSON");
+            }
+
+            try {
+                // Attendere 5 secondi prima di inviare la prossima transazione
+                Thread.sleep(3_000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Interruzione durante l'attesa", e);
+            }
+        }
+        listaTransazioniRandom.clear();
     }
 
     private static String getJsonTransazione(Transazione transazione, ObjectMapper objectMapper) throws JsonProcessingException {
@@ -96,6 +126,7 @@ public class ClientConnessione {
             ObjectMapper objectMapper = new ObjectMapper();
             jsonNode = objectMapper.readTree(jsonResponse);
         } catch (JsonProcessingException e) {
+            System.err.println(" Attenzione: non è un json");
             return;
         }
 
@@ -110,17 +141,25 @@ public class ClientConnessione {
                 break;
             case CodiciStatoServer.AGGIUNGI_PRODOTTO:
                 System.out.println("Client riceve codice Status 3: Aggiunta prodotto al Negozio");
+
                 break;
             case CodiciStatoServer.LISTA_PRODOTTI_AGGIORNATO:
                 List<Prodotto> listaProdotti = recuperoListaProdottiJson(jsonNode);
-                App.negozioClientUI.setProdottiNegozio(listaProdotti);
 
+                //aggiorna negozio prodotti UI
+                App.negozioClientUI.aggiornaProdottiNegozio(listaProdotti);
 
-                listaTransazioniRandom = Transazione.creaListaTransazioniRandom(listaProdotti);
+                // creazione transazioni in maniera rando
+                listaTransazioniRandom.addAll(Transazione.creaListaTransazioniRandom(listaProdotti));
+                App.negozioClientUI.getListaTransazione().addAll(listaTransazioniRandom);
+                //App.negozioClientUI.addTransazioneAwait();
 
                 break;
             case CodiciStatoServer.SUCCESSO_TRANSAZIONE:
                 System.out.println("Client riceve codice Status 5 : Successo nella Transazione");
+                int idTransazione = jsonNode.get("idTransazione").asInt();
+                App.negozioClientUI.aggiornaStateTransazione(idTransazione);
+                App.negozioClientUI.allSetResponsiveTable();
                 break;
             case CodiciStatoServer.FAIL_SESSION:
                 System.out.println("Client riceve codice Status -1: Fallimento sessione");

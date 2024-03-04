@@ -1,6 +1,7 @@
 package it.itsrizzoli.ui;
 
 import it.itsrizzoli.modelli.Prodotto;
+import it.itsrizzoli.modelli.Transazione;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -14,12 +15,14 @@ public class NegozioClientUI extends JFrame {
     private JTable articoliNegozioTable = new JTable();
     private JTable transazioniTable = new JTable();
 
+    private List<Prodotto> prodottiCarrello = new ArrayList<>();
 
     private List<Prodotto> prodottiNegozio = new ArrayList<>();
+    private List<Transazione> listaTransazione = new ArrayList<>();
 
-    private String[] articoliNegozioColonne = {"Prodotto", "Quantità", "Prezzo"};
+    private String[] articoliNegozioColonne = {"Prodotto", "Prezzo", "Disponibile"};
     private String[] carrelloColonne = {"Prodotto", "Quantità"};
-    private String[] transazioniColonne = {"Number", "Prodotto", "Quantità", "Prezzo", "Stato"};
+    private String[] transazioniColonne = {"Number", "Prodotto", "Prezzo", "Quantità", "Stato"};
 
 
     public NegozioClientUI() {
@@ -46,7 +49,8 @@ public class NegozioClientUI extends JFrame {
 
         // Aggiungi la seconda tabella
         String[][] articoliNegozioData = {{"Prodotto A", "10", "50.00"}, {"Prodotto B", "5", "120.00"}};
-        JScrollPane jScrollPane2 = creaTabellaPanello(articoliNegozioTable, articoliNegozioColonne, articoliNegozioData);
+        JScrollPane jScrollPane2 = creaTabellaPanello(articoliNegozioTable, articoliNegozioColonne,
+                articoliNegozioData);
         tablesPanel.add(jScrollPane2);
 
         // Aggiungi il pannello delle tabelle al contenuto principale
@@ -60,8 +64,9 @@ public class NegozioClientUI extends JFrame {
         transazioniPanel.setLayout(new BoxLayout(transazioniPanel, BoxLayout.PAGE_AXIS));
         transazioniPanel.setBackground(Color.LIGHT_GRAY);
 
-        String[][] transazioniData = {{"1", "Prodotto X", "5", "10.00", "Consegnato"}};
+        String[][] transazioniData = {{"", "", "", "", ""}};
         JScrollPane jScrollPane3 = creaTabellaPanello(transazioniTable, transazioniColonne, transazioniData);
+        DefaultTableModel defaultTableModel = (DefaultTableModel) transazioniTable.getModel();
         transazioniPanel.add(jScrollPane3);
         contentPane.add(transazioniPanel);
 
@@ -73,6 +78,27 @@ public class NegozioClientUI extends JFrame {
         setVisible(true);
     }
 
+    private static void azzeraElementiTable(DefaultTableModel defaultTableModel) {
+        defaultTableModel.setRowCount(0);
+        defaultTableModel.fireTableDataChanged();
+    }
+
+
+    public List<Prodotto> getProdottiNegozio() {
+        return prodottiNegozio;
+    }
+
+    public void setProdottiNegozio(List<Prodotto> prodottiNegozio) {
+        this.prodottiNegozio = prodottiNegozio;
+    }
+
+    public List<Transazione> getListaTransazione() {
+        return listaTransazione;
+    }
+
+    public void setListaTransazione(List<Transazione> listaTransazione) {
+        this.listaTransazione = listaTransazione;
+    }
 
     public JTable getCarrelloTable() {
         return carrelloTable;
@@ -98,15 +124,155 @@ public class NegozioClientUI extends JFrame {
         this.transazioniTable = transazioniTable;
     }
 
-    public boolean aggiornaElementiTabella(List<Prodotto> prodottiNegozio, DefaultTableModel model) {
+    public void aggiornaProdottiNegozio(List<Prodotto> newProdottiNegozio) {
         // Rimuovi tutte le righe esistenti dal modello
-        model.setRowCount(0);
-        // Aggiungi righe per ciascun prodotto nella lista
-        for (Prodotto product : prodottiNegozio) {
-            Object[] rowData = {product.getNome(), product.getPrezzo(), product.getQuantitaDisponibile()};
-            model.addRow(rowData);
+        this.prodottiNegozio = newProdottiNegozio;
+
+        SwingUtilities.invokeLater(() -> {
+            DefaultTableModel model = (DefaultTableModel) articoliNegozioTable.getModel();
+            // Aggiungi righe per ciascun prodotto nella lista
+            model.setRowCount(0);
+            for (Prodotto product : newProdottiNegozio) {
+                Object[] rowData = {product.getNome(), product.getPrezzo()+"€", product.getQuantitaDisponibile()};
+                model.addRow(rowData);
+            }
+            model.fireTableDataChanged();
+
+            System.out.println(" --> UI: Carrello aggiornato!!");
+
+        });
+
+    }
+
+    public void aggiornaStateTransazione(int idTransazione) {
+        SwingUtilities.invokeLater(() -> {
+            DefaultTableModel transazioniTableModel = (DefaultTableModel) transazioniTable.getModel();
+            Transazione transazione = null;
+
+            transazione = trovaTransazione(idTransazione);
+            if (transazione == null) {
+                System.err.println(" - Errore: Transazione non trovata");
+                return;
+            }
+
+            // Aggiorna il valore nella colonna "Stato" alla riga
+            for (int riga = 0; riga < transazioniTableModel.getRowCount(); riga++) {
+                int idTransazioneRow = (int) transazioniTableModel.getValueAt(riga, 0); // Converte l'oggetto in Integer
+                String statoTransazione = (String) transazioniTableModel.getValueAt(riga, 4);
+                if (idTransazioneRow == transazione.getIdTransazione()) {
+                    if (statoTransazione.equals("await")) {
+                        transazioniTableModel.setValueAt("complate", riga, 4); // Imposta il nuovo stato
+                        aggiornaQuantitaCarrello(transazione.getIdProdotto(), transazione.getQuantita());
+                    }
+
+                    System.out.println("Elemento trovato alla riga " + riga);
+
+                    break;
+                }
+            }
+
+            transazioniTableModel.fireTableDataChanged();
+
+
+            System.out.println(" --> UI: Lista transazione aggiornato!!");
+
+            // Aggiorna o inserisci prodotto nel carrello
+        });
+
+
+    }
+
+    private Transazione trovaTransazione(int idTransazione) {
+        for (Transazione transazione : listaTransazione) {
+            if (transazione.getIdTransazione() == idTransazione) {
+                return transazione;
+            }
         }
-        return true;
+        return null;
+    }
+
+
+    public void aggiornaQuantitaCarrello(int idProdotto, int quantitaAggiunta) {
+        DefaultTableModel modelloCarrello = (DefaultTableModel) carrelloTable.getModel();
+        Prodotto prodotto = trovaProdottoLista(idProdotto, prodottiCarrello);
+
+        if (prodotto == null) {
+            // Inserimento del nuovo prodotto nel carrello
+            Prodotto nuovoProdotto = trovaProdottoLista(idProdotto, prodottiNegozio);
+            if (nuovoProdotto == null) {
+                System.out.println("Errore: Prodotto non presente nel negozio.");
+                return;
+            }
+            this.prodottiCarrello.add(nuovoProdotto);
+
+            modelloCarrello.addRow(new String[]{nuovoProdotto.getNome(), String.valueOf(quantitaAggiunta)});
+        } else {
+            // Aggiornamento della quantità del prodotto nel carrello
+            for (int riga = 0; riga < modelloCarrello.getRowCount(); riga++) {
+                String nomeProdotto = (String) carrelloTable.getValueAt(riga, 0);
+                if (nomeProdotto.equals(prodotto.getNome())) {
+                    int quantita = Integer.parseInt((String) carrelloTable.getValueAt(riga, 1));
+                    System.out.println("Elemento trovato alla riga " + riga);
+                    int nuovaQuantita = quantita + quantitaAggiunta;
+                    modelloCarrello.setValueAt(String.valueOf(nuovaQuantita), riga, 1); // Aggiorna la quantità
+                    break;
+                }
+            }
+        }
+
+        modelloCarrello.fireTableDataChanged();
+    }
+
+
+    private Prodotto trovaProdottoLista(int idProdotto, List<Prodotto> prodotti) {
+        for (Prodotto prodotto : prodotti) {
+            if (prodotto.getIdProdotto() == idProdotto) {
+                return prodotto;
+            }
+        }
+        return null;
+    }
+
+    public void addTransazioneAwait() {
+        SwingUtilities.invokeLater(() -> {
+            DefaultTableModel model = (DefaultTableModel) transazioniTable.getModel();
+
+            for (Transazione transazione : listaTransazione) {
+
+                for (Prodotto prodotto : prodottiNegozio) {
+                    if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
+                        Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(), prodotto.getPrezzo()+"€",
+                                transazione.getQuantita(), "await"};
+                        model.addRow(rowData);
+                    }
+                }
+
+            }
+            model.fireTableDataChanged();
+
+            System.out.println(" --> UI: Lista transazione aggiunta!!");
+
+        });
+
+    }
+
+    public void addSingleTransazioneAwait(Transazione transazione) {
+        SwingUtilities.invokeLater(() -> {
+            DefaultTableModel model = (DefaultTableModel) transazioniTable.getModel();
+
+            for (Prodotto prodotto : prodottiNegozio) {
+                if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
+                    Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(), prodotto.getPrezzo()+"€",
+                            transazione.getQuantita(), "await"};
+                    model.addRow(rowData);
+                }
+            }
+            model.fireTableDataChanged();
+
+            System.out.println(" --> UI: Lista transazione aggiunta!!");
+
+        });
+
     }
 
     private JLabel createTitleLabel() {
@@ -136,9 +302,13 @@ public class NegozioClientUI extends JFrame {
     }
 
     private JScrollPane creaTabellaPanello(JTable table, String[] colonneTabella, String[][] elementiTabella) {
-        table = new JTable(new DefaultTableModel(elementiTabella, colonneTabella));
+        DefaultTableModel defaultTableModel = new DefaultTableModel(elementiTabella, colonneTabella);
+        azzeraElementiTable(defaultTableModel);
+        table.setModel(defaultTableModel);
+
         // Imposta l'allineamento al centro per tutte le colonne
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
         for (int i = 0; i < table.getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
@@ -148,7 +318,7 @@ public class NegozioClientUI extends JFrame {
     }
 
 
-    private void allSetResponsiveTable() {
+    public void allSetResponsiveTable() {
         articoliNegozioTable.setPreferredScrollableViewportSize(articoliNegozioTable.getPreferredSize());
         carrelloTable.setPreferredScrollableViewportSize(carrelloTable.getPreferredSize());
         transazioniTable.setPreferredScrollableViewportSize(transazioniTable.getPreferredSize());

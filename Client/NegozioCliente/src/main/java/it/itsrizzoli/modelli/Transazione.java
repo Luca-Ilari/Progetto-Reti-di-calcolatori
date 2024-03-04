@@ -1,5 +1,9 @@
 package it.itsrizzoli.modelli;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 public class Transazione {
     private int idTransazione;
     private int idProdotto;
@@ -44,10 +48,22 @@ public class Transazione {
         return "Transazione{" + "idTransazione=" + idTransazione + ", idProdotto=" + idProdotto + ", quantita=" + quantita + '}';
     }
 
-    private static Transazione createTransaction(Prodotto prodotto) {
-        // Simuliamo la creazione di una transazione con un prodotto casuale e una quantità casuale
-        int idProdotto = prodotto.getIdProdotto(); // Id del prodotto casuale
+    public static Transazione createTransaction(int idProdotto) {
         int randomQuantita = (int) (Math.random() * 10) + 1; // Quantità casuale tra 1 e 10
         return new Transazione(idProdotto, randomQuantita);
+    }
+
+    public static List<Transazione> creaListaTransazioniRandom(List<Prodotto> listaProdotti) {
+        List<Transazione> listaRandomTransazioni = new ArrayList<>();
+        Random random = new Random();
+        int numeroTransazioni = random.nextInt(5,20);
+
+        for (int i = 0; i < numeroTransazioni; i++) {
+            int idProdotto = random.nextInt(listaProdotti.size());
+            listaRandomTransazioni.add(createTransaction(idProdotto));
+        }
+
+        System.out.println(" --> listaRandomTransazioni.size() = " + listaRandomTransazioni.size());
+        return listaRandomTransazioni;
     }
 }
