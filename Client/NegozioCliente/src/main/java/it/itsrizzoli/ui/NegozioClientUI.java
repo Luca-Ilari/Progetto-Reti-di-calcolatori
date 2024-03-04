@@ -28,7 +28,7 @@ public class NegozioClientUI extends JFrame {
     public NegozioClientUI() {
         setTitle("Negozio Online - Interfaccia Cliente");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(200, 300));
+        setMinimumSize(new Dimension(300, 400));
         JPanel contentPane = new JPanel();
         contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
 

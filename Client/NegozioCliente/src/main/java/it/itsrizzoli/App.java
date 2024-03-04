@@ -20,7 +20,7 @@ public class App {
 
 
 
-        // connessioni al server  ---> Creazione di una lista di transazioni
+        // connessioni al server  ---> Creazione di una lista di transazioni --> aggiornamento UI
         ClientConnessione clientConnessione = new ClientConnessione();
 
         // Aggiorno UI

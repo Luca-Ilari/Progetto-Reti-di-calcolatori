@@ -25,7 +25,7 @@ public class ClientConnessione {
     private PrintWriter out;
     private static final String SERVER_ADDRESS = "localhost";
     private static final int SERVER_PORT = 5555;
-    List<Transazione> listaTransazioniRandom = new ArrayList<>();
+    final List<Transazione> listaTransazioniRandom = new ArrayList<>();
 
 
     public ClientConnessione() {
@@ -150,7 +150,9 @@ public class ClientConnessione {
                 App.negozioClientUI.aggiornaProdottiNegozio(listaProdotti);
 
                 // creazione transazioni in maniera rando
-                listaTransazioniRandom.addAll(Transazione.creaListaTransazioniRandom(listaProdotti));
+                synchronized (listaTransazioniRandom) {
+                    listaTransazioniRandom.addAll(Transazione.creaListaTransazioniRandom(listaProdotti));
+                }
                 App.negozioClientUI.getListaTransazione().addAll(listaTransazioniRandom);
                 //App.negozioClientUI.addTransazioneAwait();
 
