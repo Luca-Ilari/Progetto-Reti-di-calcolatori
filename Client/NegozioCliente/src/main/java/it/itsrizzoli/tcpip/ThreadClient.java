@@ -27,6 +27,7 @@ public class ThreadClient implements Runnable {
                 clientConnessione.tentaConnessione(); // Tentativo di connessione
                 message = "Thread di connessione completato.\n---- SESSIONE AVVIATA ----";
 
+                clientConnessione.onConnessione = true;
                 // Avvio del thread di lettura dopo la connessione
                 Thread threadClientConnessione1 = new Thread(new ThreadClient(clientConnessione, THREAD_READ));
                 threadClientConnessione1.start();

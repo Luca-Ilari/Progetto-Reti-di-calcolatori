@@ -26,7 +26,7 @@ public class ClientConnessione {
     private static final String SERVER_ADDRESS = "localhost";
     private static final int SERVER_PORT = 5555;
     final List<Transazione> listaTransazioniRandom = new ArrayList<>();
-
+    public boolean onConnessione = false;
 
     public ClientConnessione() {
         ThreadClient threadClientConnessione = new ThreadClient(this, THREAD_CONNESSIONE);
@@ -40,13 +40,6 @@ public class ClientConnessione {
             while ((risposta = in.readLine()) != null) {
                 System.out.println(" -Server: " + risposta);
                 gestioneJsonCodiceStato(risposta);
-
-                if (!listaTransazioniRandom.isEmpty()) {
-                    ThreadClient threadWriting = new ThreadClient(this, THREAD_WRITE);
-                    Thread thread = new Thread(threadWriting);
-                    thread.start();
-                }
-
             }
 
         } catch (IOException e) {
@@ -55,6 +48,33 @@ public class ClientConnessione {
 
         return true;
 
+    }
+
+    public void writeTransazioniJson(NegozioClientUI negozioClientUI) {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        List<Transazione> sendTransazioni =
+                Transazione.creaListaTransazioniRandom(negozioClientUI.getProdottiNegozio());
+        for (Transazione transazione : sendTransazioni) {
+            try {
+                String jsonString = getJsonTransazione(transazione, objectMapper);
+                out.println(jsonString);// Invia la transazione al server
+                System.out.println("Client: Transazione inviata al server.");
+
+                negozioClientUI.addSingleTransazioneAwait(transazione);
+
+            } catch (JsonProcessingException e) {
+                System.err.println("Errore durante la conversione in JSON");
+            }
+
+            try {
+                // Attendere 5 secondi prima di inviare la prossima transazione
+                Thread.sleep(3_000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Interruzione durante l'attesa", e);
+            }
+        }
+        listaTransazioniRandom.clear();
     }
 
     protected void writeTransazioniJson() {
@@ -73,31 +93,6 @@ public class ClientConnessione {
             try {
                 // Attendere 5 secondi prima di inviare la prossima transazione
                 Thread.sleep(5_000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Interruzione durante l'attesa", e);
-            }
-        }
-        listaTransazioniRandom.clear();
-    }
-
-    protected void writeTransazioniJson(NegozioClientUI negozioClientUI) {
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        for (Transazione transazione : listaTransazioniRandom) {
-            try {
-                String jsonString = getJsonTransazione(transazione, objectMapper);
-                out.println(jsonString);// Invia la transazione al server
-                System.out.println("Transazione inviata al server.");
-
-                negozioClientUI.addSingleTransazioneAwait(transazione);
-
-            } catch (JsonProcessingException e) {
-                System.err.println("Errore durante la conversione in JSON");
-            }
-
-            try {
-                // Attendere 5 secondi prima di inviare la prossima transazione
-                Thread.sleep(3_000);
             } catch (InterruptedException e) {
                 throw new RuntimeException("Interruzione durante l'attesa", e);
             }
@@ -150,10 +145,10 @@ public class ClientConnessione {
                 App.negozioClientUI.aggiornaProdottiNegozio(listaProdotti);
 
                 // creazione transazioni in maniera rando
-                synchronized (listaTransazioniRandom) {
-                    listaTransazioniRandom.addAll(Transazione.creaListaTransazioniRandom(listaProdotti));
-                }
+
+                listaTransazioniRandom.addAll(Transazione.creaListaTransazioniRandom(listaProdotti));
                 App.negozioClientUI.getListaTransazione().addAll(listaTransazioniRandom);
+
                 //App.negozioClientUI.addTransazioneAwait();
 
                 break;

@@ -1,14 +1,20 @@
 package it.itsrizzoli.ui;
 
+import it.itsrizzoli.App;
 import it.itsrizzoli.modelli.Prodotto;
 import it.itsrizzoli.modelli.Transazione;
+import it.itsrizzoli.tcpip.ThreadClient;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+
+import static it.itsrizzoli.tools.TypeThread.THREAD_WRITE;
 
 public class NegozioClientUI extends JFrame {
     private JTable carrelloTable = new JTable();
@@ -70,6 +76,23 @@ public class NegozioClientUI extends JFrame {
         transazioniPanel.add(jScrollPane3);
         contentPane.add(transazioniPanel);
 
+        JButton button = new JButton("Invia richieste random");
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Questo codice viene eseguito quando il bottone viene premuto
+                if (App.clientConnessione.onConnessione) {
+                    ThreadClient threadWriting = new ThreadClient(App.clientConnessione, THREAD_WRITE);
+                    Thread thread = new Thread(threadWriting);
+                    thread.start();
+                    JOptionPane.showMessageDialog(contentPane, "Richiesta inviata!");
+                }else {
+                    JOptionPane.showMessageDialog(contentPane, "Attenzione: nessun connessione al server!");
+                }
+            }
+        });
+
+        contentPane.add(button);
         setContentPane(contentPane);
 
         allSetResponsiveTable();
@@ -133,7 +156,7 @@ public class NegozioClientUI extends JFrame {
             // Aggiungi righe per ciascun prodotto nella lista
             model.setRowCount(0);
             for (Prodotto product : newProdottiNegozio) {
-                Object[] rowData = {product.getNome(), product.getPrezzo()+"€", product.getQuantitaDisponibile()};
+                Object[] rowData = {product.getNome(), product.getPrezzo() + "€", product.getQuantitaDisponibile()};
                 model.addRow(rowData);
             }
             model.fireTableDataChanged();
@@ -241,8 +264,8 @@ public class NegozioClientUI extends JFrame {
 
                 for (Prodotto prodotto : prodottiNegozio) {
                     if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
-                        Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(), prodotto.getPrezzo()+"€",
-                                transazione.getQuantita(), "await"};
+                        Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(),
+                                prodotto.getPrezzo() + "€", transazione.getQuantita(), "await"};
                         model.addRow(rowData);
                     }
                 }
@@ -262,8 +285,8 @@ public class NegozioClientUI extends JFrame {
 
             for (Prodotto prodotto : prodottiNegozio) {
                 if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
-                    Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(), prodotto.getPrezzo()+"€",
-                            transazione.getQuantita(), "await"};
+                    Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(), prodotto.getPrezzo() +
+                            "€", transazione.getQuantita(), "await"};
                     model.addRow(rowData);
                 }
             }
@@ -287,7 +310,7 @@ public class NegozioClientUI extends JFrame {
         labelsPanel.setLayout(new BoxLayout(labelsPanel, BoxLayout.LINE_AXIS));
 
 
-        JLabel carrelloLabel = new JLabel("Carrello ");
+        JLabel carrelloLabel = new JLabel("Mio Carrello ");
         carrelloLabel.setFont(new Font("Arial", Font.BOLD, 14));
         JLabel articoliNegozioLabel = new JLabel("Articoli negozio");
         articoliNegozioLabel.setFont(new Font("Arial", Font.BOLD, 14));
