@@ -24,7 +24,7 @@ int nConnectedClient = 0;
 struct product serverProductList[PRODUCT_NUMBER] = {
         {0, "Pane", 10, (float)2.99},
         {1, "Acqua", 5, (float)1},
-        {2, "Vino", 5, (float)20.2},
+        {2, "Vino", 5, (float)20},
         {3, "Birra", 9, (float)2},
         {4, "Patatine", 7, (float)2}
 };
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]){
     CreateThread(NULL, 0, handleUpdateClients, NULL, 0, NULL);
     #else
     pthread_t thread_id = 0;
-    pthread_create(&thread_id,NULL,handleUpdateClients, &updateAllClients);
+    pthread_create(&thread_id,NULL,handleUpdateClients, NULL);
     #endif
 
     while(1) {

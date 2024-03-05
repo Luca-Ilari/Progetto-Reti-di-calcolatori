@@ -87,30 +87,38 @@ int handleClient(int sock){
         return -1;
     }
     timestamp();
-    printf("<- Received from socket %d : %s",sock ,buffer);
+    printf("<- Received from socket %d: %s",sock ,buffer);
+
     int jsonStatusCode = -1;
     int validate = validateJson(buffer, &jsonStatusCode);
+    printf("Code recived: %d \n", jsonStatusCode);
     if (validate == 0){
-        //printf("%llu", strlen(buffer));
+        switch (jsonStatusCode) {
+            case 2://Modify a product
+                customEnterCriticalSection();
+                //TODO Modify products
+                //read json and modify product list
+                //set buffer to status code succefull
+                updateAllClients = 1;
+                customLeaveCriticalSection();
 
-        customEnterCriticalSection();
+                memset(buffer, 0, BUFFER_SIZE);
 
-        //TODO Modify products
-        //read json and modify product list
-        //set buffer to status code succefull
-        updateAllClients = 1;
-
-        customLeaveCriticalSection();
-
-        if (sendToClient(sock, buffer) == -1){
-            timestamp();
-            printf("X Error sending to socket %d", sock);
+                //JSON to send if modification is successful
+                strcpy(buffer, "{\"codiceStato\":-2,\"idTransazione\":1}");
+                //JSON to send if modification is NOT successful
+              //strcpy(buffer, "{\"codiceStato\":-2,\"idTransazione\":1}");
+                if (sendToClient(sock, buffer) == -1){
+                    timestamp();
+                    printf("X Error sending to socket %d", sock);
+                }
+                break;
         }
     }
     return 0;
 }
 
-int sendProductListToClient(int sock){
+void sendProductListToClient(int sock){
     char *json = getProductJson();
     sendToClient(sock, json);
     free(json);
@@ -141,9 +149,8 @@ void *ThreadFunc(void *newSockParam){
     timestamp();
     printf("Closing socket %d\n", newsock);
 
-    //TODO remove socket from list of connected sockets
     int indexSocketToRemove;
-    for (int i = 0; i < nConnectedClient; i++) {
+    for (int i = 0; i < nConnectedClient; ++i) {
         if (connectedSockets[i] == newsock) {
             indexSocketToRemove = i;
             break;
@@ -164,4 +171,3 @@ void *ThreadFunc(void *newSockParam){
 #endif
     return 0;
 }
-

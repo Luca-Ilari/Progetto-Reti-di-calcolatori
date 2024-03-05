@@ -58,12 +58,15 @@ char *getProductJson(){
 
     return heapJson;
 }
-int validateJson(char *json, int *jsonStatusCode) {
-    if (json[0] == '{' && json[strlen(json)-2] == '}') {
 
+// {"codiceStato":2,"transazione":{"idTransazione":6,"idProdotto":2,"quantita":7}}
+int validateJson(char *json, int *jsonStatusCode) {
+  //  if (json[0] == '{' && json[strlen(json)-2] == '}') {
         char strToFind[] = {"\"codiceStato\":"};
         char *foundStr = strstr(json, strToFind);
+
         if (foundStr == NULL){
+            printf("\nNULL\n");
             return -1;
         }
         foundStr += strlen(strToFind);
@@ -71,13 +74,14 @@ int validateJson(char *json, int *jsonStatusCode) {
         //  statusCode = atoi(foundStr);
         int statusCode = strtol(foundStr, NULL, 10);
         if (statusCode == 0){
+            printf("\nto INt\n");
             return -1;
         }
         *jsonStatusCode = statusCode;
-        printf("status %d\n", statusCode);
         return 0;
-
+/*
     }else{
+        printf("\n{}\n");
         return -1;
-    }
+    }*/
 }
