@@ -15,16 +15,13 @@ public class App {
     public static void main(String[] args) {
         System.out.println("Start Client...");
 
-        clientConnessione = new ClientConnessione();
 
         SwingUtilities.invokeLater(() -> {
-            App.negozioClientUI = new NegozioClientUI();
+            negozioClientUI = new NegozioClientUI();
+            // connessioni al server  ---> Creazione di una lista di transazioni --> aggiornamento UI
+            clientConnessione = new ClientConnessione("173.212.203.208", 5555);
         });
 
-
-        // connessioni al server  ---> Creazione di una lista di transazioni --> aggiornamento UI
-
-        // Aggiorno UI
 
     }
 }

@@ -14,8 +14,6 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static it.itsrizzoli.tools.TypeThread.*;
 
@@ -23,8 +21,8 @@ public class ClientConnessione {
     private Socket clientSocket;
     private BufferedReader in;
     private PrintWriter out;
-    private static final String SERVER_ADDRESS = "localhost";
-    private static final int SERVER_PORT = 5555;
+    private  String serverAddress = "localhost";
+    private  int serverPort = 5555;
     final List<Transazione> listaTransazioniRandom = new ArrayList<>();
     public boolean onConnessione = false;
 
@@ -34,6 +32,13 @@ public class ClientConnessione {
         threadConnessione.start();
     }
 
+    public ClientConnessione(String serverAddress,int serverPort) {
+        this.serverAddress = serverAddress;
+        this.serverPort = serverPort;
+        ThreadClient threadClientConnessione = new ThreadClient(this, THREAD_CONNESSIONE);
+        Thread threadConnessione = new Thread(threadClientConnessione);
+        threadConnessione.start();
+    }
     protected boolean readLoop() {
         String risposta;
         try {
@@ -50,7 +55,7 @@ public class ClientConnessione {
 
     }
 
-    public void writeTransazioniJson(NegozioClientUI negozioClientUI) {
+    public synchronized void writeTransazioniJson(NegozioClientUI negozioClientUI) {
         ObjectMapper objectMapper = new ObjectMapper();
 
         List<Transazione> sendTransazioni =
@@ -103,7 +108,7 @@ public class ClientConnessione {
     private static String getJsonTransazione(Transazione transazione, ObjectMapper objectMapper) throws JsonProcessingException {
         ObjectNode objectNode = objectMapper.createObjectNode();
 
-        objectNode.put("codiceStato", CodiciStatoServer.AGGIUNGI_PRODOTTO);
+        objectNode.put("codiceStato", CodiciStatoServer.RIMUOVI_PRODOTTO);
 
         String transazioneNode = objectMapper.writeValueAsString(transazione);
 
@@ -146,8 +151,8 @@ public class ClientConnessione {
 
                 // creazione transazioni in maniera rando
 
-                listaTransazioniRandom.addAll(Transazione.creaListaTransazioniRandom(listaProdotti));
-                App.negozioClientUI.getListaTransazione().addAll(listaTransazioniRandom);
+               // listaTransazioniRandom.addAll(Transazione.creaListaTransazioniRandom(listaProdotti));
+                //App.negozioClientUI.getListaTransazione().addAll(listaTransazioniRandom);
 
                 //App.negozioClientUI.addTransazioneAwait();
 
@@ -229,10 +234,10 @@ public class ClientConnessione {
     }
 
     private void connessioneAlServer() throws IOException {
-        clientSocket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+        clientSocket = new Socket(serverAddress, serverPort);
         in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         out = new PrintWriter(clientSocket.getOutputStream(), true);
-        System.out.println("Successo: Connessione avvenuta al server con IP: " + SERVER_ADDRESS + " - PORTA: " + SERVER_PORT);
+        System.out.println("Successo: Connessione avvenuta al server con IP: " + serverAddress + " - PORTA: " + serverPort);
 
     }
 }
