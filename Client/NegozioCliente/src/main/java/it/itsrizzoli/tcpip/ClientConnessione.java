@@ -21,8 +21,8 @@ public class ClientConnessione {
     private Socket clientSocket;
     private BufferedReader in;
     private PrintWriter out;
-    private  String serverAddress = "localhost";
-    private  int serverPort = 5555;
+    private String serverAddress = "localhost";
+    private int serverPort = 5555;
     final List<Transazione> listaTransazioniRandom = new ArrayList<>();
     public boolean onConnessione = false;
 
@@ -32,13 +32,14 @@ public class ClientConnessione {
         threadConnessione.start();
     }
 
-    public ClientConnessione(String serverAddress,int serverPort) {
+    public ClientConnessione(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
         ThreadClient threadClientConnessione = new ThreadClient(this, THREAD_CONNESSIONE);
         Thread threadConnessione = new Thread(threadClientConnessione);
         threadConnessione.start();
     }
+
     protected boolean readLoop() {
         String risposta;
         try {
@@ -60,6 +61,9 @@ public class ClientConnessione {
 
         List<Transazione> sendTransazioni =
                 Transazione.creaListaTransazioniRandom(negozioClientUI.getProdottiNegozio());
+
+        negozioClientUI.getListaTransazione().addAll(sendTransazioni);
+
         for (Transazione transazione : sendTransazioni) {
             try {
                 String jsonString = getJsonTransazione(transazione, objectMapper);
@@ -107,14 +111,14 @@ public class ClientConnessione {
 
     private static String getJsonTransazione(Transazione transazione, ObjectMapper objectMapper) throws JsonProcessingException {
         ObjectNode objectNode = objectMapper.createObjectNode();
-
         objectNode.put("codiceStato", CodiciStatoServer.RIMUOVI_PRODOTTO);
 
-        String transazioneNode = objectMapper.writeValueAsString(transazione);
-
-        objectNode.put("transazione", transazioneNode);
+        // Aggiungi direttamente l'oggetto transazione come nodo
+        ObjectNode transazioneNode = objectMapper.convertValue(transazione, ObjectNode.class);
+        objectNode.set("transazione", transazioneNode);
 
         String jsonString = objectMapper.writeValueAsString(objectNode);
+
 
         System.out.println("Transazione JSON: " + jsonString);
         return jsonString;
@@ -151,7 +155,7 @@ public class ClientConnessione {
 
                 // creazione transazioni in maniera rando
 
-               // listaTransazioniRandom.addAll(Transazione.creaListaTransazioniRandom(listaProdotti));
+                // listaTransazioniRandom.addAll(Transazione.creaListaTransazioniRandom(listaProdotti));
                 //App.negozioClientUI.getListaTransazione().addAll(listaTransazioniRandom);
 
                 //App.negozioClientUI.addTransazioneAwait();
@@ -168,6 +172,8 @@ public class ClientConnessione {
                 break;
             case CodiciStatoServer.FAIL_RIMUOVI_PRODOTTO:
                 System.out.println("Client riceve codice Status -2: Fallimento rimozione prodotto dal Negozio");
+                idTransazione = jsonNode.get("idTransazione").asInt();
+                App.negozioClientUI.aggiornaStateTransazioneFail(idTransazione);
                 break;
             case CodiciStatoServer.FAIL_AGGIUNGI_PRODOTTO:
                 System.out.println("Client riceve codice Status -3: Fallimento aggiunta prodotto al Negozio");

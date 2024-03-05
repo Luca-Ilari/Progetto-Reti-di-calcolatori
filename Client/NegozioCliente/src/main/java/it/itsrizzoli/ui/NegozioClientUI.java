@@ -72,7 +72,7 @@ public class NegozioClientUI extends JFrame {
 
         String[][] transazioniData = {{"", "", "", "", ""}};
         JScrollPane jScrollPane3 = creaTabellaPanello(transazioniTable, transazioniColonne, transazioniData);
-        DefaultTableModel defaultTableModel = (DefaultTableModel) transazioniTable.getModel();
+        // DefaultTableModel defaultTableModel = (DefaultTableModel) transazioniTable.getModel();
         transazioniPanel.add(jScrollPane3);
         contentPane.add(transazioniPanel);
 
@@ -80,13 +80,13 @@ public class NegozioClientUI extends JFrame {
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Questo codice viene eseguito quando il bottone viene premuto
                 if (App.clientConnessione.onConnessione) {
+                    // Avvia un thread per l'invio di json al server
                     ThreadClient threadWriting = new ThreadClient(App.clientConnessione, THREAD_WRITE);
                     Thread thread = new Thread(threadWriting);
                     thread.start();
                     JOptionPane.showMessageDialog(contentPane, "Richiesta inviata!");
-                }else {
+                } else {
                     JOptionPane.showMessageDialog(contentPane, "Attenzione: nessun connessione al server!");
                 }
             }
@@ -169,7 +169,6 @@ public class NegozioClientUI extends JFrame {
 
     public void aggiornaStateTransazione(int idTransazione) {
         SwingUtilities.invokeLater(() -> {
-            DefaultTableModel transazioniTableModel = (DefaultTableModel) transazioniTable.getModel();
             Transazione transazione = null;
 
             transazione = trovaTransazione(idTransazione);
@@ -178,6 +177,7 @@ public class NegozioClientUI extends JFrame {
                 return;
             }
 
+            DefaultTableModel transazioniTableModel = (DefaultTableModel) transazioniTable.getModel();
             // Aggiorna il valore nella colonna "Stato" alla riga
             for (int riga = 0; riga < transazioniTableModel.getRowCount(); riga++) {
                 int idTransazioneRow = (int) transazioniTableModel.getValueAt(riga, 0); // Converte l'oggetto in Integer
@@ -205,6 +205,42 @@ public class NegozioClientUI extends JFrame {
 
     }
 
+    public void aggiornaStateTransazioneFail(int idTransazione) {
+        SwingUtilities.invokeLater(() -> {
+            Transazione transazione = null;
+
+            transazione = trovaTransazione(idTransazione);
+            if (transazione == null) {
+                System.err.println(" - Errore: Transazione non trovata");
+                return;
+            }
+
+            DefaultTableModel transazioniTableModel = (DefaultTableModel) transazioniTable.getModel();
+            // Aggiorna il valore nella colonna "Stato" alla riga
+            for (int riga = 0; riga < transazioniTableModel.getRowCount(); riga++) {
+                int idTransazioneRow = (int) transazioniTableModel.getValueAt(riga, 0); // Converte l'oggetto in Integer
+                String statoTransazione = (String) transazioniTableModel.getValueAt(riga, 4);
+                if (idTransazioneRow == transazione.getIdTransazione()) {
+                    if (statoTransazione.equals("await")) {
+                        transazioniTableModel.setValueAt("fail", riga, 4); // Imposta il nuovo stato
+                        System.out.println("Elemento trovato alla riga " + riga);
+
+                        break;
+                    }
+                }
+            }
+
+            transazioniTableModel.fireTableDataChanged();
+
+
+            System.out.println(" --> UI: Lista transazione aggiornato!!");
+
+            // Aggiorna o inserisci prodotto nel carrello
+        });
+
+
+    }
+
     private Transazione trovaTransazione(int idTransazione) {
         for (Transazione transazione : listaTransazione) {
             if (transazione.getIdTransazione() == idTransazione) {
@@ -215,7 +251,7 @@ public class NegozioClientUI extends JFrame {
     }
 
 
-    public void aggiornaQuantitaCarrello(int idProdotto, int quantitaAggiunta) {
+    public synchronized void aggiornaQuantitaCarrello(int idProdotto, int quantitaAggiunta) {
         DefaultTableModel modelloCarrello = (DefaultTableModel) carrelloTable.getModel();
         Prodotto prodotto = trovaProdottoLista(idProdotto, prodottiCarrello);
 
@@ -315,7 +351,6 @@ public class NegozioClientUI extends JFrame {
         JLabel articoliNegozioLabel = new JLabel("Articoli negozio");
         articoliNegozioLabel.setFont(new Font("Arial", Font.BOLD, 14));
 
-        labelsPanel.add(Box.createHorizontalGlue());
         labelsPanel.add(carrelloLabel);
         labelsPanel.add(Box.createHorizontalGlue());
         labelsPanel.add(articoliNegozioLabel);
