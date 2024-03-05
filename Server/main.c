@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #ifdef WIN32
 #include <winsock2.h>
 #include <windows.h>
@@ -39,7 +38,7 @@ pthread_mutex_t CriticalSection;
 int main(int argc, char* argv[]){
     if (argc < 2){
         timestamp();
-        printf("Can't start server. Please specify port number");
+        printf("Can't start server. Please specify port number\n");
         return -1;
     }
     timestamp();
@@ -60,7 +59,7 @@ int main(int argc, char* argv[]){
     
     if (bind(sockfd, (struct sockaddr*)&serv_addr,sizeof(serv_addr)) < 0){
         timestamp();
-        perror("ERROR on binding");
+        perror("ERROR on binding\n");
         return 0;
     }
     timestamp();
@@ -82,11 +81,11 @@ int main(int argc, char* argv[]){
             #ifdef WIN32
             CreateThread(NULL, 0, ThreadFunc, param, 0, NULL);
             #else
-            pthread_create(&thread_id,NULL,ThreadFunc, &newsockfd);
+            pthread_create(&thread_id,NULL,ThreadFunc, param);
             #endif
         }else{
             timestamp();
-            perror("ERROR while accepting new client");
+            perror("ERROR while accepting new client\n");
         }
     }
     #ifdef WIN32
