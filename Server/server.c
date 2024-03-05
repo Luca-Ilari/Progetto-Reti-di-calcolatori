@@ -4,7 +4,6 @@
 
 #ifdef WIN32
 #include <winsock2.h>
-#include <windows.h>
 #include <ws2tcpip.h>
 #else
 #include <sys/types.h>
@@ -13,38 +12,17 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
-#include <pthread.h>
 #endif
 
 #include "headers/define.h"
-#include "handleJson/handleJson.h"
+#include "utils/handleJson.h"
+#include "utils/customCriticalSection.h"
 
 extern int nConnectedClient;
 extern int updateAllClients;
 extern int connectedSockets[MAX_CLIENT];
 
-#ifdef WIN32
-extern CRITICAL_SECTION CriticalSection;
-#else
-extern pthread_mutex_t CriticalSection;
-#endif
-
 #define BUFFER_SIZE 1024
-
-void customEnterCriticalSection(){
-#ifdef WIN32
-    EnterCriticalSection(&CriticalSection);
-#else
-    pthread_mutex_lock(&CriticalSection);
-#endif
-}
-void customLeaveCriticalSection(){
-#ifdef WIN32
-    LeaveCriticalSection(&CriticalSection);
-#else
-    pthread_mutex_unlock(&CriticalSection);
-#endif
-}
 
 void timestamp()
 {
@@ -110,7 +88,9 @@ int handleClient(int sock){
     }
     timestamp();
     printf("<- Received from socket %d : %s",sock ,buffer);
-    if (buffer[0] == '{' && buffer[strlen(buffer)-2] == '}' ){
+    int jsonStatusCode = -1;
+    int validate = validateJson(buffer, &jsonStatusCode);
+    if (validate == 0){
         //printf("%llu", strlen(buffer));
 
         customEnterCriticalSection();
@@ -153,7 +133,6 @@ void *ThreadFunc(void *newSockParam){
     sendProductListToClient(newsock);
     timestamp();
     printf("-> Sendind item list to socket: %d\n",newsock);
-
 
     int res = 0;
     while(res >= 0){

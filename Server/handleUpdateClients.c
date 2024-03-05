@@ -9,6 +9,7 @@
 #include "headers/server.h"
 #include "headers/define.h"
 #include "headers/handleUpdateClients.h"
+#include "utils/customCriticalSection.h"
 
 extern int updateAllClients;
 extern int connectedSockets[MAX_CLIENT];
@@ -19,8 +20,6 @@ DWORD WINAPI handleUpdateClients(void *params) {
 #else
 void *handleUpdateClients(void *params){
 #endif
-    //struct threadParamStruct p = *(struct threadParamStruct*)params;
-
     while(1){
         customEnterCriticalSection();
         if (updateAllClients == 1){

@@ -11,8 +11,10 @@ add_executable(Server
         headers/product.h
         handleUpdateClients.c
         headers/handleUpdateClients.h
-        handleJson/handleJson.c
-        handleJson/handleJson.h
+        utils/handleJson.c
+        utils/handleJson.h
+        utils/customCriticalSection.c
+        utils/customCriticalSection.h
 )
 
 if(WIN32)

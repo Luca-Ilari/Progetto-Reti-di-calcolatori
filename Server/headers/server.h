@@ -7,8 +7,6 @@ DWORD WINAPI ThreadFunc(void *threadParam);
 #else
 void *ThreadFunc(void *threadParam);
 #endif
-void customEnterCriticalSection();
-void customLeaveCriticalSection();
 void timestamp();
 int sendProductListToClient(int sock);
 int setupSocket(int argc);

@@ -58,8 +58,7 @@ int main(int argc, char* argv[]){
     #endif
     
     if (bind(sockfd, (struct sockaddr*)&serv_addr,sizeof(serv_addr)) < 0){
-        timestamp();
-        perror("ERROR on binding\n");
+        perror("ERROR on binding");
         return 0;
     }
     timestamp();
