@@ -147,7 +147,7 @@ public class NegozioClientUI extends JFrame {
         this.transazioniTable = transazioniTable;
     }
 
-    public void aggiornaProdottiNegozio(List<Prodotto> newProdottiNegozio) {
+    public synchronized void aggiornaProdottiNegozio(List<Prodotto> newProdottiNegozio) {
         // Rimuovi tutte le righe esistenti dal modello
         this.prodottiNegozio = newProdottiNegozio;
 
