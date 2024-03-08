@@ -90,13 +90,14 @@ int findProductToModify(int productId){
 }
 int tryToRemoveProduct(int productId, int nToRemove){
     int index = findProductToModify(productId);
+    customEnterCriticalSection();
     if (serverProductList[index].quantity >= nToRemove){
-        customEnterCriticalSection();
         serverProductList[index].quantity -= nToRemove;
         updateAllClients = 1;
         customLeaveCriticalSection();
         return 0;
     }else{
+        customLeaveCriticalSection();
         return -1;
     }
 }
@@ -115,24 +116,28 @@ int handleClient(int sock){
 
     int jsonStatusCode = -1;
     int validate = getJsonStatusCode(buffer, &jsonStatusCode);
-    printf("Code recived: %d \n", jsonStatusCode);
     if (validate == 0){
         switch (jsonStatusCode) {
             struct jsonTransaction *transaction;
             case 2://Modify a product
                 transaction = getJsonTransaction(buffer);
-                memset(buffer, 0, BUFFER_SIZE);
 
                 char prepString[sizeof("{\"codiceStato\":xxxxx,\"idTransazione\":xxxxxx}\n")];
                 if(tryToRemoveProduct(transaction->productId, transaction->quantityToRemove) == 0){
                     //JSON to send if modification is successful
+                    timestamp();
+                    printf("- Socket %d modified product %d\n", sock, transaction->productId);
                     sprintf(prepString, "{\"codiceStato\":4,\"idTransazione\":%d}\n", transaction->transactionId);
                 }else{
                     //JSON to send if modification is NOT successful
+                    timestamp();
+                    printf("X Socket %d did not modify products\n", sock);
                     sprintf(prepString, "{\"codiceStato\":-2,\"idTransazione\":%d}\n", transaction->transactionId);
                 }
-                strcpy(buffer, prepString);
                 free(transaction);
+
+                memset(buffer, 0, BUFFER_SIZE);
+                strcpy(buffer, prepString);
 
                 if (sendToClient(sock, buffer) == -1){
                     timestamp();
