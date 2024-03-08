@@ -89,7 +89,11 @@ int findProductToModify(int productId){
     return -1;
 }
 int tryToRemoveProduct(int productId, int nToRemove){
+    if (nToRemove < 1)
+        return -1;
     int index = findProductToModify(productId);
+    if(index == -1)
+        return -1;
     customEnterCriticalSection();
     if (serverProductList[index].quantity >= nToRemove){
         serverProductList[index].quantity -= nToRemove;
@@ -116,24 +120,30 @@ int handleClient(int sock){
 
     int jsonStatusCode = -1;
     int validate = getJsonStatusCode(buffer, &jsonStatusCode);
+    struct jsonTransaction *transaction;
     if (validate == 0){
         switch (jsonStatusCode) {
-            struct jsonTransaction *transaction;
             case 2://Modify a product
                 transaction = getJsonTransaction(buffer);
-
-                char prepString[sizeof("{\"codiceStato\":xxxxx,\"idTransazione\":xxxxxx}\n")];
+                char prepString[strlen("{\"codiceStato\":xxxxx,\"idTransazione\":xxxxxx}\n")];
+                if (transaction == NULL) {
+                    //JSON to send if modification is NOT successful
+                    timestamp();
+                    printf("X Socket %d sent a incorrect JSON\n", sock);
+                    return 0;
+                }
                 if(tryToRemoveProduct(transaction->productId, transaction->quantityToRemove) == 0){
                     //JSON to send if modification is successful
                     timestamp();
                     printf("- Socket %d modified product %d\n", sock, transaction->productId);
-                    sprintf(prepString, "{\"codiceStato\":4,\"idTransazione\":%d}\n", transaction->transactionId);
+                    sprintf(prepString, "{\"codiceStato\":5,\"idTransazione\":%d}\n", transaction->transactionId);
                 }else{
                     //JSON to send if modification is NOT successful
                     timestamp();
                     printf("X Socket %d did not modify products\n", sock);
                     sprintf(prepString, "{\"codiceStato\":-2,\"idTransazione\":%d}\n", transaction->transactionId);
                 }
+
                 free(transaction);
 
                 memset(buffer, 0, BUFFER_SIZE);
@@ -188,8 +198,7 @@ void *ThreadFunc(void *newSockParam){
         }
     }
     customEnterCriticalSection();
-    for(int i = indexSocketToRemove; i < MAX_CLIENT-1 ; i++)
-    {
+    for(int i = indexSocketToRemove; i < MAX_CLIENT-1 ; i++){
         connectedSockets[i] = connectedSockets[i + 1];
     }
     nConnectedClient -= 1;

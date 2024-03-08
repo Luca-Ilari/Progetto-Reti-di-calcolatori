@@ -67,8 +67,9 @@ int getJsonValue(char *json, char *strToFind, int *result) {
     }
     foundStrPtr += strlen(strToFind);
 
+    errno = 0;
     int value = strtol(foundStrPtr, NULL, 10);
-    if (value == 0) {
+    if (errno != 0 && value == 0) { // if strtol has returned an error
         return -1;
     }
     *result = value;
