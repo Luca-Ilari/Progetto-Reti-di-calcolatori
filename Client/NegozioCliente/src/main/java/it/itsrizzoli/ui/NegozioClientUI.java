@@ -17,6 +17,7 @@ import java.util.List;
 import static it.itsrizzoli.tools.TypeThread.THREAD_WRITE;
 
 public class NegozioClientUI extends JFrame {
+    private boolean statoNegozioOnline = false;
     private JTable carrelloTable = new JTable();
     private JTable articoliNegozioTable = new JTable();
     private JTable transazioniTable = new JTable();
@@ -31,8 +32,19 @@ public class NegozioClientUI extends JFrame {
     private String[] transazioniColonne = {"Number", "Prodotto", "Prezzo", "Quantità", "Stato"};
 
 
-    public NegozioClientUI() {
-        setTitle("Negozio Online - Interfaccia Cliente");
+    public NegozioClientUI(String titolo){
+        setTitle(titolo);
+    }
+
+    public boolean isStatoNegozioOnline() {
+        return statoNegozioOnline;
+    }
+
+    public void setStatoNegozioOnline(boolean statoNegozioOnline) {
+        this.statoNegozioOnline = statoNegozioOnline;
+    }
+
+    public void inizzalizza() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(300, 400));
         JPanel contentPane = new JPanel();
@@ -80,9 +92,9 @@ public class NegozioClientUI extends JFrame {
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (App.clientConnessione.onConnessione) {
+                if (statoNegozioOnline) {
                     // Avvia un thread per l'invio di json al server
-                    ThreadClient threadWriting = new ThreadClient(App.clientConnessione, THREAD_WRITE);
+                    ThreadClient threadWriting = new ThreadClient(THREAD_WRITE);
                     threadWriting.start();
                     JOptionPane.showMessageDialog(contentPane, "Richiesta inviata!");
                 } else {
@@ -97,7 +109,6 @@ public class NegozioClientUI extends JFrame {
         allSetResponsiveTable();
         pack();
         setLocationRelativeTo(null);
-        setVisible(true);
     }
 
 

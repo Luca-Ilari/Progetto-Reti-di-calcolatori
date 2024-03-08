@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import it.itsrizzoli.App;
 import it.itsrizzoli.modelli.Prodotto;
 import it.itsrizzoli.modelli.Transazione;
 import it.itsrizzoli.tools.CodiciStatoServer;
@@ -27,6 +26,7 @@ public class ClientConnessione {
     private PrintWriter out;
     private String serverAddress = "localhost";
     private int serverPort = 5555;
+    private NegozioClientUI negozioClientUI;
     public boolean onConnessione = false;
     private static Logger logger = Logger.getLogger("Avvisi");
 
@@ -35,10 +35,11 @@ public class ClientConnessione {
         startConnessione();
     }
 
-    public ClientConnessione(String serverAddress, int serverPort) {
+    public ClientConnessione(String serverAddress, int serverPort, NegozioClientUI negozioClientUI) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
 
+        this.negozioClientUI = negozioClientUI;
         attivaColoreLogger();
         startConnessione();
 
@@ -47,6 +48,10 @@ public class ClientConnessione {
     private void startConnessione() {
         ThreadClient threadConnessione = new ThreadClient(this, THREAD_CONNESSIONE_READ);
         threadConnessione.start();
+    }
+
+    public void aggiornaStatoNegozio(boolean stato) {
+        this.negozioClientUI.setStatoNegozioOnline(stato);
     }
 
     private void attivaColoreLogger() {
@@ -96,7 +101,7 @@ public class ClientConnessione {
 
     }
 
-    public synchronized void writeTransazioniJson(NegozioClientUI negozioClientUI) {
+    public synchronized void writeTransazioniJson() {
         ObjectMapper objectMapper = new ObjectMapper();
 
         List<Transazione> sendTransazioni =
@@ -166,21 +171,21 @@ public class ClientConnessione {
                 List<Prodotto> listaProdotti = recuperoListaProdottiJson(jsonNode);
 
                 //aggiorna negozio prodotti UI
-                App.negozioClientUI.aggiornaProdottiNegozio(listaProdotti);
+                negozioClientUI.aggiornaProdottiNegozio(listaProdotti);
 
                 // creazione transazioni in maniera rando
 
                 // listaTransazioniRandom.addAll(Transazione.creaListaTransazioniRandom(listaProdotti));
-                //App.negozioClientUI.getListaTransazione().addAll(listaTransazioniRandom);
+                //negozioClientUI.getListaTransazione().addAll(listaTransazioniRandom);
 
-                //App.negozioClientUI.addTransazioneAwait();
+                //negozioClientUI.addTransazioneAwait();
 
                 break;
             case CodiciStatoServer.SUCCESSO_TRANSAZIONE:
                 logger.info("Client riceve codice Status 5 : Successo nella Transazione");
                 int idTransazione = jsonNode.get("idTransazione").asInt();
-                App.negozioClientUI.aggiornaStateTransazione(idTransazione);
-                App.negozioClientUI.allSetResponsiveTable();
+                negozioClientUI.aggiornaStateTransazione(idTransazione);
+                negozioClientUI.allSetResponsiveTable();
                 break;
             case CodiciStatoServer.FAIL_SESSION:
                 System.out.println("Client riceve codice Status -1: Fallimento sessione");
@@ -188,7 +193,7 @@ public class ClientConnessione {
             case CodiciStatoServer.FAIL_RIMUOVI_PRODOTTO:
                 System.out.println("Client riceve codice Status -2: Fallimento rimozione prodotto dal Negozio");
                 idTransazione = jsonNode.get("idTransazione").asInt();
-                App.negozioClientUI.aggiornaStateTransazioneFail(idTransazione);
+                negozioClientUI.aggiornaStateTransazioneFail(idTransazione);
                 break;
             case CodiciStatoServer.FAIL_AGGIUNGI_PRODOTTO:
                 System.out.println("Client riceve codice Status -3: Fallimento aggiunta prodotto al Negozio");
