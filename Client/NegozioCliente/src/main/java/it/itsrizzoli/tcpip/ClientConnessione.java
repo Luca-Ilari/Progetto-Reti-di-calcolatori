@@ -14,6 +14,10 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Formatter;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import static it.itsrizzoli.tools.TypeThread.*;
 
@@ -23,28 +27,64 @@ public class ClientConnessione {
     private PrintWriter out;
     private String serverAddress = "localhost";
     private int serverPort = 5555;
-    final List<Transazione> listaTransazioniRandom = new ArrayList<>();
     public boolean onConnessione = false;
+    private static Logger logger = Logger.getLogger("Avvisi");
 
     public ClientConnessione() {
-        ThreadClient threadClientConnessione = new ThreadClient(this, THREAD_CONNESSIONE);
-        Thread threadConnessione = new Thread(threadClientConnessione);
-        threadConnessione.start();
+        attivaColoreLogger();
+        startConnessione();
     }
 
     public ClientConnessione(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
-        ThreadClient threadClientConnessione = new ThreadClient(this, THREAD_CONNESSIONE);
-        Thread threadConnessione = new Thread(threadClientConnessione);
+
+        attivaColoreLogger();
+        startConnessione();
+
+    }
+
+    private void startConnessione() {
+        ThreadClient threadConnessione = new ThreadClient(this, THREAD_CONNESSIONE_READ);
         threadConnessione.start();
+    }
+
+    private void attivaColoreLogger() {
+        ConsoleHandler handler = new ConsoleHandler();
+        logger.setUseParentHandlers(false);
+        handler.setFormatter(new Formatter() {
+            @Override
+            public synchronized String format(LogRecord record) {
+                String levelName = record.getLevel().getName();
+                String message = record.getMessage();
+
+                // Assegna il colore in base al livello del log
+                String color = "";
+                if (levelName.equals("INFO")) {
+                    color = "\u001B[34m"; // Blu
+                } else if (levelName.equals("WARNING")) {
+                    color = "\u001B[33m"; // Giallo
+                } else if (levelName.equals("SEVERE")) {
+                    color = "\u001B[31m"; // Rosso
+                }
+
+                // Resetta il colore dopo il messaggio
+                String resetColor = "\u001B[0m";
+
+                // Formatta il messaggio con il colore
+                return color + "[" + levelName + "] " + message + resetColor + "\n";
+            }
+
+
+        });
+        logger.addHandler(handler);
     }
 
     protected boolean readLoop() {
         String risposta;
         try {
             while ((risposta = in.readLine()) != null) {
-                System.out.println(" -Server: " + risposta);
+                logger.info(" - Server: " + risposta);
                 gestioneJsonCodiceStato(risposta);
             }
 
@@ -68,14 +108,13 @@ public class ClientConnessione {
             try {
                 String jsonString = getJsonTransazione(transazione, objectMapper);
                 out.println(jsonString);// Invia la transazione al server
-                System.out.println("Client: Transazione inviata al server.");
+                logger.info("Client: Transazione inviata al server.");
 
                 negozioClientUI.addSingleTransazioneAwait(transazione);
 
             } catch (JsonProcessingException e) {
-                System.err.println("Errore durante la conversione in JSON");
+                logger.warning("Errore durante la conversione in JSON");
             }
-
             try {
                 // Attendere 5 secondi prima di inviare la prossima transazione
                 Thread.sleep(3_000);
@@ -83,31 +122,8 @@ public class ClientConnessione {
                 throw new RuntimeException("Interruzione durante l'attesa", e);
             }
         }
-        listaTransazioniRandom.clear();
     }
 
-    protected void writeTransazioniJson() {
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        for (Transazione transazione : listaTransazioniRandom) {
-            try {
-                String jsonString = getJsonTransazione(transazione, objectMapper);
-                out.println(jsonString);// Invia la transazione al server
-                System.out.println("Transazione inviata al server.");
-
-            } catch (JsonProcessingException e) {
-                System.err.println("Errore durante la conversione in JSON");
-            }
-
-            try {
-                // Attendere 5 secondi prima di inviare la prossima transazione
-                Thread.sleep(5_000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Interruzione durante l'attesa", e);
-            }
-        }
-        listaTransazioniRandom.clear();
-    }
 
     private static String getJsonTransazione(Transazione transazione, ObjectMapper objectMapper) throws JsonProcessingException {
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -133,7 +149,6 @@ public class ClientConnessione {
             System.err.println(" Attenzione: non è un json");
             return;
         }
-
 
         int codeStatus = jsonNode.get("codiceStato").asInt();
         switch (codeStatus) {
@@ -162,7 +177,7 @@ public class ClientConnessione {
 
                 break;
             case CodiciStatoServer.SUCCESSO_TRANSAZIONE:
-                System.out.println("Client riceve codice Status 5 : Successo nella Transazione");
+                logger.info("Client riceve codice Status 5 : Successo nella Transazione");
                 int idTransazione = jsonNode.get("idTransazione").asInt();
                 App.negozioClientUI.aggiornaStateTransazione(idTransazione);
                 App.negozioClientUI.allSetResponsiveTable();
@@ -185,7 +200,7 @@ public class ClientConnessione {
     }
 
     private List<Prodotto> recuperoListaProdottiJson(JsonNode jsonNode) { // Recupero gli articoli Negozio
-        System.out.println("Client riceve codice Status 4: Lista prodotti aggiornata");
+        logger.info("Client riceve codice Status 4: Lista prodotti aggiornata");
         JsonNode prodottiNode = jsonNode.get("prodotti");
         // Creare una lista di prodotti
         List<Prodotto> prodotti = new ArrayList<>();
@@ -227,8 +242,9 @@ public class ClientConnessione {
                 connessioneAlServer();
                 connected = true;
             } catch (IOException e) {
-                System.out.println("Errore: Connessione rifiutata!!");
-                System.out.println("Tentativo di riconnessione...");
+                logger.severe("Connessione rifiutata!!");
+                logger.info("Tentativo di riconnessione...");
+
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException ex) {
@@ -243,7 +259,7 @@ public class ClientConnessione {
         clientSocket = new Socket(serverAddress, serverPort);
         in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         out = new PrintWriter(clientSocket.getOutputStream(), true);
-        System.out.println("Successo: Connessione avvenuta al server con IP: " + serverAddress + " - PORTA: " + serverPort);
+        logger.info("Successo: Connessione avvenuta al server con IP: " + serverAddress + " - PORTA: " + serverPort);
 
     }
 }

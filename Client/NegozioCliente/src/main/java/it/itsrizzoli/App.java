@@ -3,8 +3,7 @@ package it.itsrizzoli;
 import it.itsrizzoli.tcpip.ClientConnessione;
 import it.itsrizzoli.ui.NegozioClientUI;
 
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.SwingUtilities;
 
 
 public class App {
@@ -18,9 +17,10 @@ public class App {
 
         SwingUtilities.invokeLater(() -> {
             negozioClientUI = new NegozioClientUI();
-            // connessioni al server  ---> Creazione di una lista di transazioni --> aggiornamento UI
-            clientConnessione = new ClientConnessione("173.212.203.208", 5555);
         });
+
+        // connessioni al server  ---> Recupero Prodotti negozio --> aggiornamento UI
+        clientConnessione = new ClientConnessione("173.212.203.208", 5555);
 
 
     }

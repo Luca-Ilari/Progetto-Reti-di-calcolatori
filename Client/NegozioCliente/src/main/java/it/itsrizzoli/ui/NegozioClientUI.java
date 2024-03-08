@@ -83,8 +83,7 @@ public class NegozioClientUI extends JFrame {
                 if (App.clientConnessione.onConnessione) {
                     // Avvia un thread per l'invio di json al server
                     ThreadClient threadWriting = new ThreadClient(App.clientConnessione, THREAD_WRITE);
-                    Thread thread = new Thread(threadWriting);
-                    thread.start();
+                    threadWriting.start();
                     JOptionPane.showMessageDialog(contentPane, "Richiesta inviata!");
                 } else {
                     JOptionPane.showMessageDialog(contentPane, "Attenzione: nessun connessione al server!");
@@ -99,11 +98,6 @@ public class NegozioClientUI extends JFrame {
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
-    }
-
-    private static void azzeraElementiTable(DefaultTableModel defaultTableModel) {
-        defaultTableModel.setRowCount(0);
-        defaultTableModel.fireTableDataChanged();
     }
 
 
@@ -380,6 +374,11 @@ public class NegozioClientUI extends JFrame {
         articoliNegozioTable.setPreferredScrollableViewportSize(articoliNegozioTable.getPreferredSize());
         carrelloTable.setPreferredScrollableViewportSize(carrelloTable.getPreferredSize());
         transazioniTable.setPreferredScrollableViewportSize(transazioniTable.getPreferredSize());
+    }
+
+    private static void azzeraElementiTable(DefaultTableModel defaultTableModel) {
+        defaultTableModel.setRowCount(0);
+        defaultTableModel.fireTableDataChanged();
     }
 
 
