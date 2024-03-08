@@ -28,7 +28,7 @@ public class ClientConnessione {
     private int serverPort = 5555;
     private NegozioClientUI negozioClientUI;
     public boolean onConnessione = false;
-    private static Logger logger = Logger.getLogger("Avvisi");
+    private final static Logger logger = Logger.getLogger("Avvisi");
 
     public ClientConnessione() {
         attivaColoreLogger();
@@ -65,14 +65,17 @@ public class ClientConnessione {
 
                 // Assegna il colore in base al livello del log
                 String color = "";
-                if (levelName.equals("INFO")) {
-                    color = "\u001B[34m"; // Blu
-                } else if (levelName.equals("WARNING")) {
-                    color = "\u001B[33m"; // Giallo
-                } else if (levelName.equals("SEVERE")) {
-                    color = "\u001B[31m"; // Rosso
+                switch (levelName) {
+                    case "INFO":
+                        color = "\u001B[34m"; // Blu
+                        break;
+                    case "WARNING":
+                        color = "\u001B[33m"; // Giallo
+                        break;
+                    case "SEVERE":
+                        color = "\u001B[31m"; // Rosso
+                        break;
                 }
-
                 // Resetta il colore dopo il messaggio
                 String resetColor = "\u001B[0m";
 
@@ -146,7 +149,7 @@ public class ClientConnessione {
     }
 
     private void gestioneJsonCodiceStato(String jsonResponse) {
-        JsonNode jsonNode = null;
+        JsonNode jsonNode;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             jsonNode = objectMapper.readTree(jsonResponse);
@@ -165,12 +168,15 @@ public class ClientConnessione {
                 break;
             case CodiciStatoServer.AGGIUNGI_PRODOTTO:
                 System.out.println("Client riceve codice Status 3: Aggiunta prodotto al Negozio");
-
                 break;
             case CodiciStatoServer.LISTA_PRODOTTI_AGGIORNATO:
                 List<Prodotto> listaProdotti = recuperoListaProdottiJson(jsonNode);
 
                 //aggiorna negozio prodotti UI
+                if (listaProdotti == null) {
+                    System.out.println(" ATTENZIONE: lista Prodotti null");
+                    break;
+                }
                 negozioClientUI.aggiornaProdottiNegozio(listaProdotti);
 
                 // creazione transazioni in maniera rando
@@ -207,6 +213,9 @@ public class ClientConnessione {
     private List<Prodotto> recuperoListaProdottiJson(JsonNode jsonNode) { // Recupero gli articoli Negozio
         logger.info("Client riceve codice Status 4: Lista prodotti aggiornata");
         JsonNode prodottiNode = jsonNode.get("prodotti");
+        if (prodottiNode == null) {
+            return null;
+        }
         // Creare una lista di prodotti
         List<Prodotto> prodotti = new ArrayList<>();
 
@@ -247,7 +256,7 @@ public class ClientConnessione {
                 connessioneAlServer();
                 connected = true;
             } catch (IOException e) {
-                logger.severe("Connessione rifiutata!!");
+                logger.severe("Connessione rifiutata!!\n\n");
                 logger.info("Tentativo di riconnessione...");
 
                 try {
