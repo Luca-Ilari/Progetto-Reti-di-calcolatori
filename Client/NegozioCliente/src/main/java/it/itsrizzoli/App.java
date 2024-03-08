@@ -1,6 +1,7 @@
 package it.itsrizzoli;
 
 import it.itsrizzoli.tcpip.ClientConnessione;
+import it.itsrizzoli.tcpip.ThreadClient;
 import it.itsrizzoli.ui.NegozioClientUI;
 
 import javax.swing.SwingUtilities;
@@ -20,8 +21,7 @@ public class App {
         });
 
         // Start Thread - connessioni al server  ---> Recupero Prodotti negozio --> aggiornamento UI
-        ClientConnessione clientConnessione = new ClientConnessione("173.212.203.208", 5555, negozioClientUI1);
-
+        new ClientConnessione("173.212.203.208", 5555, negozioClientUI1);
 
     }
 }

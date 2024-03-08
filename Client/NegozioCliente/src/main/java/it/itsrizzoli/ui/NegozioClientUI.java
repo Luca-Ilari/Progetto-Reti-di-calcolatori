@@ -1,6 +1,5 @@
 package it.itsrizzoli.ui;
 
-import it.itsrizzoli.App;
 import it.itsrizzoli.modelli.Prodotto;
 import it.itsrizzoli.modelli.Transazione;
 import it.itsrizzoli.tcpip.ThreadClient;
@@ -27,12 +26,12 @@ public class NegozioClientUI extends JFrame {
     private List<Prodotto> prodottiNegozio = new ArrayList<>();
     private List<Transazione> listaTransazione = new ArrayList<>();
 
-    private String[] articoliNegozioColonne = {"Prodotto", "Prezzo", "Disponibile"};
-    private String[] carrelloColonne = {"Prodotto", "Quantità"};
-    private String[] transazioniColonne = {"Number", "Prodotto", "Prezzo", "Quantità", "Stato"};
+    private final String[] articoliNegozioColonne = {"Prodotto", "Prezzo", "Disponibile"};
+    private final String[] carrelloColonne = {"Prodotto", "Quantità"};
+    private final String[] transazioniColonne = {"Number", "Prodotto", "Prezzo", "Quantità", "Stato"};
 
 
-    public NegozioClientUI(String titolo){
+    public NegozioClientUI(String titolo) {
         setTitle(titolo);
     }
 
@@ -174,7 +173,7 @@ public class NegozioClientUI extends JFrame {
 
     public void aggiornaStateTransazione(int idTransazione) {
         SwingUtilities.invokeLater(() -> {
-            Transazione transazione = null;
+            Transazione transazione;
 
             transazione = trovaTransazione(idTransazione);
             if (transazione == null) {
@@ -212,7 +211,7 @@ public class NegozioClientUI extends JFrame {
 
     public void aggiornaStateTransazioneFail(int idTransazione) {
         SwingUtilities.invokeLater(() -> {
-            Transazione transazione = null;
+            Transazione transazione;
 
             transazione = trovaTransazione(idTransazione);
             if (transazione == null) {
@@ -376,8 +375,7 @@ public class NegozioClientUI extends JFrame {
         for (int i = 0; i < table.getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
-        JScrollPane tableScrollPane = new JScrollPane(table);
-        return tableScrollPane;
+        return new JScrollPane(table);
     }
 
 

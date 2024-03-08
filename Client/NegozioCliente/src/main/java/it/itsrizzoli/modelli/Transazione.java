@@ -59,7 +59,7 @@ public class Transazione {
         int numeroTransazioni = random.nextInt(5, 20);
 
         for (int i = 0; i < numeroTransazioni; i++) {
-            int idProdotto = random.nextInt(listaProdotti.size());
+            int idProdotto = random.nextInt(0,listaProdotti.size());
             listaRandomTransazioni.add(createTransaction(idProdotto));
         }
 
