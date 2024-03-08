@@ -11,5 +11,10 @@ struct product{
     int quantity;
     float price;
 };
+struct jsonTransaction{
+    int transactionId;
+    int productId;
+    int quantityToRemove;
+};
 
 #endif //SERVER_PRODUCT_H

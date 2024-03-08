@@ -59,29 +59,46 @@ char *getProductJson(){
     return heapJson;
 }
 
-// {"codiceStato":2,"transazione":{"idTransazione":6,"idProdotto":2,"quantita":7}}
-int validateJson(char *json, int *jsonStatusCode) {
-  //  if (json[0] == '{' && json[strlen(json)-2] == '}') {
-        char strToFind[] = {"\"codiceStato\":"};
-        char *foundStr = strstr(json, strToFind);
+int getJsonValue(char *json, char *strToFind, int *result) {
+    char *foundStrPtr = strstr(json, strToFind);
 
-        if (foundStr == NULL){
-            printf("\nNULL\n");
-            return -1;
-        }
-        foundStr += strlen(strToFind);
-
-        //  statusCode = atoi(foundStr);
-        int statusCode = strtol(foundStr, NULL, 10);
-        if (statusCode == 0){
-            printf("\nto INt\n");
-            return -1;
-        }
-        *jsonStatusCode = statusCode;
-        return 0;
-/*
-    }else{
-        printf("\n{}\n");
+    if (foundStrPtr == NULL) {
         return -1;
-    }*/
+    }
+    foundStrPtr += strlen(strToFind);
+
+    int value = strtol(foundStrPtr, NULL, 10);
+    if (value == 0) {
+        return -1;
+    }
+    *result = value;
+    return 0;
+}
+
+// {"codiceStato":2,"transazione":{"idTransazione":6,"idProdotto":2,"quantita":7}}
+int getJsonStatusCode(char *json, int *jsonStatusCode) {
+    char strToFind[] = {"\"codiceStato\":"};
+    if (getJsonValue(json,strToFind,jsonStatusCode) == 0){
+        return 0;
+    }
+    return -1;
+}
+
+/**return jsonTransaction struct if it finds all the transaction data in the json passed
+ * @Return NULL if the json doesn't have all the transaction values
+ * @Return *jsonTransaction allocated with malloc*/
+struct jsonTransaction *getJsonTransaction(char *json){
+    struct jsonTransaction *transaction;
+    transaction = malloc(sizeof(struct jsonTransaction));
+    int r = -1;
+    r = getJsonValue(json, "\"idTransazione\":",&transaction->transactionId);
+    if (r == -1)
+        return NULL;
+    r = getJsonValue(json, "\"idProdotto\":",&transaction->productId);
+    if (r == -1)
+        return NULL;
+    r = getJsonValue(json, "\"quantita\":",&transaction->quantityToRemove);
+    if (r == -1)
+        return NULL;
+    return transaction;
 }

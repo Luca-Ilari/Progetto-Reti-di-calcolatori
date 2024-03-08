@@ -17,7 +17,9 @@
 #include "headers/define.h"
 #include "utils/handleJson.h"
 #include "utils/customCriticalSection.h"
+#include "headers/product.h"
 
+extern struct product serverProductList[];
 extern int nConnectedClient;
 extern int updateAllClients;
 extern int connectedSockets[MAX_CLIENT];
@@ -77,6 +79,28 @@ int sendToClient(int sock, char *buffer) {
 
     return 0;
 }
+
+int findProductToModify(int productId){
+    for (int i = 0; i < PRODUCT_NUMBER; ++i) {
+        if (productId == serverProductList[i].id) {
+            return i;
+        }
+    }
+    return -1;
+}
+int tryToRemoveProduct(int productId, int nToRemove){
+    int index = findProductToModify(productId);
+    if (serverProductList[index].quantity >= nToRemove){
+        customEnterCriticalSection();
+        serverProductList[index].quantity -= nToRemove;
+        updateAllClients = 1;
+        customLeaveCriticalSection();
+        return 0;
+    }else{
+        return -1;
+    }
+}
+
 int handleClient(int sock){
     char buffer[BUFFER_SIZE];
     memset(buffer, 0, BUFFER_SIZE);
@@ -90,24 +114,26 @@ int handleClient(int sock){
     printf("<- Received from socket %d: %s",sock ,buffer);
 
     int jsonStatusCode = -1;
-    int validate = validateJson(buffer, &jsonStatusCode);
+    int validate = getJsonStatusCode(buffer, &jsonStatusCode);
     printf("Code recived: %d \n", jsonStatusCode);
     if (validate == 0){
         switch (jsonStatusCode) {
+            struct jsonTransaction *transaction;
             case 2://Modify a product
-                customEnterCriticalSection();
-                //TODO Modify products
-                //read json and modify product list
-                //set buffer to status code succefull
-                updateAllClients = 1;
-                customLeaveCriticalSection();
-
+                transaction = getJsonTransaction(buffer);
                 memset(buffer, 0, BUFFER_SIZE);
 
-                //JSON to send if modification is successful
-                strcpy(buffer, "{\"codiceStato\":-2,\"idTransazione\":1}");
-                //JSON to send if modification is NOT successful
-              //strcpy(buffer, "{\"codiceStato\":-2,\"idTransazione\":1}");
+                char prepString[sizeof("{\"codiceStato\":xxxxx,\"idTransazione\":xxxxxx}\n")];
+                if(tryToRemoveProduct(transaction->productId, transaction->quantityToRemove) == 0){
+                    //JSON to send if modification is successful
+                    sprintf(prepString, "{\"codiceStato\":4,\"idTransazione\":%d}\n", transaction->transactionId);
+                }else{
+                    //JSON to send if modification is NOT successful
+                    sprintf(prepString, "{\"codiceStato\":-2,\"idTransazione\":%d}\n", transaction->transactionId);
+                }
+                strcpy(buffer, prepString);
+                free(transaction);
+
                 if (sendToClient(sock, buffer) == -1){
                     timestamp();
                     printf("X Error sending to socket %d", sock);
