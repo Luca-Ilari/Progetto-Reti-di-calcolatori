@@ -60,7 +60,7 @@ Esempio json che il server manda ai client quando la lista dei prodotti deve ess
    "prodotti":[
       {
          "Id":0,
-         "nome":"”Pane”",
+         "nome":"Pane",
          "prezzo":1.05,
          "quantitaDisponibile":96
       },
