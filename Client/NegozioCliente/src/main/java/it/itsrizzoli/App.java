@@ -1,7 +1,6 @@
 package it.itsrizzoli;
 
 import it.itsrizzoli.tcpip.ClientConnessione;
-import it.itsrizzoli.tcpip.ThreadClient;
 import it.itsrizzoli.ui.NegozioClientUI;
 
 import javax.swing.SwingUtilities;
