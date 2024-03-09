@@ -30,8 +30,9 @@ Il server può essere compilato sia per window che per linux, infatti negli esem
 ### Caratteristiche Client
 I client sono scritti in java e sono 2:
 #### Producer
+TODO
 #### Consumer
-
+TODO
 
 ## Esempi di utilizzo dell'applicazione
 ```mermaid
