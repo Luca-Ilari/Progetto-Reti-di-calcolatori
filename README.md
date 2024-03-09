@@ -5,7 +5,7 @@ Creato da:
   
 > [!NOTE]
 > Il progetto non è ancora finito quindi alcune funzionalità spiegate prossimamente non sono ancora presenti.
-## Descrizione
+# Descrizione
 Il progetto consite in un server multi-threaded che gestisce parallelamente le connesioni e le richieste dei client.
 
 Tutti i messaggi che il server e il client si scambiano sono json con dentro un codice che identifica il tipo di messaggio che si stà mandando. Per dettagli ulteriori andare alla sezione [Json](#json-e-codici-di-stato).
@@ -27,21 +27,21 @@ Se la porta non verrà specificata il server non si avvierà.
 
 Il server può essere compilato sia per window che per linux, infatti negli esempi che dopo verranno illustrati, il server è fatto girare su una vps Ubuntu.
 
-### Caratteristiche Client
+## Caratteristiche Client
 I client sono scritti in java e sono 2:
-#### Producer
+### Producer
 TODO
-#### Consumer
+### Consumer
 TODO
 
-## Esempi di utilizzo dell'applicazione
+# Esempi di utilizzo dell'applicazione
 ```mermaid
 sequenceDiagram
 Client->>+ Server: Connessione porta: 5555
 Server->>+ Client: Risponde json connessione
 Server->>+ Client: Manda json prodotti
 ```
-## JSON e codici di stato
+# JSON e codici di stato
 | codiceStato | Descrizione |
 | ----- | ------------- |
 | 1 | START_SESSION |
