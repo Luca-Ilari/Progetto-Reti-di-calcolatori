@@ -5,6 +5,7 @@ import it.itsrizzoli.tcpip.ThreadClient;
 import it.itsrizzoli.ui.NegozioClientUI;
 
 import javax.swing.SwingUtilities;
+import java.util.Random;
 
 
 public class App {
@@ -12,7 +13,7 @@ public class App {
 
     public static void main(String[] args) {
         System.out.println("Start Client...");
-        NegozioClientUI negozioClientUI1 = new NegozioClientUI("Negozio Online - Interfaccia Cliente");
+        NegozioClientUI negozioClientUI1 = new NegozioClientUI("Negozio Online - Interfaccia Cliente %d".formatted(new Random().nextInt(0,1000)));
 
         SwingUtilities.invokeLater(() -> {
             negozioClientUI1.inizzalizza();
