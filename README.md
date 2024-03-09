@@ -52,3 +52,21 @@ Server->>+ Client: Manda json prodotti
 | -1 | FAIL_SESSION |
 | -2 | FAIL_RIMUOVI_PRODOTTO |
 | -3 | FAIL_AGGIUNGI_PRODOTTO |
+
+Esempio json che il server manda ai client quando la lista dei prodotti deve essere aggiornata
+```json
+{
+   "codiceStato":4,
+   "prodotti":[
+      {
+         "Id":0,
+         "nome":"”Pane”",
+         "prezzo":1.05,
+         "quantitaDisponibile":96
+      },
+      {
+        .... 
+      }
+   ]
+}
+```
