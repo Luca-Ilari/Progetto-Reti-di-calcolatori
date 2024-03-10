@@ -30,9 +30,9 @@ Il server può essere compilato sia per window che per linux, infatti negli esem
 ## Caratteristiche Client
 I client sono scritti in java e sono 2:
 ### Producer
-TODO
+Il client producer crea randomicamente nuovi prodotti e tramite una richiesta al server aggiunge il prodotto alla lista dei prodotti disponibili.
 ### Consumer
-TODO
+Il client consumer rimuove randomicamente dei prodotti dalla lista del server. Questa operazione può anche essere rifiutata dal server in caso non ci siano abbastanza prodotti.
 
 # Esempi di come il client e il server comunicano
 Connessione di un client al server sulla porta 5555
@@ -105,6 +105,6 @@ Richiesta da parte di un client per la rimozione di un prodotto
 ```json
 {
    "codiceStato":5,
-   “idTransazione”:1
+   "idTransazione":1
 }
 ```
