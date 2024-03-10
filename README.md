@@ -34,13 +34,23 @@ TODO
 ### Consumer
 TODO
 
-# Esempi di utilizzo dell'applicazione
+# Esempi di come il client e il server comunicano
+Connessione di un client al server sulla porta 5555
 ```mermaid
 sequenceDiagram
 Client->>+ Server: Connessione porta: 5555
 Server->>+ Client: Risponde json connessione
 Server->>+ Client: Manda json prodotti
 ```
+Modifica della lista prodotti da parte di un client
+```mermaid
+sequenceDiagram
+Client->>+ Server: Json rimozione prodotto
+Server->- Server: Verifica della transazione
+Server->>+ Client: Json successo transazione
+Server->>+ Tutti i Client Connessi: Lista prodotti aggiornata
+```
+
 # JSON e codici di stato
 | codiceStato | Descrizione |
 | ----- | ------------- |
@@ -53,7 +63,16 @@ Server->>+ Client: Manda json prodotti
 | -2 | FAIL_RIMUOVI_PRODOTTO |
 | -3 | FAIL_AGGIUNGI_PRODOTTO |
 
-Esempio json che il server manda ai client quando la lista dei prodotti deve essere aggiornata
+## Esempi di json
+### Json base
+```json
+{
+   "codiceStato": <codiceStato>,
+   ...
+}
+```
+### Aggiornamento lista prodotti
+Il server manda ai client quest json quando la lista dei prodotti deve essere aggiornata
 ```json
 {
    "codiceStato":4,
@@ -68,5 +87,24 @@ Esempio json che il server manda ai client quando la lista dei prodotti deve ess
         .... 
       }
    ]
+}
+```
+### Json rimozione prodotto
+Richiesta da parte di un client per la rimozione di un prodotto 
+```json
+{
+   "codiceStato":2,
+   "transazione":{
+      "idTransazione":20,
+      "idProdotto":1,
+      "quantita":4
+   }
+}
+```
+### Json successo transazione
+```json
+{
+   "codiceStato":5,
+   “idTransazione”:1
 }
 ```
