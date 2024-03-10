@@ -38,7 +38,7 @@ Connessione di un client al server sulla porta 5555
 ```mermaid
 sequenceDiagram
 Client->>+ Server: Connessione porta: 5555
-Server->>+ Client: Risponde json connessione
+Server->>+ Client: json connessione avvenuta
 Server->>+ Client: Manda json prodotti
 ```
 Modifica della lista prodotti da parte di un client
