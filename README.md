@@ -4,28 +4,27 @@ Creato da:
 - [Luca Ilari](https://github.com/Luca-Ilari)
   
 > [!NOTE]
-> Il progetto non è ancora finito quindi alcune funzionalità spiegate prossimamente non sono ancora presenti.
+> Il progetto non è ancora finito quindi alcune funzionalità descritte nel seguito non sono ancora presenti.
 # Descrizione
-Il progetto consite in un server multi-threaded che gestisce parallelamente le connesioni e le richieste dei client.
+Il progetto consiste in un server multi-threaded che gestisce parallelamente le connessioni e le richieste dei client.
 
-Tutti i messaggi che il server e il client si scambiano sono json con dentro un codice che identifica il tipo di messaggio che si stà mandando. Per dettagli ulteriori andare alla sezione [Json](#json-e-codici-di-stato).
+Tutti i messaggi che il server e il client si scambiano sono in formato json con dentro un codice che identifica il tipo di messaggio che si sta mandando. Per dettagli ulteriori andare alla sezione [Json](#json-e-codici-di-stato).
 
 Il server ha una lista di prodotti con le loro proprietà (nome, prezzo, quantità) che manda a tutti i client che si connettono.
 
-I client una volta che sono connessi e hanno la lista dei prodotti, possono iniziare ad inviare delle richieste al server di "acquisto"; ovvero possono mandare una richiesta al server di descrementare un elemento specifico come se lo avessero acquitasto.
+I client una volta che sono connessi e hanno ricevuto la lista dei prodotti, possono iniziare ad inviare delle richieste  di "acquisto" al server; ovvero possono mandare una richiesta al server di decrementare un elemento specifico come se lo avessero acquistato.
 
-Il server una volta ricevuta la richiesta verificherà la sua validità e quindi decrementerà il prodotto specificato dal client.
+Il server una volta ricevuta la richiesta verifica la sua validità e quindi decrementa il prodotto specificato dal client.
 
-Ogni volta che un client connesso al server modifica la lista dei prodotti, il server manderà la lista aggiornata a tutti i client connessi in modo da avere sempre i client aggiornati.
+Ogni volta che un client connesso al server modifica la lista dei prodotti, il server manda la lista aggiornata a tutti i client connessi in modo da avere sempre i client aggiornati.
 
-Se la richiesta non è valida, quindi per esempio il client chiede di rimuovere troppi prodotti rispetto a quelli che ci sono nella lista, il server risponderà al client con un json con codiceStato -2.
+Se la richiesta non è valida, quindi per esempio il client chiede di rimuovere troppi prodotti rispetto a quelli che ci sono nella lista, il server risponde al client con un json con codiceStato -2.
 
 ### Caratteristiche Server
-Il server è una applicazione da linea di comando. Quando viene avviata bisogna specificare la porta su cui il server ascolterà nuove connessioni.
-Se la porta non verrà specificata il server non si avvierà.
+Il server è un'applicazione da linea di comando. Quando viene avviata bisogna specificare la porta su cui il server ascolta nuove connessioni.
+Se la porta non è specificata il server non si avvia.
 
-
-Il server può essere compilato sia per window che per linux, infatti negli esempi che dopo verranno illustrati, il server è fatto girare su una vps Ubuntu.
+Il server può essere compilato sia per windows che per linux; infatti negli esempi che dopo verranno illustrati, il server è fatto girare su una vps Ubuntu.
 
 ## Caratteristiche Client
 I client sono scritti in java e sono 2:
@@ -72,7 +71,7 @@ Server->>+ Tutti i Client Connessi: Lista prodotti aggiornata
 }
 ```
 ### Aggiornamento lista prodotti
-Il server manda ai client quest json quando la lista dei prodotti deve essere aggiornata
+Il server manda ai client questo json quando la lista dei prodotti deve essere aggiornata
 ```json
 {
    "codiceStato":4,
