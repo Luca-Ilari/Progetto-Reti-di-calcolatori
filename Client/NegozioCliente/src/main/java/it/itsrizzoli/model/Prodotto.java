@@ -1,4 +1,4 @@
-package it.itsrizzoli.modelli;
+package it.itsrizzoli.model;
 
 public class Prodotto {
     private int idProdotto;

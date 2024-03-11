@@ -1,8 +1,8 @@
 package it.itsrizzoli;
 
 import it.itsrizzoli.controller.ControllerClientNegozio;
-import it.itsrizzoli.modelli.ModelloClientNegozio;
-import it.itsrizzoli.ui.ClientNegozioInterfaccia;
+import it.itsrizzoli.model.ModelloClientNegozio;
+import it.itsrizzoli.view.ClientNegozioInterfaccia;
 
 import java.util.Random;
 

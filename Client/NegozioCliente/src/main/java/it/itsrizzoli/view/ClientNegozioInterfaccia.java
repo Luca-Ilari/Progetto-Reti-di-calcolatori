@@ -1,8 +1,8 @@
-package it.itsrizzoli.ui;
+package it.itsrizzoli.view;
 
 import it.itsrizzoli.controller.ControllerClientNegozio;
-import it.itsrizzoli.modelli.Prodotto;
-import it.itsrizzoli.modelli.Transazione;
+import it.itsrizzoli.model.Prodotto;
+import it.itsrizzoli.model.Transazione;
 import it.itsrizzoli.tcpip.ThreadClient;
 
 import javax.swing.*;

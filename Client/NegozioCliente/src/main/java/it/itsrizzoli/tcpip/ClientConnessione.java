@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import it.itsrizzoli.controller.ControllerClientNegozio;
-import it.itsrizzoli.modelli.Prodotto;
-import it.itsrizzoli.modelli.Transazione;
+import it.itsrizzoli.model.Prodotto;
+import it.itsrizzoli.model.Transazione;
 import it.itsrizzoli.tools.CodiciStatoServer;
 
 import java.io.*;

@@ -1,4 +1,4 @@
-package it.itsrizzoli.modelli;
+package it.itsrizzoli.model;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package it.itsrizzoli.ui;
+package it.itsrizzoli.view;
 
 import it.itsrizzoli.tcpip.ClientConnessione;
 

@@ -1,10 +1,10 @@
 package it.itsrizzoli.controller;
 
-import it.itsrizzoli.modelli.ModelloClientNegozio;
-import it.itsrizzoli.modelli.Prodotto;
-import it.itsrizzoli.modelli.Transazione;
+import it.itsrizzoli.model.ModelloClientNegozio;
+import it.itsrizzoli.model.Prodotto;
+import it.itsrizzoli.model.Transazione;
 import it.itsrizzoli.tcpip.ClientConnessione;
-import it.itsrizzoli.ui.ClientNegozioInterfaccia;
+import it.itsrizzoli.view.ClientNegozioInterfaccia;
 
 import java.util.List;
 
