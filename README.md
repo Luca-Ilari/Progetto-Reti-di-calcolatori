@@ -28,7 +28,7 @@ Il server può essere compilato sia per windows che per linux; infatti negli ese
 
 Per caricare la lista dei prodotti il server legge un file di testo nella stessa cartella del server.
 
-Qui di seguito, una rappresentazione grafica dei thread che il server utilizza per gestire i server e aggiornare la lista dei prodotti quando viene modificata da un client
+Qui di seguito, una rappresentazione grafica dei thread che il server utilizza per gestire i client e aggiornare la lista dei prodotti quando viene modificata da un client
 ```mermaid
 stateDiagram-v2
     ThreadAttivi
