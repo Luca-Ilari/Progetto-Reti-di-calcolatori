@@ -44,9 +44,10 @@ stateDiagram-v2
 ```
 
 ## Caratteristiche Client
-I client sono scritti in java e sono 2:
+I client sono scritti in java e sono due:
 ### Producer
-Il client producer crea randomicamente nuovi prodotti e tramite una richiesta al server aggiunge il prodotto alla lista dei prodotti disponibili.
+Il client producer, una volta connesso al server, aggiunge dei prodotti alla lista del server tramite una richiesta.
+I prodotti che il client può aggiungere possono essere creati dall'utente, specificando nome e prezzo, oppure utilizzando uno dei prodotti nella lista del server.
 ### Consumer
 Il client consumer rimuove randomicamente dei prodotti dalla lista del server. Questa operazione può anche essere rifiutata dal server in caso non ci siano abbastanza prodotti.
 
