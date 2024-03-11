@@ -4,6 +4,8 @@
 #ifdef WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <unistd.h>
+
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -156,6 +158,7 @@ void sendProductListToClient(int sock){
     char *json = getProductJson();
     sendToClient(sock, json);
     free(json);
+    json = NULL;
 }
 
 #ifdef WIN32
@@ -174,7 +177,7 @@ void *handleNewClient(void *newSockParam){
 
     sendProductListToClient(newsock);
     timestamp();
-    printf("-> Sendind item list to socket: %d\n",newsock);
+    printf("-> Sending item list to socket: %d\n",newsock);
 
     int res = 0;
     while(res >= 0){

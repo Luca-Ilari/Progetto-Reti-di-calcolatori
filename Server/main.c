@@ -72,19 +72,21 @@ int main(int argc, char* argv[]){
     #endif
 
     while(1) {
-        memset(&serv_addr, 0, sizeof(serv_addr));
-        int newsockfd = acceptNewConnection(sockfd);
+        if (nConnectedClient < MAX_CLIENT){
+            memset(&serv_addr, 0, sizeof(serv_addr));
+            int newsockfd = acceptNewConnection(sockfd);
 
-        if (newsockfd > 0) {
-            int *param = &newsockfd;
-            #ifdef WIN32
-            CreateThread(NULL, 0, handleNewClient, param, 0, NULL);
-            #else
-            pthread_create(&thread_id, NULL, handleNewClient, param);
-            #endif
-        }else{
-            timestamp();
-            perror("ERROR while accepting new client\n");
+            if (newsockfd > 0) {
+                int *param = &newsockfd;
+                #ifdef WIN32
+                CreateThread(NULL, 0, handleNewClient, param, 0, NULL);
+                #else
+                pthread_create(&thread_id, NULL, handleNewClient, param);
+                #endif
+            }else{
+                timestamp();
+                perror("ERROR while accepting new client\n");
+            }
         }
     }
     #ifdef WIN32
