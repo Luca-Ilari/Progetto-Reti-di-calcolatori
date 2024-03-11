@@ -27,8 +27,9 @@ Se la porta non è specificata il server non si avvia.
 Il server può essere compilato sia per windows che per linux; infatti negli esempi che dopo verranno illustrati, il server è fatto girare su una vps Ubuntu.
 
 Per caricare la lista dei prodotti il server legge un file di testo nella stessa cartella del server.
+Inoltre il server ha un limite di client connessi contemporaneamente. Questa variabile è impostata a 20.  
 
-Qui di seguito, una rappresentazione grafica dei thread che il server utilizza per gestire i server e aggiornare la lista dei prodotti quando viene modificata da un client
+Qui di seguito, una rappresentazione grafica dei thread che il server utilizza per gestire i client e aggiornare la lista dei prodotti quando viene modificata da un client
 ```mermaid
 stateDiagram-v2
     ThreadAttivi
@@ -44,9 +45,10 @@ stateDiagram-v2
 ```
 
 ## Caratteristiche Client
-I client sono scritti in java e sono 2:
+I client sono scritti in java e sono due:
 ### Producer
-Il client producer crea randomicamente nuovi prodotti e tramite una richiesta al server aggiunge il prodotto alla lista dei prodotti disponibili.
+Il client producer, una volta connesso al server, aggiunge dei prodotti alla lista del server tramite una richiesta.
+I prodotti che il client può aggiungere possono essere creati dall'utente, specificando nome e prezzo, oppure utilizzando uno dei prodotti nella lista del server.
 ### Consumer
 Il client consumer rimuove randomicamente dei prodotti dalla lista del server. Questa operazione può anche essere rifiutata dal server in caso non ci siano abbastanza prodotti.
 
