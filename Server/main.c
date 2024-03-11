@@ -18,8 +18,8 @@
 #include "include/sockets/handleUpdateClients.h"
 
 int updateAllClients = 0;
-int connectedSockets[MAX_CLIENT];
 int nConnectedClient = 0;
+int connectedSockets[MAX_CLIENT];
 
 struct product serverProductList[PRODUCT_NUMBER] = {
         {0, "Pane", 100, (float)2.99},
