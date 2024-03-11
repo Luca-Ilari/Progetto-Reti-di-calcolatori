@@ -6,6 +6,7 @@ import static it.itsrizzoli.tools.TypeThread.*;
 public class ThreadClient extends Thread {
     public static ClientConnessione clientConnessione;
     private final int typeThread;
+    private boolean newConnessione = false;
 
     public ThreadClient(ClientConnessione clientConnessione, int typeThread) {
         setGlobalClientConnessione(clientConnessione);
@@ -14,6 +15,10 @@ public class ThreadClient extends Thread {
 
     public ThreadClient(int typeThread) {
         this.typeThread = typeThread;
+    }
+
+    public void setNewConnessione(boolean newConnessione) {
+        this.newConnessione = newConnessione;
     }
 
     public void setGlobalClientConnessione(ClientConnessione clientConnessione) {
@@ -27,29 +32,26 @@ public class ThreadClient extends Thread {
         switch (typeThread) {
             case THREAD_CONNESSIONE_READ:
                 System.out.println("Thread di tentativo connessione avviato.");
-                for (int i = 0; i < 100; i++) {
-                    System.out.println(" Tentativo Connessione: " + (i + 1));
+                while (!newConnessione) {
+
                     clientConnessione.tentaConnessione(); // Tentativo di connessione
-                    message = "Thread di connessione completato.\n---- SESSIONE AVVIATA ----";
 
                     clientConnessione.aggiornaStato(true);
                     setGlobalClientConnessione(clientConnessione);
 
-                    System.err.println("Messaggio: " + message);
-
-                    System.out.println(" Thread connessione diveenta di lettura loop.");
 
                     clientConnessione.readLoop(); // Avvio del loop di lettura
 
-                    message = "Thread di lettura completato.\n---- SESSIONE TERMINATA ----";
-                    System.out.println(message);
 
                     clientConnessione.aggiornaStato(false);
+
                 }
+                newConnessione = false;
                 break;
             case THREAD_WRITE:
                 System.out.println("Thread di scrittura avviato.");
                 //clientConnessione.writeTransazioniJson(); // Avvio del loop di scrittura
+
                 clientConnessione.writeTransazioniJson();
                 message = "Thread di scrittura completato.";
                 break;

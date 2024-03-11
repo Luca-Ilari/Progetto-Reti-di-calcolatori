@@ -4,10 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import it.itsrizzoli.controller.ControllerClientNegozio;
 import it.itsrizzoli.modelli.Prodotto;
 import it.itsrizzoli.modelli.Transazione;
 import it.itsrizzoli.tools.CodiciStatoServer;
-import it.itsrizzoli.ui.NegozioClientUI;
 
 import java.io.*;
 import java.net.*;
@@ -26,69 +26,57 @@ public class ClientConnessione {
     private PrintWriter out;
     private String serverAddress = "localhost";
     private int serverPort = 5555;
-    private NegozioClientUI negozioClientUI;
     public boolean onConnessione = false;
     private final static Logger logger = Logger.getLogger("Avvisi");
 
-    public ClientConnessione() {
+    private final ControllerClientNegozio controllerClientNegozio;
+
+    private ThreadClient threadConnessione;
+
+    public ClientConnessione(ControllerClientNegozio controllerClientNegozio) {
+        this.controllerClientNegozio = controllerClientNegozio;
+
         attivaColoreLogger();
         startConnessione();
+
+
     }
 
-    public ClientConnessione(String serverAddress, int serverPort, NegozioClientUI negozioClientUI) {
+    public ClientConnessione(String serverAddress, int serverPort, ControllerClientNegozio controllerClientNegozio) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
 
-        this.negozioClientUI = negozioClientUI;
+        this.controllerClientNegozio = controllerClientNegozio;
         attivaColoreLogger();
         startConnessione();
 
     }
 
     private void startConnessione() {
-        ThreadClient threadConnessione = new ThreadClient(this, THREAD_CONNESSIONE_READ);
+        threadConnessione = new ThreadClient(this, THREAD_CONNESSIONE_READ);
         threadConnessione.start();
     }
 
-    public void aggiornaStatoNegozio(boolean stato) {
-        this.negozioClientUI.setStatoNegozioOnline(stato);
+    public void aggiornaIP(String serverAddress,int serverPort) {
+        this.serverAddress = serverAddress;
+        this.serverPort = serverPort;
+        logger.info(" Change serverAddres --> " + serverAddress);
+        chiusuraConnessione();
+        startConnessione();
     }
 
-    private void attivaColoreLogger() {
-        ConsoleHandler handler = new ConsoleHandler();
-        logger.setUseParentHandlers(false);
-        handler.setFormatter(new Formatter() {
-            @Override
-            public synchronized String format(LogRecord record) {
-                String levelName = record.getLevel().getName();
-                String message = record.getMessage();
-
-                // Assegna il colore in base al livello del log
-                String color = "";
-                switch (levelName) {
-                    case "INFO":
-                        color = "\u001B[34m"; // Blu
-                        break;
-                    case "WARNING":
-                        color = "\u001B[33m"; // Giallo
-                        break;
-                    case "SEVERE":
-                        color = "\u001B[31m"; // Rosso
-                        break;
-                }
-                // Resetta il colore dopo il messaggio
-                String resetColor = "\u001B[0m";
-
-                // Formatta il messaggio con il colore
-                return color + "[" + levelName + "] " + message + resetColor + "\n";
-            }
-
-
-        });
-        logger.addHandler(handler);
+    public void aggiornaStato(boolean stato) {
+        this.onConnessione = stato;
+        this.controllerClientNegozio.aggiornaStatoConnessione(stato);
     }
+
+
 
     protected boolean readLoop() {
+        String message = "Thread di connessione completato.\n---- SESSIONE AVVIATA ----";
+        logger.warning(message);
+
+        logger.info(" Thread connessione diveenta di lettura loop.");
         String risposta;
         try {
             while ((risposta = in.readLine()) != null) {
@@ -100,6 +88,9 @@ public class ClientConnessione {
             System.out.println(e.getMessage());
         }
 
+        message = "Thread di lettura completato.\n---- SESSIONE TERMINATA ----";
+        logger.warning(message);
+
         return true;
 
     }
@@ -108,9 +99,9 @@ public class ClientConnessione {
         ObjectMapper objectMapper = new ObjectMapper();
 
         List<Transazione> sendTransazioni =
-                Transazione.creaListaTransazioniRandom(negozioClientUI.getProdottiNegozio());
+                Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiNegozio());
 
-        negozioClientUI.getListaTransazione().addAll(sendTransazioni);
+        controllerClientNegozio.aggiungiListaTransazione(sendTransazioni);
 
         for (Transazione transazione : sendTransazioni) {
             try {
@@ -118,8 +109,8 @@ public class ClientConnessione {
                 out.println(jsonString);// Invia la transazione al server
                 logger.info("Client: Transazione inviata al server.");
 
-                negozioClientUI.addSingleTransazioneAwait(transazione);
-
+                // clientNegozioInterfaccia.addSingleTransazioneAwait(transazione);
+                controllerClientNegozio.addSingleTransazioneAwait(transazione);
             } catch (JsonProcessingException e) {
                 logger.warning("Errore durante la conversione in JSON");
             }
@@ -158,7 +149,15 @@ public class ClientConnessione {
             return;
         }
 
-        int codeStatus = jsonNode.get("codiceStato").asInt();
+
+        int codeStatus;
+        try {
+            codeStatus = jsonNode.get("codiceStato").asInt();
+
+        } catch (NullPointerException e) {
+            logger.info(e.getMessage());
+            return;
+        }
         switch (codeStatus) {
             case CodiciStatoServer.START_SESSION:
                 System.out.println("Client riceve codice Status 1: Avvio sessione");
@@ -171,27 +170,18 @@ public class ClientConnessione {
                 break;
             case CodiciStatoServer.LISTA_PRODOTTI_AGGIORNATO:
                 List<Prodotto> listaProdotti = recuperoListaProdottiJson(jsonNode);
-
-                //aggiorna negozio prodotti UI
                 if (listaProdotti == null) {
                     System.out.println(" ATTENZIONE: lista Prodotti null");
                     break;
                 }
-                negozioClientUI.aggiornaProdottiNegozio(listaProdotti);
-
-                // creazione transazioni in maniera rando
-
-                // listaTransazioniRandom.addAll(Transazione.creaListaTransazioniRandom(listaProdotti));
-                //negozioClientUI.getListaTransazione().addAll(listaTransazioniRandom);
-
-                //negozioClientUI.addTransazioneAwait();
+                //aggiorna negozio prodotti UI
+                controllerClientNegozio.aggiornaProdottiNegozio(listaProdotti);
 
                 break;
             case CodiciStatoServer.SUCCESSO_TRANSAZIONE:
                 logger.info("Client riceve codice Status 5 : Successo nella Transazione");
                 int idTransazione = jsonNode.get("idTransazione").asInt();
-                negozioClientUI.aggiornaStateTransazione(idTransazione);
-                negozioClientUI.allSetResponsiveTable();
+                controllerClientNegozio.aggiornaStateTransazioneId(idTransazione);
                 break;
             case CodiciStatoServer.FAIL_SESSION:
                 System.out.println("Client riceve codice Status -1: Fallimento sessione");
@@ -199,7 +189,7 @@ public class ClientConnessione {
             case CodiciStatoServer.FAIL_RIMUOVI_PRODOTTO:
                 System.out.println("Client riceve codice Status -2: Fallimento rimozione prodotto dal Negozio");
                 idTransazione = jsonNode.get("idTransazione").asInt();
-                negozioClientUI.aggiornaStateTransazioneFail(idTransazione);
+                controllerClientNegozio.aggiornaStateTransazioneFail(idTransazione);
                 break;
             case CodiciStatoServer.FAIL_AGGIUNGI_PRODOTTO:
                 System.out.println("Client riceve codice Status -3: Fallimento aggiunta prodotto al Negozio");
@@ -234,6 +224,10 @@ public class ClientConnessione {
     }
 
     public void chiusuraConnessione() {
+        if (threadConnessione != null) {
+            threadConnessione.setNewConnessione(true);
+        }
+
         try {
             if (out != null) {
                 out.close();
@@ -244,12 +238,13 @@ public class ClientConnessione {
             if (clientSocket != null) {
                 clientSocket.close();
             }
+
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.severe(e.getMessage());
         }
     }
 
-    void tentaConnessione() {
+    public void tentaConnessione() {
         boolean connected = false;
         while (!connected) {
             try {
@@ -263,7 +258,7 @@ public class ClientConnessione {
                     Thread.sleep(5000);
                 } catch (InterruptedException ex) {
                     // Gestisci l'eccezione se il thread viene interrotto durante il sonno
-                    ex.printStackTrace();
+                    logger.severe(e.getMessage());
                 }
             }
         }
@@ -276,4 +271,39 @@ public class ClientConnessione {
         logger.info("Successo: Connessione avvenuta al server con IP: " + serverAddress + " - PORTA: " + serverPort);
 
     }
+
+    private void attivaColoreLogger() {
+        ConsoleHandler handler = new ConsoleHandler();
+        logger.setUseParentHandlers(false);
+        handler.setFormatter(new Formatter() {
+            @Override
+            public synchronized String format(LogRecord record) {
+                String levelName = record.getLevel().getName();
+                String message = record.getMessage();
+
+                // Assegna il colore in base al livello del log
+                String color = "";
+                switch (levelName) {
+                    case "INFO":
+                        color = "\u001B[34m"; // Blu
+                        break;
+                    case "WARNING":
+                        color = "\u001B[33m"; // Giallo
+                        break;
+                    case "SEVERE":
+                        color = "\u001B[31m"; // Rosso
+                        break;
+                }
+                // Resetta il colore dopo il messaggio
+                String resetColor = "\u001B[0m";
+
+                // Formatta il messaggio con il colore
+                return color + "[" + levelName + "] " + message + resetColor + "\n";
+            }
+
+
+        });
+        logger.addHandler(handler);
+    }
+
 }
