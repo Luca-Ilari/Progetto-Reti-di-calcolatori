@@ -26,6 +26,8 @@ Se la porta non è specificata il server non si avvia.
 
 Il server può essere compilato sia per windows che per linux; infatti negli esempi che dopo verranno illustrati, il server è fatto girare su una vps Ubuntu.
 
+Per caricare la lista dei prodotti il server legge un file di testo nella stessa cartella del server.
+
 ## Caratteristiche Client
 I client sono scritti in java e sono 2:
 ### Producer
