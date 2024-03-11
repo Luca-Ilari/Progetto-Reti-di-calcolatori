@@ -20,13 +20,28 @@ Ogni volta che un client connesso al server modifica la lista dei prodotti, il s
 
 Se la richiesta non è valida, quindi per esempio il client chiede di rimuovere troppi prodotti rispetto a quelli che ci sono nella lista, il server risponde al client con un json con codiceStato -2.
 
-### Caratteristiche Server
+## Caratteristiche Server
 Il server è un'applicazione da linea di comando. Quando viene avviata bisogna specificare la porta su cui il server ascolta nuove connessioni.
 Se la porta non è specificata il server non si avvia.
 
 Il server può essere compilato sia per windows che per linux; infatti negli esempi che dopo verranno illustrati, il server è fatto girare su una vps Ubuntu.
 
 Per caricare la lista dei prodotti il server legge un file di testo nella stessa cartella del server.
+
+Qui di seguito, una rappresentazione grafica dei thread che il server utilizza per gestire i server e aggiornare la lista dei prodotti quando viene modificata da un client
+```mermaid
+stateDiagram-v2
+    ThreadAttivi
+    state ThreadAttivi{
+        main --> handleUpdateClients()
+        main --> handleNewClient()
+        state handleNewClient(){
+            socket1
+            socket2
+            socket...
+        }
+    }
+```
 
 ## Caratteristiche Client
 I client sono scritti in java e sono 2:
