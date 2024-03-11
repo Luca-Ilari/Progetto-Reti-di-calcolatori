@@ -27,6 +27,7 @@ Se la porta non è specificata il server non si avvia.
 Il server può essere compilato sia per windows che per linux; infatti negli esempi che dopo verranno illustrati, il server è fatto girare su una vps Ubuntu.
 
 Per caricare la lista dei prodotti il server legge un file di testo nella stessa cartella del server.
+Inoltre il server ha un limite di client connessi contemporaneamente. Questa variabile è impostata a 20.  
 
 Qui di seguito, una rappresentazione grafica dei thread che il server utilizza per gestire i client e aggiornare la lista dei prodotti quando viene modificata da un client
 ```mermaid
