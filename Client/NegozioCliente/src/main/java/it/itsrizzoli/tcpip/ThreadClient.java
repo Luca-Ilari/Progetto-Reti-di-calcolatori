@@ -26,26 +26,27 @@ public class ThreadClient extends Thread {
         String message = "";
         switch (typeThread) {
             case THREAD_CONNESSIONE_READ:
-                System.out.println("Thread di connessione avviato.");
-                while (true) {
+                System.out.println("Thread di tentativo connessione avviato.");
+                for (int i = 0; i < 100; i++) {
+                    System.out.println(" Tentativo Connessione: " + (i + 1));
                     clientConnessione.tentaConnessione(); // Tentativo di connessione
                     message = "Thread di connessione completato.\n---- SESSIONE AVVIATA ----";
 
-                    clientConnessione.aggiornaStatoNegozio(true);
+                    clientConnessione.aggiornaStato(true);
                     setGlobalClientConnessione(clientConnessione);
-
-                    clientConnessione.onConnessione = true;
 
                     System.err.println("Messaggio: " + message);
 
-                    System.out.println(" lettura loop avviato.");
-                    boolean connessionePersa = clientConnessione.readLoop(); // Avvio del loop di lettura
+                    System.out.println(" Thread connessione diveenta di lettura loop.");
+
+                    clientConnessione.readLoop(); // Avvio del loop di lettura
 
                     message = "Thread di lettura completato.\n---- SESSIONE TERMINATA ----";
                     System.out.println(message);
 
-                    clientConnessione.aggiornaStatoNegozio(false);
+                    clientConnessione.aggiornaStato(false);
                 }
+                break;
             case THREAD_WRITE:
                 System.out.println("Thread di scrittura avviato.");
                 //clientConnessione.writeTransazioniJson(); // Avvio del loop di scrittura
