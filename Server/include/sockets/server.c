@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 #ifdef WIN32
 #include <winsock2.h>
@@ -14,10 +13,11 @@
 #include <unistd.h>
 #endif
 
-#include "headers/define.h"
-#include "utils/handleJson.h"
-#include "utils/customCriticalSection.h"
-#include "headers/product.h"
+#include "../define.h"
+#include "../product.h"
+#include "../utils/handleJson.h"
+#include "../utils/customCriticalSection.h"
+#include "../utils/timeStamp.h"
 
 extern struct product serverProductList[];
 extern int nConnectedClient;
@@ -25,13 +25,6 @@ extern int updateAllClients;
 extern int connectedSockets[MAX_CLIENT];
 
 #define BUFFER_SIZE 1024
-
-void timestamp()
-{
-    time_t now = time(NULL);
-    struct tm *tm_struct = localtime(&now);
-    printf("[%d:%d:%d] ",tm_struct->tm_hour,tm_struct->tm_min,tm_struct->tm_sec);
-}
 
 int setupSocket(int argc){
     if (argc < 2) {
@@ -166,9 +159,9 @@ void sendProductListToClient(int sock){
 }
 
 #ifdef WIN32
-DWORD WINAPI ThreadFunc(void *newSockParam) {
+DWORD WINAPI handleNewClient(void *newSockParam) {
 #else
-void *ThreadFunc(void *newSockParam){
+void *handleNewClient(void *newSockParam){
 #endif
     int newsock = *(int*)(newSockParam);
 

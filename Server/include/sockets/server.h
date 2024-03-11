@@ -3,9 +3,9 @@
 
 #ifdef WIN32
 #include <windows.h>
-DWORD WINAPI ThreadFunc(void *threadParam);
+DWORD WINAPI handleNewClient(void *threadParam);
 #else
-void *ThreadFunc(void *threadParam);
+void *handleNewClient(void *threadParam);
 #endif
 void timestamp();
 int sendProductListToClient(int sock);

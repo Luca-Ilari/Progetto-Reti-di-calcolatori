@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -12,9 +13,9 @@
 #endif
 
 #include "handleJson.h"
-#include "../headers/server.h"
-#include "../headers/define.h"
-#include "../headers/product.h"
+#include "../sockets/server.h"
+#include "../define.h"
+#include "../product.h"
 
 extern struct product serverProductList[PRODUCT_NUMBER];
 

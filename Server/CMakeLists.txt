@@ -5,16 +5,18 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_executable(Server
         main.c
-        headers/server.h
-        server.c
-        headers/define.h
-        headers/product.h
-        handleUpdateClients.c
-        headers/handleUpdateClients.h
-        utils/handleJson.c
-        utils/handleJson.h
-        utils/customCriticalSection.c
-        utils/customCriticalSection.h
+        include/sockets/server.h
+        include/sockets/server.c
+        include/define.h
+        include/product.h
+        include/sockets/handleUpdateClients.c
+        include/sockets/handleUpdateClients.h
+        include/utils/handleJson.c
+        include/utils/handleJson.h
+        include/utils/customCriticalSection.c
+        include/utils/customCriticalSection.h
+        include/utils/timeStamp.c
+        include/utils/timeStamp.h
 )
 
 if(WIN32)

@@ -4,12 +4,12 @@
 #include <stdio.h>
 #ifdef WIN32
 #include <windows.h>
-#else
 #endif
-#include "headers/server.h"
-#include "headers/define.h"
-#include "headers/handleUpdateClients.h"
-#include "utils/customCriticalSection.h"
+
+#include "server.h"
+#include "../define.h"
+#include "handleUpdateClients.h"
+#include "../utils/customCriticalSection.h"
 
 extern int updateAllClients;
 extern int connectedSockets[MAX_CLIENT];
@@ -28,7 +28,7 @@ void *handleUpdateClients(void *params){
             for (int i = 0; i < nConnectedClient; ++i){
                 sendProductListToClient(connectedSockets[i]);
             }
-            updateAllClients = 0;//TODO put mutex lock and unlock
+            updateAllClients = 0;
         }
         customLeaveCriticalSection();
     }

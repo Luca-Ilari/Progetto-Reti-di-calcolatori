@@ -12,21 +12,21 @@
 #include <string.h>
 #endif
 
-#include "headers/server.h"
-#include "headers/define.h"
-#include "headers/product.h"
-#include "headers/handleUpdateClients.h"
+#include "include/sockets/server.h"
+#include "include/define.h"
+#include "include/product.h"
+#include "include/sockets/handleUpdateClients.h"
 
 int updateAllClients = 0;
 int connectedSockets[MAX_CLIENT];
 int nConnectedClient = 0;
 
 struct product serverProductList[PRODUCT_NUMBER] = {
-        {0, "Pane", 10, (float)2.99},
-        {1, "Acqua", 5, (float)1},
-        {2, "Vino", 5, (float)20},
-        {3, "Birra", 9, (float)2},
-        {4, "Patatine", 7, (float)2}
+        {0, "Pane", 100, (float)2.99},
+        {1, "Acqua", 50, (float)1},
+        {2, "Vino", 50, (float)20},
+        {3, "Birra", 90, (float)2},
+        {4, "Patatine", 70, (float)2}
 };
 
 #ifdef WIN32
@@ -78,9 +78,9 @@ int main(int argc, char* argv[]){
         if (newsockfd > 0) {
             int *param = &newsockfd;
             #ifdef WIN32
-            CreateThread(NULL, 0, ThreadFunc, param, 0, NULL);
+            CreateThread(NULL, 0, handleNewClient, param, 0, NULL);
             #else
-            pthread_create(&thread_id,NULL,ThreadFunc, param);
+            pthread_create(&thread_id, NULL, handleNewClient, param);
             #endif
         }else{
             timestamp();
