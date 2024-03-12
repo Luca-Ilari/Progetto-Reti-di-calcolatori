@@ -96,7 +96,7 @@ Il server manda ai client questo json quando la lista dei prodotti deve essere a
    "codiceStato":4,
    "prodotti":[
       {
-         "Id":0,
+         "id":0,
          "nome":"Pane",
          "prezzo":1.05,
          "quantitaDisponibile":96
