@@ -132,7 +132,7 @@ public class ClientConnessione {
             }
             try {
                 // Attendere 5 secondi prima di inviare la prossima transazione
-                Thread.sleep(3_000);
+                Thread.sleep(1_000);
             } catch (InterruptedException e) {
                 throw new RuntimeException("Interruzione durante l'attesa", e);
             }

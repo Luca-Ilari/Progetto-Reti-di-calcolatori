@@ -59,7 +59,7 @@ int acceptNewConnection(int sockfd){
     char *sockIp= inet_ntoa(cli_addr.sin_addr);
 
     timestamp();
-    printf("+ New socket %d connected from: %s\n", newsocket, sockIp);
+    printf("+ New socket %d connected from: %s", newsocket, sockIp);
     return newsocket;
 }
 int sendToClient(int sock, char *buffer) {
@@ -105,18 +105,18 @@ int handleStatusCode2(int sock, char *buffer){
     if (transaction == NULL) {
         //If json is not formatted correctly
         timestamp();
-        printf("X Socket %d sent an incorrect JSON\n", sock);
+        printf("X Socket %d sent an incorrect JSON", sock);
         return -1;
     }
     if(tryToRemoveProduct(transaction->productId, transaction->quantityToRemove) == 0){
         //JSON to send if modification is successful
         timestamp();
-        printf("- Socket %d modified product %d\n", sock, transaction->productId);
+        printf("- Socket %d modified product %d", sock, transaction->productId);
         sprintf(prepString, "{\"codiceStato\":5,\"idTransazione\":%d}\n", transaction->transactionId);
     }else{
         //JSON to send if modification is NOT successful
         timestamp();
-        printf("X Socket %d did not modify products\n", sock);
+        printf("X Socket %d did not modify products", sock);
         sprintf(prepString, "{\"codiceStato\":-2,\"idTransazione\":%d}\n", transaction->transactionId);
     }
 
@@ -135,27 +135,42 @@ int handleStatusCode2(int sock, char *buffer){
 
 int handleClient(int sock){
     char buffer[BUFFER_SIZE];
+    char tmp[BUFFER_SIZE];
+    int tmplen = 0;
+    int jsonRead = 0;
+    int jsonlen=0;
     memset(buffer, 0, BUFFER_SIZE);
 
     //Receive from client
-    int n = recv(sock, buffer, BUFFER_SIZE-1, 0);
-    if (n <= 0){
-        return -1;
-    }
-    timestamp();
-    printf("<- Received from socket %d: %s",sock ,buffer);
-
-    int jsonStatusCode = -1;
-    int found = getJsonStatusCode(buffer, &jsonStatusCode);
-    if (found == 0){
-        switch (jsonStatusCode) {
-            case 2://Modify a product
-                handleStatusCode2(sock, buffer);
-                break;
+    while(jsonRead==0){
+        int n = recv(sock, buffer, BUFFER_SIZE-1, 0);
+        if (n <= 0){
+            return -1;
         }
-    }else{
-        timestamp();
-        printf("X Socket %d sent an incorrect JSON\n", sock);
+
+        for (int i = 0; i < n; ++i) {
+            if (buffer[i] == '\r' && buffer[i+1] == '\n') {
+                memset(tmp, 0, BUFFER_SIZE);
+                strncpy(tmp,buffer+(i-jsonlen),jsonlen);
+                jsonlen = 0;
+                timestamp();
+                printf("<- Handling json received from socket %d: %s",sock ,tmp);
+                int jsonStatusCode = -1;
+                int found = getJsonStatusCode(tmp, &jsonStatusCode);
+                if (found == 0){
+                    switch (jsonStatusCode) {
+                        case 2://Modify a product
+                            handleStatusCode2(sock,tmp);
+                            break;
+                    }
+                }else{
+                    timestamp();
+                    printf("X Socket %d sent an incorrect JSON", sock);
+                }
+                jsonRead = 1;
+            }
+            jsonlen++;
+        }
     }
     return 0;
 }
@@ -183,7 +198,7 @@ void *handleNewClient(void *newSockParam){
 
     sendProductListToClient(newsock);
     timestamp();
-    printf("-> Sending item list to socket: %d\n",newsock);
+    printf("-> Sending item list to socket: %d",newsock);
 
     int res = 0;
     while(res >= 0){

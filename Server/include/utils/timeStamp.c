@@ -10,5 +10,5 @@ void timestamp()
 {
     time_t now = time(NULL);
     struct tm *tm_struct = localtime(&now);
-    printf("[%d:%d:%d] ",tm_struct->tm_hour,tm_struct->tm_min,tm_struct->tm_sec);
+    printf("\n[%d:%d:%d] ",tm_struct->tm_hour,tm_struct->tm_min,tm_struct->tm_sec);
 }
