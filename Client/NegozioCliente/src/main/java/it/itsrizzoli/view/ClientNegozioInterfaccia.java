@@ -238,7 +238,7 @@ public class ClientNegozioInterfaccia extends JFrame {
                 String statoTransazione = (String) transazioniTableModel.getValueAt(riga, 4);
                 if (idTransazioneRow == transazione.getIdTransazione()) {
                     if (statoTransazione.equals("await")) {
-                        transazioniTableModel.setValueAt("fail", riga, 4); // Imposta il nuovo stato
+                        transazioniTableModel.setValueAt("Prodotto finito!!", riga, 4); // Imposta il nuovo stato
                         System.out.println("Elemento trovato alla riga " + riga);
 
                         break;
