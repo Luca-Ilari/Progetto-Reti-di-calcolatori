@@ -4,9 +4,12 @@ import it.itsrizzoli.model.ModelloClientNegozio;
 import it.itsrizzoli.model.Prodotto;
 import it.itsrizzoli.model.Transazione;
 import it.itsrizzoli.tcpip.ClientConnessione;
+import it.itsrizzoli.tcpip.ThreadClient;
 import it.itsrizzoli.view.ClientNegozioInterfaccia;
 
 import java.util.List;
+
+import static it.itsrizzoli.tools.TypeThread.THREAD_WRITE_TRANSAZIONI;
 
 public class ControllerClientNegozio {
     private final ModelloClientNegozio modelloClientNegozio;
@@ -73,8 +76,6 @@ public class ControllerClientNegozio {
     }
 
 
-
-
     public List<Prodotto> getProdottiCarrello() {
         return modelloClientNegozio.getProdottiCarrello();
     }
@@ -98,6 +99,7 @@ public class ControllerClientNegozio {
     public void aggiungiListaTransazione(List<Transazione> listaTransazioni) {
         modelloClientNegozio.aggiungiListaTransazione(listaTransazioni);
     }
+
     public void addAllTransazioneAwait(List<Transazione> listaTransazione) {
         if (listaTransazione == null) {
             System.err.println(" - Errore: Lista transazione non trovata");
@@ -107,6 +109,12 @@ public class ControllerClientNegozio {
             clientNegozioInterfaccia.addSingleTransazioneAwait(transazione, getProdottiNegozio());
         }
     }
+
+    public void startThreadTransazioni() {
+        ThreadClient threadWriting = new ThreadClient(THREAD_WRITE_TRANSAZIONI);
+        threadWriting.start();
+    }
+
     public void addSingleTransazioneAwait(Transazione transazione) {
         clientNegozioInterfaccia.addSingleTransazioneAwait(transazione, getProdottiNegozio());
     }

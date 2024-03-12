@@ -48,7 +48,7 @@ public class ThreadClient extends Thread {
                 }
                 newConnessione = false;
                 break;
-            case THREAD_WRITE:
+            case THREAD_WRITE_TRANSAZIONI:
                 System.out.println("Thread di scrittura avviato.");
                 //clientConnessione.writeTransazioniJson(); // Avvio del loop di scrittura
 

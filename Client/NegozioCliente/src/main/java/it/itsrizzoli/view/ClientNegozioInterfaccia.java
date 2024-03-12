@@ -13,7 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
-import static it.itsrizzoli.tools.TypeThread.THREAD_WRITE;
+import static it.itsrizzoli.tools.TypeThread.THREAD_WRITE_TRANSAZIONI;
 
 public class ClientNegozioInterfaccia extends JFrame {
     private boolean statoNegozioOnline = false;
@@ -97,8 +97,7 @@ public class ClientNegozioInterfaccia extends JFrame {
                 public void actionPerformed(ActionEvent e) {
                     if (statoNegozioOnline) {
                         // Avvia un thread per l'invio di json al server
-                        ThreadClient threadWriting = new ThreadClient(THREAD_WRITE);
-                        threadWriting.start();
+                        controllerClientNegozio.startThreadTransazioni();
                         JOptionPane.showMessageDialog(contentPane, "Richiesta inviata!");
                     } else {
                         JOptionPane.showMessageDialog(contentPane, "Attenzione: nessun connessione al server!");
