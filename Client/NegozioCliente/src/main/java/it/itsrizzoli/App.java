@@ -23,7 +23,6 @@ public class App {
 
 
         clientNegozioInterfaccia.setControllerClientNegozio(controllerClientNegozio);
-        controllerClientNegozio.startInterfacciaClient();
 
     }
 }

@@ -35,21 +35,22 @@ public class ClientNegozioInterfaccia extends JFrame {
     private final String[] transazioniColonne = {"Number", "Prodotto", "Prezzo", "Quantità", "Stato"};
 
     public ClientNegozioInterfaccia(String titolo) {
-        setTitle(titolo);
+        inizializza(titolo);
     }
 
     public void setControllerClientNegozio(ControllerClientNegozio controllerClientNegozio) {
         this.controllerClientNegozio = controllerClientNegozio;
+        attivaListenerBtn();
     }
 
-    public void inizializza() {
+    public void inizializza(String titolo) {
         SwingUtilities.invokeLater(() -> {
+            setTitle(titolo);
+
             setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             setMinimumSize(new Dimension(300, 400));
 
             setContentPane(mainPanel);
-
-            attivaListenerBtn();
 
             // Creazione dei pannelli delle tabelle
             creaTabellaPanello(tblCarrello, carrelloColonne, scrollPanelCarrello);
@@ -69,6 +70,8 @@ public class ClientNegozioInterfaccia extends JFrame {
 
             pack();
             setLocationRelativeTo(null);
+
+            setVisible(true);
             System.out.println(" --- FINE THREAD_SWING_EDT ---");
         });
     }
@@ -270,5 +273,8 @@ public class ClientNegozioInterfaccia extends JFrame {
         label.setFont(font);
     }
 
+    private void createUIComponents() {
+        // TODO: place custom component creation code here
+    }
 }
 

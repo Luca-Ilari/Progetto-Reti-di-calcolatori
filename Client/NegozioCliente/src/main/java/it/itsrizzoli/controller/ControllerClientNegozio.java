@@ -36,10 +36,7 @@ public class ControllerClientNegozio {
         return modelloClientNegozio;
     }
 
-    public void startInterfacciaClient() {
-        clientNegozioInterfaccia.inizializza();
-        clientNegozioInterfaccia.setVisible(true);
-    }
+
 
     public synchronized void aggiornaProdottiNegozio(List<Prodotto> newProdottiNegozio) {
         modelloClientNegozio.setProdottiNegozio(newProdottiNegozio);
