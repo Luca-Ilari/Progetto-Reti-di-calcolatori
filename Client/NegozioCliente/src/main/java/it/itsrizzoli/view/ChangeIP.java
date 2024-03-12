@@ -19,13 +19,16 @@ public class ChangeIP extends JFrame {
     public ChangeIP(ClientConnessione clientConnessione) {
         setContentPane(panelForm);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setVisible(true);
+
+        textPorta.setText(String.valueOf(clientConnessione.getServerPort()));
+        textIp.setText(clientConnessione.getServerAddress());
+
         pack();
         setLocationRelativeTo(null);
 
-        textIp.setText(clientConnessione.getServerAddress());
-        textPorta.setText(String.valueOf(clientConnessione.getServerPort()));
+        setVisible(true);
         btnAggiroanIp.addActionListener(new ActionListener() {
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 String newIP = textIp.getText().trim();
@@ -75,4 +78,5 @@ public class ChangeIP extends JFrame {
         });
 
     }
+
 }

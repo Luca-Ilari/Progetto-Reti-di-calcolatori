@@ -9,21 +9,20 @@ import java.util.Random;
 
 public class App {
 
-
     public static void main(String[] args) {
         System.out.println("Start Client...");
         int idRandom = new Random().nextInt(0, 10000);
 
-        ClientNegozioInterfaccia clientNegozioInterfaccia =
-                new ClientNegozioInterfaccia("Negozio Online - " + "Interfaccia Cliente %d".formatted(idRandom));
+        ClientNegozioInterfaccia clientNegozioInterfaccia = new ClientNegozioInterfaccia("Negozio Online - " +
+                "Interfaccia Cliente %d".formatted(idRandom));
 
         ModelloClientNegozio modelloClientNegozio = new ModelloClientNegozio();
 
+        ControllerClientNegozio controllerClientNegozio = new ControllerClientNegozio(modelloClientNegozio,
+                clientNegozioInterfaccia);
 
-        ControllerClientNegozio controllerClientNegozio = new ControllerClientNegozio(modelloClientNegozio, clientNegozioInterfaccia);
 
         clientNegozioInterfaccia.setControllerClientNegozio(controllerClientNegozio);
-
         controllerClientNegozio.startInterfacciaClient();
 
     }
