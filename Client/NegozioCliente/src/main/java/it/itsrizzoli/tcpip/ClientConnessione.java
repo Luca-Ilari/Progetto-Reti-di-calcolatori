@@ -69,9 +69,15 @@ public class ClientConnessione {
     public void aggiornaIP(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
-        logger.info(" Change SERVER:  IP --> " + serverAddress + " | PORTA --> " + serverPort);
+
+        logger.warning(" --- CHIUSURA SOCKET ---");
+
         chiusuraConnessione();
+
+        logger.info("Nuovo credenziali SERVER: \n IP --> " + serverAddress + " | PORTA --> " + serverPort);
+
         startConnessione();
+
     }
 
     public void aggiornaStato(boolean stato) {

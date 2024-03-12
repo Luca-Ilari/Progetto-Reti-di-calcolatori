@@ -14,17 +14,17 @@ public class App {
         System.out.println("Start Client...");
         int idRandom = new Random().nextInt(0, 10000);
 
-        ClientNegozioInterfaccia clientNegozioInterfaccia1 = new ClientNegozioInterfaccia("Negozio Online - " +
-                "Interfaccia Cliente %d".formatted(idRandom));
+        ClientNegozioInterfaccia clientNegozioInterfaccia =
+                new ClientNegozioInterfaccia("Negozio Online - " + "Interfaccia Cliente %d".formatted(idRandom));
 
         ModelloClientNegozio modelloClientNegozio = new ModelloClientNegozio();
 
 
-        ControllerClientNegozio controllerClientNegozio = new ControllerClientNegozio(modelloClientNegozio,
-                clientNegozioInterfaccia1);
+        ControllerClientNegozio controllerClientNegozio = new ControllerClientNegozio(modelloClientNegozio, clientNegozioInterfaccia);
 
-        clientNegozioInterfaccia1.setControllerClientNegozio(controllerClientNegozio);
+        clientNegozioInterfaccia.setControllerClientNegozio(controllerClientNegozio);
 
         controllerClientNegozio.startInterfacciaClient();
+
     }
 }

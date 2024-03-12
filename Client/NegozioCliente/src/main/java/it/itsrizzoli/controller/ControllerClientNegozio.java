@@ -28,7 +28,7 @@ public class ControllerClientNegozio {
 
     }
 
-    public ClientNegozioInterfaccia getClientNegozioInterfaccia() {
+    public ClientNegozioInterfaccia getClientNegozioGui() {
         return clientNegozioInterfaccia;
     }
 
@@ -37,7 +37,7 @@ public class ControllerClientNegozio {
     }
 
     public void startInterfacciaClient() {
-        clientNegozioInterfaccia.inizzalizza();
+        clientNegozioInterfaccia.inizializza();
         clientNegozioInterfaccia.setVisible(true);
     }
 
