@@ -1,9 +1,9 @@
 package it.itsrizzoli;
 
-import it.itsrizzoli.tcpip.ClientConnessione;
-import it.itsrizzoli.ui.NegozioClientUI;
+import it.itsrizzoli.controller.ControllerClientNegozio;
+import it.itsrizzoli.model.ModelloClientNegozio;
+import it.itsrizzoli.view.ClientNegozioInterfaccia;
 
-import javax.swing.SwingUtilities;
 import java.util.Random;
 
 
@@ -12,16 +12,19 @@ public class App {
 
     public static void main(String[] args) {
         System.out.println("Start Client...");
-        NegozioClientUI negozioClientUI1 = new NegozioClientUI("Negozio Online - Interfaccia Cliente %d".formatted(new Random().nextInt(0,1000)));
+        int idRandom = new Random().nextInt(0, 10000);
 
-        SwingUtilities.invokeLater(() -> {
-            negozioClientUI1.inizzalizza();
-            negozioClientUI1.setVisible(true);
-            System.out.println(" --- FINE THREAD_SWING_EDT ---");
-        });
+        ClientNegozioInterfaccia clientNegozioInterfaccia1 = new ClientNegozioInterfaccia("Negozio Online - " +
+                "Interfaccia Cliente %d".formatted(idRandom));
 
-        // Start Thread - connessioni al server  ---> Recupero Prodotti negozio --> aggiornamento UI
-        new ClientConnessione("173.212.203.208", 5555, negozioClientUI1);
+        ModelloClientNegozio modelloClientNegozio = new ModelloClientNegozio();
 
+
+        ControllerClientNegozio controllerClientNegozio = new ControllerClientNegozio(modelloClientNegozio,
+                clientNegozioInterfaccia1);
+
+        clientNegozioInterfaccia1.setControllerClientNegozio(controllerClientNegozio);
+
+        controllerClientNegozio.startInterfacciaClient();
     }
 }
