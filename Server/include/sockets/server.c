@@ -26,8 +26,6 @@ extern int nConnectedClient;
 extern int updateAllClients;
 extern int connectedSockets[MAX_CLIENT];
 
-#define BUFFER_SIZE 1024
-
 int setupSocket(int argc){
     if (argc < 2) {
         timestamp();
@@ -69,12 +67,11 @@ int sendToClient(int sock, char *buffer) {
     if (n < 0){
         return -1;
     }
-//    timestamp();
-//    printf("-> Sendind to socket %d : %s",sock ,buffer);
-
     return 0;
 }
 
+/**@return index of the the array serverProductList where productId == serverProductList.id
+ * @return -1 if the product id is not in the array*/
 int findProductToModify(int productId){
     for (int i = 0; i < PRODUCT_NUMBER; ++i) {
         if (productId == serverProductList[i].id) {
@@ -100,6 +97,41 @@ int tryToRemoveProduct(int productId, int nToRemove){
         return -1;
     }
 }
+int handleStatusCode2(int sock, char *buffer){
+    struct jsonTransaction *transaction;
+    transaction = getJsonTransaction(buffer);
+
+    char prepString[strlen("{\"codiceStato\":xxxxx,\"idTransazione\":xxxxxx}\n")];
+    if (transaction == NULL) {
+        //If json is not formatted correctly
+        timestamp();
+        printf("X Socket %d sent an incorrect JSON\n", sock);
+        return -1;
+    }
+    if(tryToRemoveProduct(transaction->productId, transaction->quantityToRemove) == 0){
+        //JSON to send if modification is successful
+        timestamp();
+        printf("- Socket %d modified product %d\n", sock, transaction->productId);
+        sprintf(prepString, "{\"codiceStato\":5,\"idTransazione\":%d}\n", transaction->transactionId);
+    }else{
+        //JSON to send if modification is NOT successful
+        timestamp();
+        printf("X Socket %d did not modify products\n", sock);
+        sprintf(prepString, "{\"codiceStato\":-2,\"idTransazione\":%d}\n", transaction->transactionId);
+    }
+
+    free(transaction);
+    transaction = NULL;
+
+    memset(buffer, 0, BUFFER_SIZE);
+    strcpy(buffer, prepString);
+
+    if (sendToClient(sock, buffer) == -1){
+        timestamp();
+        printf("X Error sending to socket %d", sock);
+    }
+    return 0;
+}
 
 int handleClient(int sock){
     char buffer[BUFFER_SIZE];
@@ -114,42 +146,16 @@ int handleClient(int sock){
     printf("<- Received from socket %d: %s",sock ,buffer);
 
     int jsonStatusCode = -1;
-    int validate = getJsonStatusCode(buffer, &jsonStatusCode);
-    struct jsonTransaction *transaction;
-    if (validate == 0){
+    int found = getJsonStatusCode(buffer, &jsonStatusCode);
+    if (found == 0){
         switch (jsonStatusCode) {
             case 2://Modify a product
-                transaction = getJsonTransaction(buffer);
-                char prepString[strlen("{\"codiceStato\":xxxxx,\"idTransazione\":xxxxxx}\n")];
-                if (transaction == NULL) {
-                    //JSON to send if modification is NOT successful
-                    timestamp();
-                    printf("X Socket %d sent a incorrect JSON\n", sock);
-                    return 0;
-                }
-                if(tryToRemoveProduct(transaction->productId, transaction->quantityToRemove) == 0){
-                    //JSON to send if modification is successful
-                    timestamp();
-                    printf("- Socket %d modified product %d\n", sock, transaction->productId);
-                    sprintf(prepString, "{\"codiceStato\":5,\"idTransazione\":%d}\n", transaction->transactionId);
-                }else{
-                    //JSON to send if modification is NOT successful
-                    timestamp();
-                    printf("X Socket %d did not modify products\n", sock);
-                    sprintf(prepString, "{\"codiceStato\":-2,\"idTransazione\":%d}\n", transaction->transactionId);
-                }
-
-                free(transaction);
-
-                memset(buffer, 0, BUFFER_SIZE);
-                strcpy(buffer, prepString);
-
-                if (sendToClient(sock, buffer) == -1){
-                    timestamp();
-                    printf("X Error sending to socket %d", sock);
-                }
+                handleStatusCode2(sock, buffer);
                 break;
         }
+    }else{
+        timestamp();
+        printf("X Socket %d sent an incorrect JSON\n", sock);
     }
     return 0;
 }
