@@ -57,10 +57,10 @@ public class ClientConnessione {
         threadConnessione.start();
     }
 
-    public void aggiornaIP(String serverAddress,int serverPort) {
+    public void aggiornaIP(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
-        logger.info(" Change serverAddres --> " + serverAddress);
+        logger.info(" Change SERVER:  IP --> " + serverAddress + " | PORTA --> " + serverPort);
         chiusuraConnessione();
         startConnessione();
     }
@@ -69,7 +69,6 @@ public class ClientConnessione {
         this.onConnessione = stato;
         this.controllerClientNegozio.aggiornaStatoConnessione(stato);
     }
-
 
 
     protected boolean readLoop() {
@@ -103,6 +102,8 @@ public class ClientConnessione {
 
         controllerClientNegozio.aggiungiListaTransazione(sendTransazioni);
 
+        controllerClientNegozio.addAllTransazioneAwait(sendTransazioni);
+
         for (Transazione transazione : sendTransazioni) {
             try {
                 String jsonString = getJsonTransazione(transazione, objectMapper);
@@ -110,7 +111,7 @@ public class ClientConnessione {
                 logger.info("Client: Transazione inviata al server.");
 
                 // clientNegozioInterfaccia.addSingleTransazioneAwait(transazione);
-                controllerClientNegozio.addSingleTransazioneAwait(transazione);
+                //controllerClientNegozio.addSingleTransazioneAwait(transazione);
             } catch (JsonProcessingException e) {
                 logger.warning("Errore durante la conversione in JSON");
             }

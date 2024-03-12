@@ -54,7 +54,8 @@ public class ControllerClientNegozio {
             return;
         }
 
-        clientNegozioInterfaccia.aggiornaStatoTransazioneInTabella(transazione, getProdottiNegozio(), getProdottiCarrello());
+        clientNegozioInterfaccia.aggiornaStatoTransazioneInTabella(transazione, getProdottiNegozio(),
+                getProdottiCarrello());
         System.out.println(" --> UI: Lista transazione aggiornato!!");
 
 
@@ -70,6 +71,8 @@ public class ControllerClientNegozio {
         clientNegozioInterfaccia.aggiornaStateTransazioneFail(transazione);
 
     }
+
+
 
 
     public List<Prodotto> getProdottiCarrello() {
@@ -95,12 +98,21 @@ public class ControllerClientNegozio {
     public void aggiungiListaTransazione(List<Transazione> listaTransazioni) {
         modelloClientNegozio.aggiungiListaTransazione(listaTransazioni);
     }
-
+    public void addAllTransazioneAwait(List<Transazione> listaTransazione) {
+        if (listaTransazione == null) {
+            System.err.println(" - Errore: Lista transazione non trovata");
+            return;
+        }
+        for (Transazione transazione : listaTransazione) {
+            clientNegozioInterfaccia.addSingleTransazioneAwait(transazione, getProdottiNegozio());
+        }
+    }
     public void addSingleTransazioneAwait(Transazione transazione) {
         clientNegozioInterfaccia.addSingleTransazioneAwait(transazione, getProdottiNegozio());
     }
 
     public void aggiornaStatoTransazioneInTabella(Transazione transazione) {
-        clientNegozioInterfaccia.aggiornaStatoTransazioneInTabella(transazione,getProdottiNegozio(),getProdottiCarrello());
+        clientNegozioInterfaccia.aggiornaStatoTransazioneInTabella(transazione, getProdottiNegozio(),
+                getProdottiCarrello());
     }
 }

@@ -20,10 +20,6 @@ public class App {
         ModelloClientNegozio modelloClientNegozio = new ModelloClientNegozio();
 
 
-        // Start Thread - connessioni al server  ---> Recupero Prodotti negozio --> aggiornamento UI
-        //ClientConnessione clientConnessione = new ClientConnessione("173.212.203.208", 5555,
-        // clientNegozioInterfaccia1);
-
         ControllerClientNegozio controllerClientNegozio = new ControllerClientNegozio(modelloClientNegozio,
                 clientNegozioInterfaccia1);
 

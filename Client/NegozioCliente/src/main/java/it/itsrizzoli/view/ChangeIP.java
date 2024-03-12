@@ -22,11 +22,14 @@ public class ChangeIP extends JFrame {
         setVisible(true);
         pack();
         setLocationRelativeTo(null);
+
+        textIp.setText("localhost");
+        textPorta.setText("5555");
         btnAggiroanIp.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String newIP = textIp.getText();
-                String newPorta = textPorta.getText();
+                String newIP = textIp.getText().trim();
+                String newPorta = textPorta.getText().trim();
 
                 if (newIP.isBlank()) {
                     JOptionPane.showMessageDialog(null, "Attenzione: il campo IP è vuoto");

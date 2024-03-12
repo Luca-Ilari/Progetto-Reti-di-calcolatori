@@ -23,7 +23,6 @@ public class ClientNegozioInterfaccia extends JFrame {
     private JTable tblProdottiNegozio = new JTable();
     private JTable tblTransazione = new JTable();
 
-
     private final String[] articoliNegozioColonne = {"Prodotto", "Prezzo", "Disponibile"};
     private final String[] carrelloColonne = {"Prodotto", "Quantità"};
     private final String[] transazioniColonne = {"Number", "Prodotto", "Prezzo", "Quantità", "Stato"};
