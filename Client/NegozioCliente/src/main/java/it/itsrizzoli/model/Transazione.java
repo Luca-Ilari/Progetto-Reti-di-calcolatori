@@ -49,7 +49,7 @@ public class Transazione {
     }
 
     public static Transazione createTransaction(int idProdotto) {
-        int randomQuantita = (int) (Math.random() * 10) + 1; // Quantità casuale tra 1 e 10
+        int randomQuantita = (int) (Math.random() * 20) + 1; // Quantità casuale tra 1 e 20
         return new Transazione(idProdotto, randomQuantita);
     }
 
