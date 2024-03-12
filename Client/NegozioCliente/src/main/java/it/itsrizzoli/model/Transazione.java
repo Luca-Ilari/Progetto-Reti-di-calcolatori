@@ -11,19 +11,16 @@ public class Transazione {
     private static int contaTransazione = 0;
 
     public Transazione(int idProdotto, int quantita) {
-        this.idTransazione = contaTransazione + 1;
+        contaTransazione = contaTransazione + 1;
+
+        this.idTransazione = contaTransazione;
         this.idProdotto = idProdotto;
         this.quantita = quantita;
 
-        contaTransazione = contaTransazione + 1;
     }
 
     public int getIdTransazione() {
         return idTransazione;
-    }
-
-    public void setIdTransazione(int idTransazione) {
-        this.idTransazione = idTransazione;
     }
 
     public int getIdProdotto() {
