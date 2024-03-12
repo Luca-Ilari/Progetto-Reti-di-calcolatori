@@ -133,7 +133,7 @@ public class ClientNegozioInterfaccia extends JFrame {
             for (Prodotto prodotto : prodottiNegozio) {
                 if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
                     Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(), prodotto.getPrezzo() +
-                            "€", transazione.getQuantita(), "await"};
+                            "€", transazione.getQuantita(), "Attesa risposta"};
                     model.addRow(rowData);
                 }
             }
@@ -204,8 +204,8 @@ public class ClientNegozioInterfaccia extends JFrame {
                 int idTransazioneRow = (int) transazioniTableModel.getValueAt(riga, 0); // Converte l'oggetto in Integer
                 String statoTransazione = (String) transazioniTableModel.getValueAt(riga, 4);
                 if (idTransazioneRow == transazione.getIdTransazione()) {
-                    if (statoTransazione.equals("await")) {
-                        transazioniTableModel.setValueAt("ok", riga, 4); // Imposta il nuovo stato
+                    if (statoTransazione.equals("Attesa risposta")) {
+                        transazioniTableModel.setValueAt("Richiesta accettata", riga, 4); // Imposta il nuovo stato
                         aggiornaQuantitaCarrello(transazione.getIdProdotto(), transazione.getQuantita(),
                                 prodottiNegozio, prodottiCarrello);
                     }
@@ -237,7 +237,7 @@ public class ClientNegozioInterfaccia extends JFrame {
                 int idTransazioneRow = (int) transazioniTableModel.getValueAt(riga, 0); // Converte l'oggetto in Integer
                 String statoTransazione = (String) transazioniTableModel.getValueAt(riga, 4);
                 if (idTransazioneRow == transazione.getIdTransazione()) {
-                    if (statoTransazione.equals("await")) {
+                    if (statoTransazione.equals("Attesa risposta")) {
                         transazioniTableModel.setValueAt("Prodotto finito!!", riga, 4); // Imposta il nuovo stato
                         System.out.println("Elemento trovato alla riga " + riga);
 
