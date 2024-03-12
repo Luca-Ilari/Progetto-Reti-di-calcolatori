@@ -23,8 +23,8 @@ public class ChangeIP extends JFrame {
         pack();
         setLocationRelativeTo(null);
 
-        textIp.setText("localhost");
-        textPorta.setText("5555");
+        textIp.setText(clientConnessione.getServerAddress());
+        textPorta.setText(String.valueOf(clientConnessione.getServerPort()));
         btnAggiroanIp.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

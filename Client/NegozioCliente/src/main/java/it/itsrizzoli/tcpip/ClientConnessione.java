@@ -52,6 +52,15 @@ public class ClientConnessione {
 
     }
 
+    public String getServerAddress() {
+        return serverAddress;
+    }
+
+    public int getServerPort() {
+        return serverPort;
+    }
+
+
     private void startConnessione() {
         threadConnessione = new ThreadClient(this, THREAD_CONNESSIONE_READ);
         threadConnessione.start();
