@@ -6,9 +6,9 @@
 #include <windows.h>
 #endif
 
-#include "server.h"
 #include "../define.h"
-#include "handleUpdateClients.h"
+#include "./handleUpdateClients.h"
+#include "../utils/timeStamp.h"
 #include "../utils/customCriticalSection.h"
 
 extern int updateAllClients;

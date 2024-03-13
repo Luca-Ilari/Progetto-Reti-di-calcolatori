@@ -12,10 +12,12 @@
 #include <string.h>
 #endif
 
-#include "include/sockets/server.h"
-#include "include/define.h"
-#include "include/product.h"
-#include "include/sockets/handleUpdateClients.h"
+#include "./include/define.h"
+#include "./include/product.h"
+#include "./include/utils/timeStamp.h"
+#include "./include/sockets/handleClient.h"
+#include "./include/sockets/socketFunctions.h"
+#include "./include/sockets/handleUpdateClients.h"
 
 int updateAllClients = 0;
 int nConnectedClient = 0;
