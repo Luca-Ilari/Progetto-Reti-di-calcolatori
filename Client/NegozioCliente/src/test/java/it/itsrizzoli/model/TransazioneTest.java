@@ -43,7 +43,9 @@ class TransazioneTest {
 
         var transazioni = Transazione.creaListaTransazioniRandom(tmp);
         for (int i = 0; i < q; i++) {
+            assertEquals(tmp.get(i).getNome(), "prod"+1);
             assertEquals(tmp.get(i).getPrezzo(), prezzo[i]);
+            assertEquals(tmp.get(i).getQuantitaDisponibile(), 10);
         }
     }
     @Test
