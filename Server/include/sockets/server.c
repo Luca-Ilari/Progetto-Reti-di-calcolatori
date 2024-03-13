@@ -150,6 +150,7 @@ int handleClient(int sock){
 
         for (int i = 0; i < n; ++i) {
             if (buffer[i] == '\r' && buffer[i+1] == '\n') {
+                sleep(1);
                 memset(tmp, 0, BUFFER_SIZE);
                 strncpy(tmp,buffer+(i-jsonlen),jsonlen);
                 jsonlen = 0;

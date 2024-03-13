@@ -3,6 +3,9 @@ package it.itsrizzoli.model;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class TransazioneTest {
@@ -28,5 +31,25 @@ class TransazioneTest {
         assertEquals(2, tmp.getIdProdotto());
         assert(tmp.getQuantita() <= 20);
         assert(tmp.getQuantita() > 0);
+    }
+    @Test
+    void creaListaTransazioniRandom(){
+        int q = 3;
+        float prezzo[]=  new float[]{2.2f,24.2f,5.99f};
+        ArrayList<Prodotto> tmp = new ArrayList<Prodotto>(3);
+        for (int i = 0; i <   q ; i++) {
+            tmp.add(new Prodotto(i,"prod"+1, prezzo[i],10));
+        }
+
+        var transazioni = Transazione.creaListaTransazioniRandom(tmp);
+        for (int i = 0; i < q; i++) {
+            assertEquals(tmp.get(i).getPrezzo(), prezzo[i]);
+        }
+    }
+    @Test
+    void creaListaTransazioneArrayListVuoto(){
+        ArrayList<Prodotto> tmp = new ArrayList<Prodotto>(1);
+        var transazioni = Transazione.creaListaTransazioniRandom(tmp);
+        assert(transazioni == null);
     }
 }

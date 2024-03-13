@@ -52,6 +52,10 @@ public class Transazione {
 
     public static List<Transazione> creaListaTransazioniRandom(List<Prodotto> listaProdotti) {
         List<Transazione> listaRandomTransazioni = new ArrayList<>();
+
+        if (listaProdotti.isEmpty()){
+            return null;
+        }
         Random random = new Random();
         int numeroTransazioni = random.nextInt(5, 20);
 
