@@ -103,8 +103,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     private void creaTabellaPanello(JTable table, String[] colonneTabella, JScrollPane jScrollPane) {
         DefaultTableModel defaultTableModel = new DefaultTableModel(colonneTabella, 0);
         table.setModel(defaultTableModel);
-
-        // Imposta l'allineamento al centro per tutte le colonne
+        table.setEnabled(false);        // Imposta l'allineamento al centro per tutte le colonne
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
         for (int i = 0; i < table.getColumnCount(); i++) {
