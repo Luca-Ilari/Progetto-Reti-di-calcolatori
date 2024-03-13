@@ -109,7 +109,7 @@ public class ClientConnessione {
 
     }
 
-    public synchronized void writeTransazioniJson() {
+    public void writeTransazioniJson() {
         ObjectMapper objectMapper = new ObjectMapper();
 
         List<Transazione> sendTransazioni =
@@ -129,12 +129,6 @@ public class ClientConnessione {
                 //controllerClientNegozio.addSingleTransazioneAwait(transazione);
             } catch (JsonProcessingException e) {
                 logger.warning("Errore durante la conversione in JSON");
-            }
-            try {
-                // Attendere 5 secondi prima di inviare la prossima transazione
-                Thread.sleep(1_000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Interruzione durante l'attesa", e);
             }
         }
     }

@@ -88,7 +88,6 @@ public class ClientNegozioInterfaccia extends JFrame {
                 if (statoNegozioOnline) {
                     // Avvia un thread per l'invio di json al server
                     controllerClientNegozio.startThreadTransazioni();
-                    JOptionPane.showMessageDialog(null, "Richiesta inviata!");
                 } else {
                     JOptionPane.showMessageDialog(null, "Attenzione: nessuna connessione al server!");
                 }
