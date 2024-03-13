@@ -2,6 +2,7 @@ package it.itsrizzoli;
 
 import it.itsrizzoli.controller.ControllerClientNegozio;
 import it.itsrizzoli.model.ModelloClientNegozio;
+import it.itsrizzoli.tcpip.ClientConnessione;
 import it.itsrizzoli.view.ClientNegozioInterfaccia;
 
 import java.util.Random;
@@ -18,10 +19,13 @@ public class App {
 
         ModelloClientNegozio modelloClientNegozio = new ModelloClientNegozio();
 
+        ClientConnessione clientConnessione = new ClientConnessione();
+
         ControllerClientNegozio controllerClientNegozio = new ControllerClientNegozio(modelloClientNegozio,
-                clientNegozioInterfaccia);
+                clientNegozioInterfaccia, clientConnessione);
 
 
+        clientConnessione.setControllerClientNegozio(controllerClientNegozio);
         clientNegozioInterfaccia.setControllerClientNegozio(controllerClientNegozio);
 
     }

@@ -29,24 +29,19 @@ public class ClientConnessione {
     public boolean onConnessione = false;
     private final static Logger logger = Logger.getLogger("Avvisi");
 
-    private final ControllerClientNegozio controllerClientNegozio;
+    private ControllerClientNegozio controllerClientNegozio;
 
     private ThreadClient threadConnessione;
 
-    public ClientConnessione(ControllerClientNegozio controllerClientNegozio) {
-        this.controllerClientNegozio = controllerClientNegozio;
-
+    public ClientConnessione() {
         attivaColoreLogger();
         startConnessione();
-
-
     }
 
-    public ClientConnessione(String serverAddress, int serverPort, ControllerClientNegozio controllerClientNegozio) {
+    public ClientConnessione(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
 
-        this.controllerClientNegozio = controllerClientNegozio;
         attivaColoreLogger();
         startConnessione();
 
@@ -60,6 +55,9 @@ public class ClientConnessione {
         return serverPort;
     }
 
+    public void setControllerClientNegozio(ControllerClientNegozio controllerClientNegozio) {
+        this.controllerClientNegozio = controllerClientNegozio;
+    }
 
     private void startConnessione() {
         threadConnessione = new ThreadClient(this, THREAD_CONNESSIONE_READ);

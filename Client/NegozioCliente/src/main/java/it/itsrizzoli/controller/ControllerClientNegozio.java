@@ -21,10 +21,10 @@ public class ControllerClientNegozio {
     }
 
     public ControllerClientNegozio(ModelloClientNegozio modelloClientNegozio,
-                                   ClientNegozioInterfaccia clientNegozioInterfaccia) {
+                                   ClientNegozioInterfaccia clientNegozioInterfaccia,ClientConnessione clientConnessione) {
         this.modelloClientNegozio = modelloClientNegozio;
         this.clientNegozioInterfaccia = clientNegozioInterfaccia;
-        this.clientConnessione = new ClientConnessione(this);
+        this.clientConnessione = clientConnessione;
 
     }
 
