@@ -101,7 +101,7 @@ int handleStatusCode2(int sock, char *buffer){
     struct jsonTransaction *transaction;
     transaction = getJsonTransaction(buffer);
 
-    char prepString[strlen("{\"codiceStato\":xxxxx,\"idTransazione\":xxxxxx}\n")];
+    char prepString[strlen("{\"codiceStato\":xxxx,\"idTransazione\":xxxxxxxxx}\n")];
     if (transaction == NULL) {
         //If json is not formatted correctly
         timestamp();
@@ -136,7 +136,6 @@ int handleStatusCode2(int sock, char *buffer){
 int handleClient(int sock){
     char buffer[BUFFER_SIZE];
     char tmp[BUFFER_SIZE];
-    int tmplen = 0;
     int jsonRead = 0;
     int jsonlen=0;
     memset(buffer, 0, BUFFER_SIZE);
@@ -150,7 +149,7 @@ int handleClient(int sock){
 
         for (int i = 0; i < n; ++i) {
             if (buffer[i] == '\r' && buffer[i+1] == '\n') {
-                sleep(1);
+                usleep(100*1000);//Sleep 0,1 second every transaction
                 memset(tmp, 0, BUFFER_SIZE);
                 strncpy(tmp,buffer+(i-jsonlen),jsonlen);
                 jsonlen = 0;

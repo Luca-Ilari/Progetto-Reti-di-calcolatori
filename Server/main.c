@@ -22,11 +22,11 @@ int nConnectedClient = 0;
 int connectedSockets[MAX_CLIENT];
 
 struct product serverProductList[PRODUCT_NUMBER] = {
-        {0, "Pane", 1000, (float)2.99},
-        {1, "Acqua", 500, (float)1},
-        {2, "Vino", 500, (float)20},
-        {3, "Birra", 90, (float)2},
-        {4, "Patatine", 700, (float)2}
+        {0, "Pane", 100000, (float)2.99},
+        {1, "Acqua", 50000, (float)1},
+        {2, "Vino", 50000, (float)20},
+        {3, "Birra", 900, (float)2},
+        {4, "Patatine", 7000, (float)2}
 };
 
 #ifdef WIN32
