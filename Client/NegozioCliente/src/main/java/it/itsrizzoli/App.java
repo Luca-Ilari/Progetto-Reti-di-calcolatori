@@ -24,7 +24,5 @@ public class App {
         ControllerClientNegozio controllerClientNegozio = new ControllerClientNegozio(modelloClientNegozio,
                 clientNegozioInterfaccia, clientConnessione);
 
-
-
     }
 }

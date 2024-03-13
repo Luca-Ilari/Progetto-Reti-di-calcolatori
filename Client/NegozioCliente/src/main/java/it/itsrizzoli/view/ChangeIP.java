@@ -18,7 +18,9 @@ public class ChangeIP extends JFrame {
     private ClientConnessione clientConnessione;
 
     public ChangeIP(ClientConnessione clientConnessione) {
+
         this.clientConnessione = clientConnessione;
+
         setContentPane(panelMainForm);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
