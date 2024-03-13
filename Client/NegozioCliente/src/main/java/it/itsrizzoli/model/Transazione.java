@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 public class Transazione {
-    private int idTransazione;
+    private final int idTransazione;
     private int idProdotto;
     private int quantita;
     private static int contaTransazione = 0;
