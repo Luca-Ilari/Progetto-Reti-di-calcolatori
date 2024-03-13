@@ -36,7 +36,25 @@ public class ControllerClientNegozio {
         return modelloClientNegozio;
     }
 
+    public List<Prodotto> getProdottiCarrello() {
+        return modelloClientNegozio.getProdottiCarrello();
+    }
 
+    public List<Prodotto> getProdottiNegozio() {
+        return modelloClientNegozio.getProdottiNegozio();
+    }
+
+    public List<Transazione> getListaTransazioni() {
+        return modelloClientNegozio.getListaTransazione();
+    }
+
+    public void setProdottiCarrello(List<Prodotto> prodottiCarrello) {
+        modelloClientNegozio.setProdottiCarrello(prodottiCarrello);
+    }
+
+    public void setProdottiNegozio(List<Prodotto> prodottiNegozio) {
+        modelloClientNegozio.setProdottiNegozio(prodottiNegozio);
+    }
 
     public synchronized void aggiornaProdottiNegozio(List<Prodotto> newProdottiNegozio) {
         modelloClientNegozio.setProdottiNegozio(newProdottiNegozio);
@@ -70,27 +88,6 @@ public class ControllerClientNegozio {
         }
         clientNegozioInterfaccia.aggiornaStateTransazioneFail(transazione);
 
-    }
-
-
-    public List<Prodotto> getProdottiCarrello() {
-        return modelloClientNegozio.getProdottiCarrello();
-    }
-
-    public List<Prodotto> getProdottiNegozio() {
-        return modelloClientNegozio.getProdottiNegozio();
-    }
-
-    public List<Transazione> getListaTransazioni() {
-        return modelloClientNegozio.getListaTransazione();
-    }
-
-    public void setProdottiCarrello(List<Prodotto> prodottiCarrello) {
-        modelloClientNegozio.setProdottiCarrello(prodottiCarrello);
-    }
-
-    public void setProdottiNegozio(List<Prodotto> prodottiNegozio) {
-        modelloClientNegozio.setProdottiNegozio(prodottiNegozio);
     }
 
     public void aggiungiListaTransazione(List<Transazione> listaTransazioni) {
