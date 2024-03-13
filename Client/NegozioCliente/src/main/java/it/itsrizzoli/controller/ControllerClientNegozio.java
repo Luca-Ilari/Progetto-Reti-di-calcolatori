@@ -21,11 +21,14 @@ public class ControllerClientNegozio {
     }
 
     public ControllerClientNegozio(ModelloClientNegozio modelloClientNegozio,
-                                   ClientNegozioInterfaccia clientNegozioInterfaccia,ClientConnessione clientConnessione) {
+                                   ClientNegozioInterfaccia clientNegozioInterfaccia,
+                                   ClientConnessione clientConnessione) {
         this.modelloClientNegozio = modelloClientNegozio;
         this.clientNegozioInterfaccia = clientNegozioInterfaccia;
         this.clientConnessione = clientConnessione;
 
+        clientConnessione.setControllerClientNegozio(this);
+        clientNegozioInterfaccia.setControllerClientNegozio(this);
     }
 
     public ClientNegozioInterfaccia getClientNegozioGui() {

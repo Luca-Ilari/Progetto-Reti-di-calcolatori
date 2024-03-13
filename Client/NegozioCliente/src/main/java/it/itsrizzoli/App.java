@@ -25,8 +25,6 @@ public class App {
                 clientNegozioInterfaccia, clientConnessione);
 
 
-        clientConnessione.setControllerClientNegozio(controllerClientNegozio);
-        clientNegozioInterfaccia.setControllerClientNegozio(controllerClientNegozio);
 
     }
 }

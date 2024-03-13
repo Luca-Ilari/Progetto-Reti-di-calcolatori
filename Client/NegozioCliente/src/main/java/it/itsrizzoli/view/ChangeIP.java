@@ -20,14 +20,16 @@ public class ChangeIP extends JFrame {
     public ChangeIP(ClientConnessione clientConnessione) {
         this.clientConnessione = clientConnessione;
         setContentPane(panelMainForm);
-
-        setConnectionDetails();
-        implementaListenerBtn();
-
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        pack();
-        setLocationRelativeTo(null);
-        setVisible(true);
+
+        SwingUtilities.invokeLater(() -> {
+            setConnectionDetails();
+            implementaListenerBtn();
+            pack();
+            setLocationRelativeTo(null);
+            setVisible(true);
+        });
+
     }
 
     public void setConnectionDetails() {

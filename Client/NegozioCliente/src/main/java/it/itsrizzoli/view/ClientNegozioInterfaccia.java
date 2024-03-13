@@ -44,13 +44,13 @@ public class ClientNegozioInterfaccia extends JFrame {
     }
 
     public void inizializza(String titolo) {
+        setTitle(titolo);
+
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setMinimumSize(new Dimension(300, 400));
+
+        setContentPane(mainPanel);
         SwingUtilities.invokeLater(() -> {
-            setTitle(titolo);
-
-            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            setMinimumSize(new Dimension(300, 400));
-
-            setContentPane(mainPanel);
 
             // Creazione dei pannelli delle tabelle
             creaTabellaPanello(tblCarrello, carrelloColonne, scrollPanelCarrello);
