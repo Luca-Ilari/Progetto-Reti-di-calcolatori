@@ -87,6 +87,11 @@ public class ModelloClientNegozio {
                 return transazione;
             }
         }
+        for (Transazione transazione : listaTransazioneVendita) {
+            if (transazione.getIdTransazione() == idTransazione) {
+                return transazione;
+            }
+        }
         return null;
     }
 

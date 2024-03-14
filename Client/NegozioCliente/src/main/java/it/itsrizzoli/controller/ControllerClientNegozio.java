@@ -96,29 +96,37 @@ public class ControllerClientNegozio {
         this.clientNegozioInterfaccia.aggiornaStatoNegozio(statoConnessione);
     }
 
-    public void aggiornaStateTransazioneId(int idTransazione) {
+    public void aggiornaStateTransazioneId(int idTransazione, boolean istTipoVendita) {
         Transazione transazione = modelloClientNegozio.trovaTransazione(idTransazione);
         if (transazione == null) {
             System.err.println(" - Errore: Transazione non trovata");
             return;
         }
 
-        clientNegozioInterfaccia.aggiornaStatoTransazioneInTabella(transazione, getProdottiNegozio(),
-                getProdottiCarrello());
+        if (istTipoVendita) {
+            clientNegozioInterfaccia.aggiornaStatoTransazioneInTabellaVendita(transazione, getProdottiCarrello());
+        } else {
+            clientNegozioInterfaccia.aggiornaStatoTransazioneInTabellaAcquisto(transazione, getProdottiNegozio(),
+                    getProdottiCarrello());
+        }
+
         System.out.println(" --> UI: Lista transazione aggiornato!!");
 
 
     }
 
-    public void aggiornaStateTransazioneFail(int idTransazione) {
+    public void aggiornaStateTransazioneFail(int idTransazione, boolean isTipoVendita) {
         Transazione transazione = modelloClientNegozio.trovaTransazione(idTransazione);
 
         if (transazione == null) {
             System.err.println(" - Errore: Transazione non trovata");
             return;
         }
-        clientNegozioInterfaccia.aggiornaStateTransazioneFail(transazione);
-
+        if (isTipoVendita) {
+            clientNegozioInterfaccia.aggiornaStateTransazioneFail(transazione, isTipoVendita);
+        } else {
+            clientNegozioInterfaccia.aggiornaStateTransazioneFail(transazione, isTipoVendita);
+        }
     }
 
     public void aggiungiListaTransazioneAcquisto(List<Transazione> listaTransazioni) {
@@ -160,7 +168,7 @@ public class ControllerClientNegozio {
     }
 
     public void aggiornaStatoTransazioneInTabella(Transazione transazione) {
-        clientNegozioInterfaccia.aggiornaStatoTransazioneInTabella(transazione, getProdottiNegozio(),
+        clientNegozioInterfaccia.aggiornaStatoTransazioneInTabellaAcquisto(transazione, getProdottiNegozio(),
                 getProdottiCarrello());
     }
 }

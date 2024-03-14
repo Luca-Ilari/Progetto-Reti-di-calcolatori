@@ -29,7 +29,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     private JScrollPane scrollPanelCarrello;
     private JScrollPane scrollPanelTransazioniAcquisto;
     private JPanel mainPanel;
-    private JTable tblTransazioneVendita;
+    private JTable tblTransazioniVendita;
     private JScrollPane scrollPanelTransazioniVendita;
 
 
@@ -79,7 +79,7 @@ public class ClientNegozioInterfaccia extends JFrame {
             creaTabellaPanello(tblCarrello, carrelloColonne, scrollPanelCarrello);
             creaTabellaPanello(tblNegozio, articoliNegozioColonne, scrolPanelNegozio);
             creaTabellaPanello(tblTransazioniAcquisto, transazioniColonne, scrollPanelTransazioniAcquisto);
-            creaTabellaPanello(tblTransazioneVendita, transazioniColonne, scrollPanelTransazioniVendita);
+            creaTabellaPanello(tblTransazioniVendita, transazioniColonne, scrollPanelTransazioniVendita);
 
             Dimension labelSize = new Dimension(200, 30);
             Font largeFont = new Font("Arial", Font.BOLD, 30);
@@ -192,7 +192,7 @@ public class ClientNegozioInterfaccia extends JFrame {
 
     public void addAllTransazioneVenditaAwait(List<Transazione> transazioneList, List<Prodotto> prodottiCarrello) {
         SwingUtilities.invokeLater(() -> {
-            DefaultTableModel model = (DefaultTableModel) tblTransazioneVendita.getModel();
+            DefaultTableModel model = (DefaultTableModel) tblTransazioniVendita.getModel();
 
             for (Transazione transazione : transazioneList) {
                 for (Prodotto prodotto : prodottiCarrello) {
@@ -211,8 +211,8 @@ public class ClientNegozioInterfaccia extends JFrame {
 
     }
 
-    public void aggiornaStatoTransazioneInTabella(Transazione transazione, List<Prodotto> prodottiNegozio,
-                                                  List<Prodotto> prodottiCarrello) {
+    public void aggiornaStatoTransazioneInTabellaAcquisto(Transazione transazione, List<Prodotto> prodottiNegozio,
+                                                          List<Prodotto> prodottiCarrello) {
         SwingUtilities.invokeLater(() -> {
             DefaultTableModel transazioniTableModel = (DefaultTableModel) tblTransazioniAcquisto.getModel();
             // Aggiorna il valore nella colonna "Stato" alla riga
@@ -222,8 +222,8 @@ public class ClientNegozioInterfaccia extends JFrame {
                 if (idTransazioneRow == transazione.getIdTransazione()) {
                     if (statoTransazione.equals("Attesa risposta")) {
                         transazioniTableModel.setValueAt("Richiesta accettata", riga, 4); // Imposta il nuovo stato
-                        aggiornaQuantitaCarrello(transazione.getIdProdotto(), transazione.getQuantita(),
-                                prodottiNegozio, prodottiCarrello, true);
+                        incrementaQuantitaCarrello(transazione.getIdProdotto(), transazione.getQuantita(),
+                                prodottiNegozio, prodottiCarrello);
                     }
 
                     System.out.println("Elemento trovato alla riga " + riga);
@@ -242,19 +242,57 @@ public class ClientNegozioInterfaccia extends JFrame {
 
     }
 
-
-    public void aggiornaStateTransazioneFail(Transazione transazione) {
+    public void aggiornaStatoTransazioneInTabellaVendita(Transazione transazione, List<Prodotto> prodottiCarrello) {
         SwingUtilities.invokeLater(() -> {
-
-
-            DefaultTableModel transazioniTableModel = (DefaultTableModel) tblTransazioniAcquisto.getModel();
+            DefaultTableModel transazioniTableModel = (DefaultTableModel) tblTransazioniVendita.getModel();
             // Aggiorna il valore nella colonna "Stato" alla riga
             for (int riga = 0; riga < transazioniTableModel.getRowCount(); riga++) {
                 int idTransazioneRow = (int) transazioniTableModel.getValueAt(riga, 0); // Converte l'oggetto in Integer
                 String statoTransazione = (String) transazioniTableModel.getValueAt(riga, 4);
                 if (idTransazioneRow == transazione.getIdTransazione()) {
                     if (statoTransazione.equals("Attesa risposta")) {
-                        transazioniTableModel.setValueAt("Prodotto finito!!", riga, 4); // Imposta il nuovo stato
+                        transazioniTableModel.setValueAt("Richiesta accettata", riga, 4); // Imposta il nuovo stato
+                        decrementaQuantitaCarrello(transazione.getIdProdotto(), transazione.getQuantita(),
+                                prodottiCarrello);
+                    }
+
+                    System.out.println("Elemento trovato alla riga " + riga);
+
+                    break;
+                }
+            }
+
+            transazioniTableModel.fireTableDataChanged();
+
+
+            System.out.println(" --> UI: Lista transazione aggiornato!!");
+
+            // allSetResponsiveTable();
+        });
+
+    }
+
+    public void aggiornaStateTransazioneFail(Transazione transazione, boolean isVendita) {
+        SwingUtilities.invokeLater(() -> {
+            DefaultTableModel transazioniTableModel;
+
+            if (!isVendita) {
+                transazioniTableModel = (DefaultTableModel) tblTransazioniAcquisto.getModel();
+            } else {
+                transazioniTableModel = (DefaultTableModel) tblTransazioniVendita.getModel();
+            }
+            // Aggiorna il valore nella colonna "Stato" alla riga
+            for (int riga = 0; riga < transazioniTableModel.getRowCount(); riga++) {
+                int idTransazioneRow = (int) transazioniTableModel.getValueAt(riga, 0); // Converte l'oggetto in Integer
+                String statoTransazione = (String) transazioniTableModel.getValueAt(riga, 4);
+                if (idTransazioneRow == transazione.getIdTransazione()) {
+                    if (statoTransazione.equals("Attesa risposta")) {
+
+                        if (!isVendita) {
+                            transazioniTableModel.setValueAt("Prodotto finito!!", riga, 4); // Imposta il nuovo stato
+                        } else {
+                            transazioniTableModel.setValueAt("Prodotto esaurito!!", riga, 4); // Imposta il nuovo stato
+                        }
                         System.out.println("Elemento trovato alla riga " + riga);
 
                         break;
@@ -306,6 +344,71 @@ public class ClientNegozioInterfaccia extends JFrame {
                 }
             }
         }
+
+        modelloCarrello.fireTableDataChanged();
+    }
+
+    public synchronized void incrementaQuantitaCarrello(int idProdotto, int quantitaAggiunta,
+                                                        List<Prodotto> prodottiNegozio,
+                                                        List<Prodotto> prodottiCarrello) {
+        DefaultTableModel modelloCarrello = (DefaultTableModel) tblCarrello.getModel();
+        Prodotto prodotto = trovaProdottoLista(idProdotto, prodottiCarrello);
+
+        if (prodotto == null) {
+            // Inserimento del nuovo prodotto nel carrello
+            Prodotto nuovoProdotto = trovaProdottoLista(idProdotto, prodottiNegozio);
+            if (nuovoProdotto == null) {
+                System.out.println("Errore: Prodotto non presente nel negozio.");
+                return;
+            }
+            prodottiCarrello.add(nuovoProdotto);
+
+            modelloCarrello.addRow(new String[]{nuovoProdotto.getNome(), String.valueOf(quantitaAggiunta)});
+        } else {
+            // Aggiornamento della quantità del prodotto nel carrello
+            for (int riga = 0; riga < modelloCarrello.getRowCount(); riga++) {
+                String nomeProdotto = (String) tblNegozio.getValueAt(riga, 0);
+                if (nomeProdotto.equals(prodotto.getNome())) {
+                    int quantita = Integer.parseInt((String) tblCarrello.getValueAt(riga, 1));
+                    System.out.println("Elemento trovato alla riga " + riga);
+                    int nuovaQuantita = quantita + quantitaAggiunta;
+                    modelloCarrello.setValueAt(String.valueOf(nuovaQuantita), riga, 1); // Aggiorna la quantità
+                    break;
+                }
+            }
+        }
+
+        modelloCarrello.fireTableDataChanged();
+    }
+
+    public synchronized void decrementaQuantitaCarrello(int idProdotto, int quantitaTogliere,
+                                                        List<Prodotto> prodottiCarrello) {
+        DefaultTableModel modelloCarrello = (DefaultTableModel) tblCarrello.getModel();
+        Prodotto prodotto = trovaProdottoLista(idProdotto, prodottiCarrello);
+
+        if (prodotto == null) {
+            System.out.println(" Attenzione: Prodotto non trovato nel carrello");
+            return;
+        }
+        // Aggiornamento della quantità del prodotto nel carrello
+        for (int riga = 0; riga < modelloCarrello.getRowCount(); riga++) {
+            String nomeProdotto = (String) tblNegozio.getValueAt(riga, 0);
+            if (nomeProdotto.equals(prodotto.getNome())) {
+                System.out.println("Elemento trovato alla riga " + riga);
+
+                int quantitaDisponibile = Integer.parseInt((String) tblCarrello.getValueAt(riga, 1));
+                int nuovaQuantita = quantitaDisponibile - quantitaTogliere;
+
+                if (nuovaQuantita < 0) {
+                    System.out.println(" Attenzione: la quantità richieste non è disponibile ");
+                    return;
+                }
+
+                modelloCarrello.setValueAt(String.valueOf(nuovaQuantita), riga, 1); // Aggiorna la quantità
+                break;
+            }
+        }
+
 
         modelloCarrello.fireTableDataChanged();
     }

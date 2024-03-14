@@ -15,7 +15,7 @@ public class App {
         int idRandom = new Random().nextInt(0, 10000);
 
         ClientNegozioInterfaccia clientNegozioInterfaccia = new ClientNegozioInterfaccia("Negozio Online - " +
-                "Interfaccia Cliente %d".formatted(idRandom));
+                "Interfaccia Client %d".formatted(idRandom));
 
         ModelloClientNegozio modelloClientNegozio = new ModelloClientNegozio();
 

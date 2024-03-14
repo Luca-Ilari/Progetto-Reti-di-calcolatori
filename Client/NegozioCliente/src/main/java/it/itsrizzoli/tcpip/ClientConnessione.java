@@ -9,6 +9,7 @@ import it.itsrizzoli.model.Prodotto;
 import it.itsrizzoli.model.Transazione;
 import it.itsrizzoli.tools.CodiciStatoServer;
 
+import javax.swing.*;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
@@ -130,7 +131,8 @@ public class ClientConnessione {
         // Controllo se sono presenti dei prodotti da vendere
         List<Prodotto> listaProdottiCarrello = controllerClientNegozio.getProdottiCarrello();
         if (listaProdottiCarrello.isEmpty()) {
-            System.out.println(" Attenzioen: Non ci sono prodotti da vendere");
+            System.out.println("Attenzioen: Non ci sono prodotti nel carrello da vendere");
+            JOptionPane.showMessageDialog(null, "Attenzioen: Non ci sono prodotti nel carrello da vendere!!\n - Compra Prodotti prima.");
             return;
         }
 
@@ -193,15 +195,13 @@ public class ClientConnessione {
         }
         switch (codeStatus) {
             case CodiciStatoServer.START_SESSION:
-                System.out.println("Client riceve codice Status 1: Avvio sessione");
+                logger.info("Client riceve codice Status 1: Avvio sessione");
                 break;
             case CodiciStatoServer.RIMUOVI_PRODOTTO:
                 System.out.println("Client riceve codice Status 2: Rimozione prodotto dal Negozio");
                 break;
             case CodiciStatoServer.AGGIUNGI_PRODOTTO:
                 System.out.println("Client riceve codice Status 3: Aggiunta prodotto al Negozio");
-                int idTransazione = jsonNode.get("idTransazione").asInt();
-                controllerClientNegozio.aggiornaProdottiCarrello(idTransazione);
                 break;
             case CodiciStatoServer.LISTA_PRODOTTI_AGGIORNATO:
                 List<Prodotto> listaProdotti = recuperoListaProdottiJson(jsonNode);
@@ -211,12 +211,17 @@ public class ClientConnessione {
                 }
                 //aggiorna negozio prodotti UI
                 controllerClientNegozio.aggiornaProdottiNegozio(listaProdotti);
-
                 break;
-            case CodiciStatoServer.SUCCESSO_TRANSAZIONE:
-                logger.info("Client riceve codice Status 5 : Successo nella Transazione");
+            case CodiciStatoServer.SUCCESSO_TRANSAZIONE_ACQUISTO:
+                logger.info("Client riceve codice Status 5 : Successo nella Transazione - Acquisto");
+                int idTransazione = jsonNode.get("idTransazione").asInt();
+                controllerClientNegozio.aggiornaStateTransazioneId(idTransazione, false);
+                break;
+
+            case CodiciStatoServer.SUCCESSO_TRANSAZIONE_VENDITA:
+                logger.info("Client riceve codice Status 6 : Successo nella Transazione - Vendita");
                 idTransazione = jsonNode.get("idTransazione").asInt();
-                controllerClientNegozio.aggiornaStateTransazioneId(idTransazione);
+                controllerClientNegozio.aggiornaStateTransazioneId(idTransazione, true);
                 break;
             case CodiciStatoServer.FAIL_SESSION:
                 System.out.println("Client riceve codice Status -1: Fallimento sessione");
@@ -224,10 +229,12 @@ public class ClientConnessione {
             case CodiciStatoServer.FAIL_RIMUOVI_PRODOTTO:
                 System.out.println("Client riceve codice Status -2: Fallimento rimozione prodotto dal Negozio");
                 idTransazione = jsonNode.get("idTransazione").asInt();
-                controllerClientNegozio.aggiornaStateTransazioneFail(idTransazione);
+                controllerClientNegozio.aggiornaStateTransazioneFail(idTransazione, false);
                 break;
             case CodiciStatoServer.FAIL_AGGIUNGI_PRODOTTO:
                 System.out.println("Client riceve codice Status -3: Fallimento aggiunta prodotto al Negozio");
+                idTransazione = jsonNode.get("idTransazione").asInt();
+                controllerClientNegozio.aggiornaStateTransazioneFail(idTransazione, true);
                 break;
             default:
                 System.out.println("Errore: Codice di stato non valido.");
