@@ -76,7 +76,8 @@ Server->>+ Tutti i Client Connessi: Lista prodotti aggiornata
 | 2 | RIMUOVI_PRODOTTO |
 | 3 | AGGIUNGI_PRODOTTO |
 | 4 | LISTA_PRODOTTI_AGGIORNATO |
-| 5 | SUCCESSO_TRANSAZIONE |
+| 5 | SUCCESSO_TRANSAZIONE_ACQUISTO |
+| 6 | SUCCESSO_TRANSAZIONE_VENDITA |
 | -1 | FAIL_SESSION |
 | -2 | FAIL_RIMUOVI_PRODOTTO |
 | -3 | FAIL_AGGIUNGI_PRODOTTO |
@@ -119,10 +120,17 @@ Richiesta da parte di un client per la rimozione di un prodotto
    }
 }
 ```
-### Json successo transazione
+### Json successo transazione di acquisto
 ```json
 {
    "codiceStato":5,
+   "idTransazione":1
+}
+```
+### Json successo transazione di vendita
+```json
+{
+   "codiceStato":6,
    "idTransazione":1
 }
 ```
