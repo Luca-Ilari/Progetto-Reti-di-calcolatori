@@ -120,10 +120,17 @@ Richiesta da parte di un client per la rimozione di un prodotto
    }
 }
 ```
-### Json successo transazione
+### Json successo transazione di acquisto
 ```json
 {
    "codiceStato":5,
+   "idTransazione":1
+}
+```
+### Json successo transazione di vendita
+```json
+{
+   "codiceStato":6,
    "idTransazione":1
 }
 ```
