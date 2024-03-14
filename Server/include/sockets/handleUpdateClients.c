@@ -7,6 +7,7 @@
 #endif
 
 #include "../define.h"
+#include "./socketFunctions.h"
 #include "./handleUpdateClients.h"
 #include "../utils/timeStamp.h"
 #include "../utils/customCriticalSection.h"

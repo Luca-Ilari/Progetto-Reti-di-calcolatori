@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <unistd.h>
+
 #ifdef WIN32
 #include <winsock2.h>
+#elif __APPLE__
+#include <string.h>
+#include <sys/socket.h>
 #endif
 
 #include "./socketFunctions.h"

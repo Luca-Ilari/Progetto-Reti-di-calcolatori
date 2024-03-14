@@ -19,6 +19,12 @@
 #include "./include/sockets/socketFunctions.h"
 #include "./include/sockets/handleUpdateClients.h"
 
+#ifdef WIN32
+CRITICAL_SECTION CriticalSection;
+#else
+pthread_mutex_t CriticalSection;
+#endif
+
 int updateAllClients = 0;
 int nConnectedClient = 0;
 int connectedSockets[MAX_CLIENT];
@@ -31,11 +37,17 @@ struct product serverProductList[PRODUCT_NUMBER] = {
         {4, "Patatine", 7000, (float)2}
 };
 
-#ifdef WIN32
-CRITICAL_SECTION CriticalSection;
-#else
-pthread_mutex_t CriticalSection;
-#endif
+int readProductsFromFile(){
+    FILE *fptr = fopen("./products.csv", "r");
+    if (fptr == NULL){
+        timestamp();
+        printf("Can't open file products.csv\n");
+        return -1;
+    }
+
+    
+    return 0;
+}
 
 int main(int argc, char* argv[]){
     if (argc < 2){
@@ -43,6 +55,9 @@ int main(int argc, char* argv[]){
         printf("Can't start server. Please specify port number\n");
         return -1;
     }
+    if (readProductsFromFile() == -1)
+        return -1;
+    
     timestamp();
     printf("Starting sever on port %s\n", argv[1]);
     
