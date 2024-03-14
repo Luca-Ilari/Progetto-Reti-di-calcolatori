@@ -35,16 +35,12 @@ public class ClientConnessione {
 
     public ClientConnessione() {
         attivaColoreLogger();
-        startConnessione();
     }
 
     public ClientConnessione(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
-
         attivaColoreLogger();
-        startConnessione();
-
     }
 
     public String getServerAddress() {
@@ -59,8 +55,8 @@ public class ClientConnessione {
         this.controllerClientNegozio = controllerClientNegozio;
     }
 
-    private void startConnessione() {
-        threadConnessione = new ThreadClient(this, THREAD_CONNESSIONE_READ);
+    public void startConnessione() {
+        threadConnessione = new ThreadClient(controllerClientNegozio, THREAD_CONNESSIONE_READ);
         threadConnessione.start();
     }
 
@@ -107,32 +103,61 @@ public class ClientConnessione {
 
     }
 
-    public void writeTransazioniJson() {
+    public void inviaTransazioniCompraProdotti() {
         ObjectMapper objectMapper = new ObjectMapper();
 
         List<Transazione> sendTransazioni =
                 Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiNegozio());
 
-        controllerClientNegozio.aggiungiListaTransazione(sendTransazioni);
+        controllerClientNegozio.aggiungiListaTransazioneAcquisto(sendTransazioni);
 
         controllerClientNegozio.addAllTransazioneAwait(sendTransazioni);
+        logger.info(" Inizio Transazioni da inviare al server.");
 
         for (Transazione transazione : sendTransazioni) {
             try {
-                String jsonString = getJsonTransazione(transazione, objectMapper);
+                String jsonString = getJsonTransazione(transazione, objectMapper, CodiciStatoServer.RIMUOVI_PRODOTTO);
                 out.println(jsonString);// Invia la transazione al server
-                logger.info("Client: Transazione inviata al server.");
-
-                // clientNegozioInterfaccia.addSingleTransazioneAwait(transazione);
-                //controllerClientNegozio.addSingleTransazioneAwait(transazione);
             } catch (JsonProcessingException e) {
                 logger.warning("Errore durante la conversione in JSON");
             }
         }
+        logger.info(" Fine Transazioni al server.");
+
+    }
+
+    public void inviaTransazioniVendiProdotti() {
+        // Controllo se sono presenti dei prodotti da vendere
+        List<Prodotto> listaProdottiCarrello = controllerClientNegozio.getProdottiCarrello();
+        if (listaProdottiCarrello.isEmpty()) {
+            System.out.println(" Attenzioen: Non ci sono prodotti da vendere");
+            return;
+        }
+
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        List<Transazione> sendTransazioni =
+                Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiNegozio());
+
+
+        controllerClientNegozio.aggiungiListaTransazioneVendita(sendTransazioni);
+
+        controllerClientNegozio.addAllTransazioneVenditaAwait(sendTransazioni);
+
+        for (Transazione transazione : sendTransazioni) {
+            try {
+                String jsonString = getJsonTransazione(transazione, objectMapper, CodiciStatoServer.AGGIUNGI_PRODOTTO);
+                out.println(jsonString);// Invia la transazione al server
+            } catch (JsonProcessingException e) {
+                logger.warning("Errore durante la conversione in JSON");
+            }
+        }
+        logger.info(" Fine Transazioni al server.");
     }
 
 
-    private static String getJsonTransazione(Transazione transazione, ObjectMapper objectMapper) throws JsonProcessingException {
+    private static String getJsonTransazione(Transazione transazione, ObjectMapper objectMapper, int CODICE_STATO) throws JsonProcessingException {
         ObjectNode objectNode = objectMapper.createObjectNode();
         objectNode.put("codiceStato", CodiciStatoServer.RIMUOVI_PRODOTTO);
 
@@ -175,6 +200,8 @@ public class ClientConnessione {
                 break;
             case CodiciStatoServer.AGGIUNGI_PRODOTTO:
                 System.out.println("Client riceve codice Status 3: Aggiunta prodotto al Negozio");
+                int idTransazione = jsonNode.get("idTransazione").asInt();
+                controllerClientNegozio.aggiornaProdottiCarrello(idTransazione);
                 break;
             case CodiciStatoServer.LISTA_PRODOTTI_AGGIORNATO:
                 List<Prodotto> listaProdotti = recuperoListaProdottiJson(jsonNode);
@@ -188,7 +215,7 @@ public class ClientConnessione {
                 break;
             case CodiciStatoServer.SUCCESSO_TRANSAZIONE:
                 logger.info("Client riceve codice Status 5 : Successo nella Transazione");
-                int idTransazione = jsonNode.get("idTransazione").asInt();
+                idTransazione = jsonNode.get("idTransazione").asInt();
                 controllerClientNegozio.aggiornaStateTransazioneId(idTransazione);
                 break;
             case CodiciStatoServer.FAIL_SESSION:

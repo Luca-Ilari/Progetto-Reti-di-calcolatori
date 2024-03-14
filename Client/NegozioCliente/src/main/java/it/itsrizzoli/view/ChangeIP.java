@@ -3,6 +3,7 @@ package it.itsrizzoli.view;
 import it.itsrizzoli.tcpip.ClientConnessione;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -21,6 +22,20 @@ public class ChangeIP extends JFrame {
 
         this.clientConnessione = clientConnessione;
 
+        if (panelMainForm == null) {
+            Panel panelError = new Panel();
+            JLabel labelError = new JLabel("ERRORE:caricamento main panel, chiudere la finestra - " + this.getClass());
+
+
+            panelError.add(labelError);
+            setContentPane(panelError);
+
+            pack();
+            setLocationRelativeTo(null);
+
+            setVisible(true);
+            return;
+        }
         setContentPane(panelMainForm);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 

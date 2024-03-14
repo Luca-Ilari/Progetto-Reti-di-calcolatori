@@ -8,13 +8,15 @@ public class ModelloClientNegozio {
 
     private List<Prodotto> prodottiCarrello;
     private List<Prodotto> prodottiNegozio;
-    private List<Transazione> listaTransazione;
+    private List<Transazione> listaTransazioneAcquisto;
+    private List<Transazione> listaTransazioneVendita;
 
 
     public ModelloClientNegozio() {
         prodottiNegozio = new ArrayList<>();
         prodottiCarrello = new ArrayList<>();
-        listaTransazione = new ArrayList<>();
+        listaTransazioneAcquisto = new ArrayList<>();
+        listaTransazioneVendita = new ArrayList<>();
     }
 
     public boolean isStatoNegozioOnline() {
@@ -41,40 +43,33 @@ public class ModelloClientNegozio {
         this.prodottiNegozio = prodottiNegozio;
     }
 
-    public List<Transazione> getListaTransazione() {
-        return listaTransazione;
+    public List<Transazione> getListaTransazioneAcquisto() {
+        return listaTransazioneAcquisto;
     }
 
-    public void setListaTransazione(List<Transazione> listaTransazione) {
-        this.listaTransazione = listaTransazione;
+    public void setListaTransazioneAcquisto(List<Transazione> listaTransazioneAcquisto) {
+        this.listaTransazioneAcquisto = listaTransazioneAcquisto;
     }
 
-    public void aggiungiProdottoNegozio(Prodotto prodotto) {
-        prodottiNegozio.add(prodotto);
+    public List<Transazione> getListaTransazioneVendita() {
+        return listaTransazioneVendita;
     }
 
-    public void rimuoviProdottoNegozio(Prodotto prodotto) {
-        prodottiNegozio.remove(prodotto);
+    public void setListaTransazioneVendita(List<Transazione> listaTransazioneVendita) {
+        this.listaTransazioneVendita = listaTransazioneVendita;
     }
 
-    public void aggiungiProdottoCarrello(Prodotto prodotto) {
-        prodottiCarrello.add(prodotto);
+
+    public void aggiungiListaTransazioneAcquisto(List<Transazione> listaTransazione) {
+        this.listaTransazioneAcquisto.addAll(listaTransazione);
     }
 
-    public void rimuoviProdottoCarrello(Prodotto prodotto) {
-        prodottiCarrello.remove(prodotto);
-    }
-
-    public void aggiungiTransazione(Transazione transazione) {
-        listaTransazione.add(transazione);
-    }
-
-    public void aggiungiListaTransazione(List<Transazione> listaTransazione) {
-        this.listaTransazione.addAll(listaTransazione);
+    public void aggiungiListaTransazioneVendita(List<Transazione> listaTransazione) {
+        this.listaTransazioneVendita.addAll(listaTransazione);
     }
 
     public void rimuoviTransazione(Transazione transazione) {
-        listaTransazione.remove(transazione);
+        listaTransazioneAcquisto.remove(transazione);
     }
 
     private Prodotto trovaProdottoLista(int idProdotto, List<Prodotto> prodotti) {
@@ -87,7 +82,7 @@ public class ModelloClientNegozio {
     }
 
     public Transazione trovaTransazione(int idTransazione) {
-        for (Transazione transazione : listaTransazione) {
+        for (Transazione transazione : listaTransazioneAcquisto) {
             if (transazione.getIdTransazione() == idTransazione) {
                 return transazione;
             }

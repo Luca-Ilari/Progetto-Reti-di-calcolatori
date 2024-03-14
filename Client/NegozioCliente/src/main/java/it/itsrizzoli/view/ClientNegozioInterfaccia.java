@@ -15,9 +15,11 @@ import java.util.List;
 public class ClientNegozioInterfaccia extends JFrame {
     private JTable tblCarrello;
     private JTable tblNegozio;
-    private JTable tblTransazioni;
+    private JTable tblTransazioniAcquisto;
     private JButton btnChangeIP;
-    private JButton bntInvioTransazioni;
+    private JButton btnCompraProdotti;
+    private JButton btnVendiProdotti;
+
     private JLabel labelTitle;
     private JLabel labelCarrello;
     private JLabel labelNegozio;
@@ -25,8 +27,11 @@ public class ClientNegozioInterfaccia extends JFrame {
     private JLabel labelTransazioni;
     private JScrollPane scrolPanelNegozio;
     private JScrollPane scrollPanelCarrello;
-    private JScrollPane scrollPanelTransazioni;
+    private JScrollPane scrollPanelTransazioniAcquisto;
     private JPanel mainPanel;
+    private JTable tblTransazioneVendita;
+    private JScrollPane scrollPanelTransazioniVendita;
+
 
     private boolean statoNegozioOnline = false;
     private ControllerClientNegozio controllerClientNegozio;
@@ -49,14 +54,32 @@ public class ClientNegozioInterfaccia extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(300, 400));
 
+        if (mainPanel == null) {
+            SwingUtilities.invokeLater(() -> {
+
+                Panel panelError = new Panel();
+                JLabel labelError = new JLabel("ERRORE nel caricamento mainPanel - " + this.getClass());
+
+
+                panelError.add(labelError);
+                setContentPane(panelError);
+
+                pack();
+                setLocationRelativeTo(null);
+
+                setVisible(true);
+            });
+            return;
+        }
+
         setContentPane(mainPanel);
         SwingUtilities.invokeLater(() -> {
 
             // Creazione dei pannelli delle tabelle
             creaTabellaPanello(tblCarrello, carrelloColonne, scrollPanelCarrello);
             creaTabellaPanello(tblNegozio, articoliNegozioColonne, scrolPanelNegozio);
-            creaTabellaPanello(tblTransazioni, transazioniColonne, scrollPanelTransazioni);
-
+            creaTabellaPanello(tblTransazioniAcquisto, transazioniColonne, scrollPanelTransazioniAcquisto);
+            creaTabellaPanello(tblTransazioneVendita, transazioniColonne, scrollPanelTransazioniVendita);
 
             Dimension labelSize = new Dimension(200, 30);
             Font largeFont = new Font("Arial", Font.BOLD, 30);
@@ -82,19 +105,34 @@ public class ClientNegozioInterfaccia extends JFrame {
     }
 
     private void attivaListenerBtn() {
-        bntInvioTransazioni.addActionListener(new ActionListener() {
+        btnCompraProdotti.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (statoNegozioOnline) {
                     // Avvia un thread per l'invio di json al server
-                    controllerClientNegozio.startThreadTransazioni();
+                    controllerClientNegozio.startThreadCompraProdotti();
                 } else {
                     JOptionPane.showMessageDialog(null, "Attenzione: nessuna connessione al server!");
                 }
             }
         });
+
+
+        btnVendiProdotti.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (statoNegozioOnline) {
+                    // Avvia un thread per l'invio di json al server
+                    controllerClientNegozio.startThreadVendiProdotti();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Attenzione: nessuna connessione al server!");
+                }
+            }
+        });
+
         btnChangeIP.addActionListener(e -> {
             // Azione da eseguire quando il bottone viene premuto
+
             new ChangeIP(controllerClientNegozio.getClientConnessione());
             System.out.println(" CLICK: CHANGE btn IP");
         });
@@ -115,13 +153,54 @@ public class ClientNegozioInterfaccia extends JFrame {
 
     public void addSingleTransazioneAwait(Transazione transazione, List<Prodotto> prodottiNegozio) {
         SwingUtilities.invokeLater(() -> {
-            DefaultTableModel model = (DefaultTableModel) tblTransazioni.getModel();
+            DefaultTableModel model = (DefaultTableModel) tblTransazioniAcquisto.getModel();
 
             for (Prodotto prodotto : prodottiNegozio) {
                 if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
                     Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(), prodotto.getPrezzo() +
                             "€", transazione.getQuantita(), "Attesa risposta"};
                     model.addRow(rowData);
+                }
+            }
+            model.fireTableDataChanged();
+
+
+        });
+
+    }
+
+    public void addAllTransazioneAwait(List<Transazione> transazioneList, List<Prodotto> prodottiNegozio) {
+        SwingUtilities.invokeLater(() -> {
+            DefaultTableModel model = (DefaultTableModel) tblTransazioniAcquisto.getModel();
+
+            for (Transazione transazione : transazioneList) {
+                for (Prodotto prodotto : prodottiNegozio) {
+                    if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
+                        Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(),
+                                prodotto.getPrezzo() + "€", transazione.getQuantita(), "Attesa risposta"};
+                        model.addRow(rowData);
+                    }
+                }
+            }
+            model.fireTableDataChanged();
+
+            System.out.println(" --> UI: Lista transazione aggiunta!!");
+
+        });
+
+    }
+
+    public void addAllTransazioneVenditaAwait(List<Transazione> transazioneList, List<Prodotto> prodottiCarrello) {
+        SwingUtilities.invokeLater(() -> {
+            DefaultTableModel model = (DefaultTableModel) tblTransazioneVendita.getModel();
+
+            for (Transazione transazione : transazioneList) {
+                for (Prodotto prodotto : prodottiCarrello) {
+                    if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
+                        Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(),
+                                prodotto.getPrezzo() + "€", transazione.getQuantita(), "Attesa risposta"};
+                        model.addRow(rowData);
+                    }
                 }
             }
             model.fireTableDataChanged();
@@ -135,7 +214,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     public void aggiornaStatoTransazioneInTabella(Transazione transazione, List<Prodotto> prodottiNegozio,
                                                   List<Prodotto> prodottiCarrello) {
         SwingUtilities.invokeLater(() -> {
-            DefaultTableModel transazioniTableModel = (DefaultTableModel) tblTransazioni.getModel();
+            DefaultTableModel transazioniTableModel = (DefaultTableModel) tblTransazioniAcquisto.getModel();
             // Aggiorna il valore nella colonna "Stato" alla riga
             for (int riga = 0; riga < transazioniTableModel.getRowCount(); riga++) {
                 int idTransazioneRow = (int) transazioniTableModel.getValueAt(riga, 0); // Converte l'oggetto in Integer
@@ -144,7 +223,7 @@ public class ClientNegozioInterfaccia extends JFrame {
                     if (statoTransazione.equals("Attesa risposta")) {
                         transazioniTableModel.setValueAt("Richiesta accettata", riga, 4); // Imposta il nuovo stato
                         aggiornaQuantitaCarrello(transazione.getIdProdotto(), transazione.getQuantita(),
-                                prodottiNegozio, prodottiCarrello);
+                                prodottiNegozio, prodottiCarrello, true);
                     }
 
                     System.out.println("Elemento trovato alla riga " + riga);
@@ -168,7 +247,7 @@ public class ClientNegozioInterfaccia extends JFrame {
         SwingUtilities.invokeLater(() -> {
 
 
-            DefaultTableModel transazioniTableModel = (DefaultTableModel) tblTransazioni.getModel();
+            DefaultTableModel transazioniTableModel = (DefaultTableModel) tblTransazioniAcquisto.getModel();
             // Aggiorna il valore nella colonna "Stato" alla riga
             for (int riga = 0; riga < transazioniTableModel.getRowCount(); riga++) {
                 int idTransazioneRow = (int) transazioniTableModel.getValueAt(riga, 0); // Converte l'oggetto in Integer
@@ -196,10 +275,14 @@ public class ClientNegozioInterfaccia extends JFrame {
 
 
     public synchronized void aggiornaQuantitaCarrello(int idProdotto, int quantitaAggiunta,
-                                                      List<Prodotto> prodottiNegozio, List<Prodotto> prodottiCarrello) {
+                                                      List<Prodotto> prodottiNegozio, List<Prodotto> prodottiCarrello
+            , boolean controllaCarrello) {
         DefaultTableModel modelloCarrello = (DefaultTableModel) tblCarrello.getModel();
-        Prodotto prodotto = trovaProdottoLista(idProdotto, prodottiCarrello);
+        Prodotto prodotto = null;
 
+        if (controllaCarrello) {
+            trovaProdottoLista(idProdotto, prodottiCarrello);
+        }
         if (prodotto == null) {
             // Inserimento del nuovo prodotto nel carrello
             Prodotto nuovoProdotto = trovaProdottoLista(idProdotto, prodottiNegozio);
@@ -249,7 +332,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     public void allSetResponsiveTable() {
         tblNegozio.setPreferredScrollableViewportSize(tblNegozio.getPreferredSize());
         tblCarrello.setPreferredScrollableViewportSize(tblCarrello.getPreferredSize());
-        tblTransazioni.setPreferredScrollableViewportSize(tblTransazioni.getPreferredSize());
+        tblTransazioniAcquisto.setPreferredScrollableViewportSize(tblTransazioniAcquisto.getPreferredSize());
     }
 
     private static void azzeraElementiTable(DefaultTableModel defaultTableModel) {
