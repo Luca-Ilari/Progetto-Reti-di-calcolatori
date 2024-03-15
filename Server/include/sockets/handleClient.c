@@ -16,7 +16,8 @@
 #include "../utils/customCriticalSection.h"
 #include "../utils/timeStamp.h"
 
-extern struct product serverProductList[PRODUCT_NUMBER];
+extern struct product *serverProductList;
+extern int PRODUCT_NUMBER;
 extern int nConnectedClient;
 extern int updateAllClients;
 extern int connectedSockets[MAX_CLIENT];

@@ -17,7 +17,8 @@
 #include "../define.h"
 #include "../product.h"
 
-extern struct product serverProductList[PRODUCT_NUMBER];
+extern struct product *serverProductList;
+extern int PRODUCT_NUMBER;
 
 char *getProductJson(){
     char json[1024];

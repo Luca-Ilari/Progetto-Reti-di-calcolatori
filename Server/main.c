@@ -29,24 +29,37 @@ int updateAllClients = 0;
 int nConnectedClient = 0;
 int connectedSockets[MAX_CLIENT];
 
-struct product serverProductList[PRODUCT_NUMBER] = {
-        {0, "Pane", 100000, (float)2.99},
-        {1, "Acqua", 50000, (float)1},
-        {2, "Vino", 50000, (float)20},
-        {3, "Birra", 900, (float)2},
-        {4, "Patatine", 7000, (float)2}
-};
+struct product *serverProductList;
+int PRODUCT_NUMBER = 0;
 
-int readProductsFromFile(){
+int addProduct(char *name, int quantity, float price){
+    int newArraySize = sizeof(struct product) * (PRODUCT_NUMBER + 1);
+    serverProductList = realloc(serverProductList, newArraySize);
+    
+    serverProductList[PRODUCT_NUMBER].id = PRODUCT_NUMBER;
+    strcpy(serverProductList[PRODUCT_NUMBER].name, name);
+    serverProductList[PRODUCT_NUMBER].quantity = quantity;
+    serverProductList[PRODUCT_NUMBER].price = price;
+    
+    PRODUCT_NUMBER++;
+}
+
+void readProductsFromFile(){
+    serverProductList = malloc(sizeof(struct product) * PRODUCT_NUMBER);
     FILE *fptr = fopen("./products.csv", "r");
     if (fptr == NULL){
         timestamp();
-        printf("Can't open file products.csv\n");
-        return -1;
+        printf("WARNING: Can't open file products.csv");
+        timestamp();
+        printf("WARNING: Loaded default products\n");
+        
+        addProduct("Pane",100000, 5.5);
+        addProduct("Acqua",50000, 1.99);
+        addProduct("Vino",30000, 20);
+        addProduct("Birra",40000, 2);
+        addProduct("Patatine",10000, 2.8);
     }
-
-    
-    return 0;
+    //TODO: load products from file
 }
 
 int main(int argc, char* argv[]){
@@ -55,11 +68,11 @@ int main(int argc, char* argv[]){
         printf("Can't start server. Please specify port number\n");
         return -1;
     }
-    if (readProductsFromFile() == -1)
-        return -1;
+
+    readProductsFromFile();
     
     timestamp();
-    printf("Starting sever on port %s\n", argv[1]);
+    printf("Starting sever on port %s", argv[1]);
     
     int sockfd, portno;
     struct sockaddr_in serv_addr;
@@ -75,7 +88,7 @@ int main(int argc, char* argv[]){
     #endif
     
     if (bind(sockfd, (struct sockaddr*)&serv_addr,sizeof(serv_addr)) < 0){
-        perror("ERROR on binding");
+        perror("\nERROR on binding");
         return 0;
     }
     timestamp();
@@ -106,6 +119,7 @@ int main(int argc, char* argv[]){
             }
         }
     }
+    free(serverProductList);
     #ifdef WIN32
     closesocket(sockfd);
     #else
