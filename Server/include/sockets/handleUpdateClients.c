@@ -6,6 +6,7 @@
 #include <windows.h>
 #endif
 
+#include "./socketFunctions.h"
 #include "./handleUpdateClients.h"
 #include "./socketFunctions.h"
 #include "../define.h"

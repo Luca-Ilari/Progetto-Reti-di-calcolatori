@@ -5,7 +5,6 @@
 #ifndef SERVER_DEFINE_H
 #define SERVER_DEFINE_H
 
-#define PRODUCT_NUMBER 5
 #define MAX_CLIENT 20
 #define BUFFER_SIZE 1024*8
 
