@@ -73,7 +73,7 @@ int handleStatusCode2(int sock, char *buffer){
         printf("X Socket %d sent an incorrect JSON", sock);
         return -1;
     }
-    if(tryToRemoveProduct(transaction->productId, transaction->quantityToRemove) == 0){
+    if(tryToRemoveProduct(transaction->productId, transaction->quantity) == 0){
         //JSON to send if modification is successful
         timestamp();
         printf("- Socket %d modified product %d", sock, transaction->productId);
@@ -108,7 +108,7 @@ int handleStatusCode3(int sock, char *buffer){
         printf("X Socket %d sent an incorrect JSON", sock);
         return -1;
     }
-    if(tryToAddProduct(transaction->productId, transaction->quantityToRemove) == 0){
+    if(tryToAddProduct(transaction->productId, transaction->quantity) == 0){
         //JSON to send if modification is successful
         timestamp();
         printf("- Socket %d modified product %d", sock, transaction->productId);
@@ -163,7 +163,7 @@ int handleClient(int sock){
                             handleStatusCode2(sock,tmp);
                             break;
                         case 3:
-                            handleStatusCode3(sock, tmp);
+                            handleStatusCode3(sock,tmp);
                             break;
                     }
                 }else{

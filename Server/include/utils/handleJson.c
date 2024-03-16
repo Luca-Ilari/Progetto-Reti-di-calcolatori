@@ -40,7 +40,7 @@ char *getProductJson(){
         sprintf(tmp, "\"prezzo\":%f,", serverProductList[i].price);
         strcat(json, tmp);
 
-        sprintf(tmp, "\"quantitaDisponibile\":%d", serverProductList[i].quantity);
+        sprintf(tmp, "\"quantitaDisponibile\":%lld", serverProductList[i].quantity);
         strcat(json, tmp);
         if(i == PRODUCT_NUMBER-1){
             strcat(json, "}"); //last item without ,
@@ -77,7 +77,7 @@ int getJsonValue(char *json, char *strToFind, int *result) {
     *result = value;
     return 0;
 }
-
+// {"codiceStato”:2,”transazione":{"idTransazione":1,"idProdotto":5,"quantita":10000}}
 // {"codiceStato":2,"transazione":{"idTransazione":6,"idProdotto":2,"quantita":7}}
 int getJsonStatusCode(char *json, int *jsonStatusCode) {
     char strToFind[] = {"\"codiceStato\":"};
@@ -100,7 +100,7 @@ struct jsonTransaction *getJsonTransaction(char *json){
     r = getJsonValue(json, "\"idProdotto\":",&transaction->productId);
     if (r == -1)
         return NULL;
-    r = getJsonValue(json, "\"quantita\":",&transaction->quantityToRemove);
+    r = getJsonValue(json, "\"quantita\":",&transaction->quantity);
     if (r == -1)
         return NULL;
     return transaction;
