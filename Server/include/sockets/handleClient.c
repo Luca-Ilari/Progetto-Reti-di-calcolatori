@@ -50,6 +50,18 @@ int tryToRemoveProduct(int productId, int nToRemove){
         return -1;
     }
 }
+int tryToAddProduct(int productId, int nToAdd){
+    int index = findProductToModify(productId);
+    if(index == -1)
+        return -1;
+    if (nToAdd < 1)
+        return -1;
+    customEnterCriticalSection();
+    serverProductList[index].quantity += nToAdd;
+    updateAllClients = 1;
+    customLeaveCriticalSection();
+    return 0;
+}
 int handleStatusCode2(int sock, char *buffer){
     struct jsonTransaction *transaction;
     transaction = getJsonTransaction(buffer);
@@ -71,6 +83,41 @@ int handleStatusCode2(int sock, char *buffer){
         timestamp();
         printf("X Socket %d did not modify products", sock);
         sprintf(prepString, "{\"codiceStato\":-2,\"idTransazione\":%d}\n", transaction->transactionId);
+    }
+
+    free(transaction);
+    transaction = NULL;
+
+    memset(buffer, 0, BUFFER_SIZE);
+    strcpy(buffer, prepString);
+
+    if (sendToClient(sock, buffer) == -1){
+        timestamp();
+        printf("X Error sending to socket %d", sock);
+    }
+    return 0;
+}
+int handleStatusCode3(int sock, char *buffer){
+    struct jsonTransaction *transaction;
+    transaction = getJsonTransaction(buffer);
+
+    char prepString[strlen("{\"codiceStato\":xxxx,\"idTransazione\":xxxxxxxxx}\n")];
+    if (transaction == NULL) {
+        //If json is not formatted correctly
+        timestamp();
+        printf("X Socket %d sent an incorrect JSON", sock);
+        return -1;
+    }
+    if(tryToAddProduct(transaction->productId, transaction->quantityToRemove) == 0){
+        //JSON to send if modification is successful
+        timestamp();
+        printf("- Socket %d modified product %d", sock, transaction->productId);
+        sprintf(prepString, "{\"codiceStato\":6,\"idTransazione\":%d}\n", transaction->transactionId);
+    }else{
+        //JSON to send if modification is NOT successful
+        timestamp();
+        printf("X Socket %d did not modify products", sock);
+        sprintf(prepString, "{\"codiceStato\":-3,\"idTransazione\":%d}\n", transaction->transactionId);
     }
 
     free(transaction);
@@ -115,6 +162,9 @@ int handleClient(int sock){
                         case 2://Modify a product
                             handleStatusCode2(sock,tmp);
                             break;
+                        case 3:
+                            handleStatusCode3(sock, tmp);
+                            break;
                     }
                 }else{
                     timestamp();
@@ -128,32 +178,23 @@ int handleClient(int sock){
     return 0;
 }
 
-#ifdef WIN32
-DWORD WINAPI handleNewClient(void *newSockParam) {
-#else
-void *handleNewClient(void *newSockParam){
-#endif
-    int newsock = *(int*)(newSockParam);
-
+int setupNewClient(int newsock){
     customEnterCriticalSection();
     connectedSockets[nConnectedClient] = newsock;
     nConnectedClient += 1;
     customLeaveCriticalSection();
 
-    sendToClient(newsock,"{\"codiceStato\":1}\n");
-
-    sendProductListToClient(newsock);
-    timestamp();
-    printf("-> Sending item list to socket: %d",newsock);
-
-    int res = 0;
-    while(res >= 0){
-        res = handleClient(newsock);
+    int res = sendToClient(newsock,"{\"codiceStato\":1}\n");
+    if (res == -1){
+        return -1;
     }
-    timestamp();
-    printf("Closing socket %d\n", newsock);
-
+    sendProductListToClient(newsock);
+    return 0;
+}
+void closeSocket(int newsock){
     int indexSocketToRemove;
+
+    //Remove the disconnected socket from socket list
     for (int i = 0; i < nConnectedClient; ++i) {
         if (connectedSockets[i] == newsock) {
             indexSocketToRemove = i;
@@ -172,5 +213,23 @@ void *handleNewClient(void *newSockParam){
 #else
     close(newsock);
 #endif
+}
+
+#ifdef WIN32
+DWORD WINAPI handleNewClient(void *newSockParam) {
+#else
+void *handleNewClient(void *newSockParam){
+#endif
+    int newsock = *(int*)(newSockParam);
+
+    setupNewClient(newsock);
+
+    int res = 0;
+    while(res >= 0){
+        res = handleClient(newsock);
+    }
+    timestamp();
+    printf("Closing socket %d\n", newsock);
+    closeSocket(newsock);
     return 0;
 }

@@ -93,7 +93,7 @@ int getJsonStatusCode(char *json, int *jsonStatusCode) {
 struct jsonTransaction *getJsonTransaction(char *json){
     struct jsonTransaction *transaction;
     transaction = malloc(sizeof(struct jsonTransaction));
-    int r = -1;
+    int r;
     r = getJsonValue(json, "\"idTransazione\":",&transaction->transactionId);
     if (r == -1)
         return NULL;
