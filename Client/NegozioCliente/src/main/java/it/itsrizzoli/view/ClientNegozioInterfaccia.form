@@ -106,7 +106,7 @@
                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
-                          <text value="setting server"/>
+                          <text value="imp. server"/>
                         </properties>
                       </component>
                       <component id="c4ca1" class="javax.swing.JButton" binding="btnSwitchUtente">
@@ -120,7 +120,7 @@
                           <hideActionText value="false"/>
                           <horizontalTextPosition value="0"/>
                           <inheritsPopupMenu value="false"/>
-                          <text value="switch utente"/>
+                          <text value="Cambia User"/>
                           <verticalAlignment value="0"/>
                         </properties>
                       </component>
