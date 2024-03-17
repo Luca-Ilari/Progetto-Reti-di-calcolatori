@@ -101,9 +101,6 @@ public class ClientNegozioInterfaccia extends JFrame {
 
         progressBar1.setValue(newValue);
 
-        if (progressBar1.getValue() == MAX_QUANTITA) {  // Se la progress bar raggiunge il massimo, mostra un messaggio
-            System.out.println("Quantità massima raggiunta");
-        }
     }
 
 
