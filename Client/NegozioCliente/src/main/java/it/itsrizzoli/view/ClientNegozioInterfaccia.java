@@ -391,7 +391,7 @@ public class ClientNegozioInterfaccia extends JFrame {
         Prodotto prodotto = null;
 
         if (controllaCarrello) {
-            trovaProdottoLista(idProdotto, prodottiCarrello);
+            prodotto = trovaProdottoLista(idProdotto, prodottiCarrello);
         }
         if (prodotto == null) {
             // Inserimento del nuovo prodotto nel carrello
