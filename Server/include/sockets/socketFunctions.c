@@ -2,17 +2,18 @@
 // Created by lucai on 13/03/2024.
 //
 #include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+
 #ifdef WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <unistd.h>
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
-#include <unistd.h>
 #endif
 
 #include "./socketFunctions.h"

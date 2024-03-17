@@ -17,7 +17,8 @@
 #include "../define.h"
 #include "../product.h"
 
-extern struct product serverProductList[PRODUCT_NUMBER];
+extern struct product *serverProductList;
+extern int PRODUCT_NUMBER;
 
 char *getProductJson(){
     char json[1024];
@@ -39,7 +40,7 @@ char *getProductJson(){
         sprintf(tmp, "\"prezzo\":%f,", serverProductList[i].price);
         strcat(json, tmp);
 
-        sprintf(tmp, "\"quantitaDisponibile\":%d", serverProductList[i].quantity);
+        sprintf(tmp, "\"quantitaDisponibile\":%lld", serverProductList[i].quantity);
         strcat(json, tmp);
         if(i == PRODUCT_NUMBER-1){
             strcat(json, "}"); //last item without ,
@@ -76,7 +77,7 @@ int getJsonValue(char *json, char *strToFind, int *result) {
     *result = value;
     return 0;
 }
-
+// {"codiceStato”:2,”transazione":{"idTransazione":1,"idProdotto":5,"quantita":10000}}
 // {"codiceStato":2,"transazione":{"idTransazione":6,"idProdotto":2,"quantita":7}}
 int getJsonStatusCode(char *json, int *jsonStatusCode) {
     char strToFind[] = {"\"codiceStato\":"};
@@ -92,14 +93,14 @@ int getJsonStatusCode(char *json, int *jsonStatusCode) {
 struct jsonTransaction *getJsonTransaction(char *json){
     struct jsonTransaction *transaction;
     transaction = malloc(sizeof(struct jsonTransaction));
-    int r = -1;
+    int r;
     r = getJsonValue(json, "\"idTransazione\":",&transaction->transactionId);
     if (r == -1)
         return NULL;
     r = getJsonValue(json, "\"idProdotto\":",&transaction->productId);
     if (r == -1)
         return NULL;
-    r = getJsonValue(json, "\"quantita\":",&transaction->quantityToRemove);
+    r = getJsonValue(json, "\"quantita\":",&transaction->quantity);
     if (r == -1)
         return NULL;
     return transaction;

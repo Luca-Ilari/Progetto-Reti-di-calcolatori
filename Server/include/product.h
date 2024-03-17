@@ -8,13 +8,13 @@
 struct product{
     int id;
     char name[20];
-    int quantity;
+    long long quantity;
     float price;
 };
 struct jsonTransaction{
     int transactionId;
     int productId;
-    int quantityToRemove;
+    int quantity;
 };
 
 #endif //SERVER_PRODUCT_H

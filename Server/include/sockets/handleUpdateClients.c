@@ -6,8 +6,10 @@
 #include <windows.h>
 #endif
 
-#include "../define.h"
+#include "./socketFunctions.h"
 #include "./handleUpdateClients.h"
+#include "./socketFunctions.h"
+#include "../define.h"
 #include "../utils/timeStamp.h"
 #include "../utils/customCriticalSection.h"
 
