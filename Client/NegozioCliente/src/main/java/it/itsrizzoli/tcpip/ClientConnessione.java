@@ -167,7 +167,7 @@ public class ClientConnessione {
         }
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            String jsonString = getJsonTransazione(transazione, objectMapper, CodiciStatoServer.RIMUOVI_PRODOTTO);
+            String jsonString = getJsonTransazione(transazione, objectMapper, CodiciStatoServer.AGGIUNGI_PRODOTTO);
             out.println(jsonString);// Invia la transazione al server
         } catch (JsonProcessingException e) {
             logger.warning("Errore durante la conversione in JSON");

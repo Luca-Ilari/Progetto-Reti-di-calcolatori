@@ -46,7 +46,7 @@ public class Transazione {
     }
 
     public static Transazione createTransaction(int idProdotto) {
-        int randomQuantita = new Random().nextInt(101, 201); // Quantità casuale tra 101 e 200
+        int randomQuantita = new Random().nextInt(5 , 100); // Quantità casuale tra 50 e 200
         return new Transazione(idProdotto, randomQuantita);
     }
 
@@ -62,7 +62,7 @@ public class Transazione {
             return null;
         }
         Random random = new Random();
-        int numeroTransazioni = random.nextInt(10, 50);
+        int numeroTransazioni = random.nextInt(10, 200);
 
         for (int i = 0; i < numeroTransazioni; i++) {
             int idProdotto = random.nextInt(0, listaProdotti.size());
