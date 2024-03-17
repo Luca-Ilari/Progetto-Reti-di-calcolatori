@@ -108,7 +108,7 @@ public class ClientConnessione {
         ObjectMapper objectMapper = new ObjectMapper();
 
         List<Transazione> sendTransazioni =
-                Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiNegozio());
+                Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiNegozio(), true);
 
         controllerClientNegozio.aggiungiListaTransazioneAcquisto(sendTransazioni);
 
@@ -132,7 +132,8 @@ public class ClientConnessione {
         List<Prodotto> listaProdottiCarrello = controllerClientNegozio.getProdottiCarrello();
         if (listaProdottiCarrello.isEmpty()) {
             System.out.println("Attenzioen: Non ci sono prodotti nel carrello da vendere");
-            JOptionPane.showMessageDialog(null, "Attenzioen: Non ci sono prodotti nel carrello da vendere!!\n - Compra Prodotti prima.");
+            JOptionPane.showMessageDialog(null, "Attenzioen: Non ci sono prodotti nel carrello da vendere!!\n - " +
+                    "Compra Prodotti prima.");
             return;
         }
 
@@ -140,7 +141,7 @@ public class ClientConnessione {
         ObjectMapper objectMapper = new ObjectMapper();
 
         List<Transazione> sendTransazioni =
-                Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiNegozio());
+                Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiCarrello(), false);
 
 
         controllerClientNegozio.aggiungiListaTransazioneVendita(sendTransazioni);
@@ -158,10 +159,25 @@ public class ClientConnessione {
         logger.info(" Fine Transazioni al server.");
     }
 
+    public void inviaSingolaTransazione(Transazione transazione) {
+
+        if (transazione == null) {
+            logger.severe(" Transazione è null ");
+            return;
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            String jsonString = getJsonTransazione(transazione, objectMapper, CodiciStatoServer.RIMUOVI_PRODOTTO);
+            out.println(jsonString);// Invia la transazione al server
+        } catch (JsonProcessingException e) {
+            logger.warning("Errore durante la conversione in JSON");
+        }
+        logger.info(" Fine Transazioni al server.");
+    }
 
     private static String getJsonTransazione(Transazione transazione, ObjectMapper objectMapper, int CODICE_STATO) throws JsonProcessingException {
         ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put("codiceStato", CodiciStatoServer.RIMUOVI_PRODOTTO);
+        objectNode.put("codiceStato", CODICE_STATO);
 
         // Aggiungi direttamente l'oggetto transazione come nodo
         ObjectNode transazioneNode = objectMapper.convertValue(transazione, ObjectNode.class);
@@ -172,6 +188,25 @@ public class ClientConnessione {
 
         System.out.println("Transazione JSON: " + jsonString);
         return jsonString;
+    }
+
+    private static String getJsonTransazione(Transazione transazione, Prodotto prodotto, ObjectMapper objectMapper,
+                                             int CODICE_STATO) throws JsonProcessingException {
+        ObjectNode rootNode = objectMapper.createObjectNode();
+        rootNode.put("codiceStato", CODICE_STATO);
+
+        ObjectNode transazioneNode = rootNode.putObject("transazione");
+        transazioneNode.put("idTransazione", 123);
+
+        ObjectNode prodottoNode = transazioneNode.putObject("prodotto");
+        prodottoNode.put("idProdotto", prodotto.getIdProdotto());
+        prodottoNode.put("nome", prodotto.getNome());
+        prodottoNode.put("prezzo", prodotto.getPrezzo());
+        prodottoNode.put("quantita", prodotto.getQuantitaDisponibile());
+
+        String jsonOutput = rootNode.toPrettyString();
+        System.out.println(jsonOutput);
+        return jsonOutput;
     }
 
     private void gestioneJsonCodiceStato(String jsonResponse) {

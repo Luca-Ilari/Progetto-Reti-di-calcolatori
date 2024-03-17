@@ -43,7 +43,7 @@ class TransazioneTest {
             prodotti.add(new Prodotto(i, "prod" + i, prezzo[i], 10)); // corretto "prod" + 1 a "prod" + i
         }
 
-        List<Transazione> transazioni = Transazione.creaListaTransazioniRandom(prodotti);
+        List<Transazione> transazioni = Transazione.creaListaTransazioniRandom(prodotti, true);
 
         boolean idProdottoPresente = false;
         for (Transazione transazione : transazioni) {
@@ -53,7 +53,7 @@ class TransazioneTest {
                     break;
                 }
             }
-            if (!idProdottoPresente){
+            if (!idProdottoPresente) {
                 break;
             }
         }
@@ -64,7 +64,7 @@ class TransazioneTest {
     @Test
     void creaListaTransazioneArrayListVuoto() {
         ArrayList<Prodotto> tmp = new ArrayList<Prodotto>(1);
-        var transazioni = Transazione.creaListaTransazioniRandom(tmp);
+        var transazioni = Transazione.creaListaTransazioniRandom(tmp,true);
         assert (transazioni == null);
     }
 }

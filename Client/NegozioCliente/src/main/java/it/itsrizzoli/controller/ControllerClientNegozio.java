@@ -1,11 +1,13 @@
 package it.itsrizzoli.controller;
 
+import com.sun.source.tree.UsesTree;
 import it.itsrizzoli.model.ModelloClientNegozio;
 import it.itsrizzoli.model.Prodotto;
 import it.itsrizzoli.model.Transazione;
 import it.itsrizzoli.tcpip.ClientConnessione;
 import it.itsrizzoli.tcpip.ThreadClient;
 import it.itsrizzoli.view.ClientNegozioInterfaccia;
+import it.itsrizzoli.view.SchermoCustomVendita;
 
 import java.util.List;
 
@@ -14,7 +16,8 @@ import static it.itsrizzoli.tools.TypeThread.THREAD_VENDI_PRODOTTI;
 
 public class ControllerClientNegozio {
     private final ModelloClientNegozio modelloClientNegozio;
-    private final ClientNegozioInterfaccia clientNegozioInterfaccia;
+    private ClientNegozioInterfaccia clientNegozioInterfaccia;
+    private SchermoCustomVendita schermoCustomVendita;
     private final ClientConnessione clientConnessione;
 
     public ClientConnessione getClientConnessione() {
@@ -33,6 +36,29 @@ public class ControllerClientNegozio {
 
         clientConnessione.startConnessione();
     }
+
+
+    public void setClientNegozioInterfaccia(ClientNegozioInterfaccia clientNegozioInterfaccia) {
+        this.clientNegozioInterfaccia = clientNegozioInterfaccia;
+        this.clientNegozioInterfaccia.setControllerClientNegozio(this);
+
+    }
+
+
+
+
+    public SchermoCustomVendita getSchermoCustomVendita() {
+        return schermoCustomVendita;
+    }
+
+    public ClientNegozioInterfaccia getClientNegozioInterfaccia() {
+        return clientNegozioInterfaccia;
+    }
+
+    public void setSchermoCustomVendita(SchermoCustomVendita schermoCustomVendita) {
+        this.schermoCustomVendita = schermoCustomVendita;
+    }
+
 
     public ClientNegozioInterfaccia getClientNegozioGui() {
         return clientNegozioInterfaccia;
@@ -65,6 +91,9 @@ public class ControllerClientNegozio {
     public synchronized void aggiornaProdottiNegozio(List<Prodotto> newProdottiNegozio) {
         modelloClientNegozio.setProdottiNegozio(newProdottiNegozio);
         clientNegozioInterfaccia.aggiornaTabellaProdottiNegozio(newProdottiNegozio);
+        if (schermoCustomVendita != null) {
+            schermoCustomVendita.aggiornaTabellaProdottiNegozio(newProdottiNegozio);
+        }
     }
 
     // Intuile
@@ -171,4 +200,6 @@ public class ControllerClientNegozio {
         clientNegozioInterfaccia.aggiornaStatoTransazioneInTabellaAcquisto(transazione, getProdottiNegozio(),
                 getProdottiCarrello());
     }
+
+
 }

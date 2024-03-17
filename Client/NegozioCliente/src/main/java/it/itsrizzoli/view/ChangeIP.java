@@ -24,7 +24,7 @@ public class ChangeIP extends JFrame {
 
         if (panelMainForm == null) {
             Panel panelError = new Panel();
-            JLabel labelError = new JLabel("ERRORE:caricamento main panel, chiudere la finestra - " + this.getClass());
+            JLabel labelError = new JLabel("ERRORE:caricamento main panel, chiudere la finestra - " + this.getClass().getName());
 
 
             panelError.add(labelError);

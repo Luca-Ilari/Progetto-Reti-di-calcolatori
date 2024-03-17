@@ -24,13 +24,15 @@ public class ClientNegozioInterfaccia extends JFrame {
     private JLabel labelCarrello;
     private JLabel labelNegozio;
     private JLabel labelStatoServer;
-    private JLabel labelTransazioni;
+
     private JScrollPane scrolPanelNegozio;
     private JScrollPane scrollPanelCarrello;
     private JScrollPane scrollPanelTransazioniAcquisto;
     private JPanel mainPanel;
     private JTable tblTransazioniVendita;
     private JScrollPane scrollPanelTransazioniVendita;
+    private JButton btnSwitchUtente;
+    private JProgressBar progressBar1;
 
 
     private boolean statoNegozioOnline = false;
@@ -39,8 +41,12 @@ public class ClientNegozioInterfaccia extends JFrame {
     private final String[] carrelloColonne = {"Prodotto", "Quantità"};
     private final String[] transazioniColonne = {"Number", "Prodotto", "Prezzo", "Quantità", "Stato"};
 
+
+    private final static int MAX_QUANTITA = 10_000;
+
     public ClientNegozioInterfaccia(String titolo) {
         inizializza(titolo);
+
     }
 
     public void setControllerClientNegozio(ControllerClientNegozio controllerClientNegozio) {
@@ -52,28 +58,16 @@ public class ClientNegozioInterfaccia extends JFrame {
         setTitle(titolo);
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(300, 400));
+        setSize(new Dimension(300, 400));
 
-        if (mainPanel == null) {
-            SwingUtilities.invokeLater(() -> {
+        if (isNullPanelMain()) return;
 
-                Panel panelError = new Panel();
-                JLabel labelError = new JLabel("ERRORE nel caricamento mainPanel - " + this.getClass());
-
-
-                panelError.add(labelError);
-                setContentPane(panelError);
-
-                pack();
-                setLocationRelativeTo(null);
-
-                setVisible(true);
-            });
-            return;
-        }
 
         setContentPane(mainPanel);
         SwingUtilities.invokeLater(() -> {
+
+            progressBar1.setStringPainted(true);
+            progressBar1.setMaximum(MAX_QUANTITA);
 
             // Creazione dei pannelli delle tabelle
             creaTabellaPanello(tblCarrello, carrelloColonne, scrollPanelCarrello);
@@ -88,7 +82,6 @@ public class ClientNegozioInterfaccia extends JFrame {
             setLabelProperties(labelCarrello, labelSize, smallFont);
             setLabelProperties(labelNegozio, labelSize, smallFont);
             setLabelProperties(labelStatoServer, labelSize, smallFont);
-            setLabelProperties(labelTransazioni, labelSize, smallFont);
 
 
             pack();
@@ -97,6 +90,44 @@ public class ClientNegozioInterfaccia extends JFrame {
             setVisible(true);
             System.out.println(" --- FINE THREAD_SWING_EDT ---");
         });
+    }
+
+    public synchronized void updateProgressBar(int quantita) {
+        int newValue = progressBar1.getValue() + quantita;
+
+        newValue = Math.max(newValue, 0);  // Assicurati che il valore non vada al di sotto di 0
+
+        newValue = Math.min(newValue, MAX_QUANTITA);  // Assicurati che il valore non superi il valore massimo
+
+        progressBar1.setValue(newValue);
+
+        if (progressBar1.getValue() == MAX_QUANTITA) {  // Se la progress bar raggiunge il massimo, mostra un messaggio
+            System.out.println("Quantità massima raggiunta");
+        }
+    }
+
+
+    private boolean isNullPanelMain() {
+        if (mainPanel == null) {
+            SwingUtilities.invokeLater(() -> {
+
+                Panel panelError = new Panel();
+                JLabel labelError = new JLabel("ERRORE nel caricamento mainPanel - " + this.getClass().getName());
+
+
+                panelError.add(labelError);
+                setContentPane(panelError);
+
+                pack();
+                setLocationRelativeTo(null);
+
+                setVisible(true);
+
+                System.exit(0);
+            });
+            return true;
+        }
+        return false;
     }
 
     public void aggiornaStatoNegozio(boolean statoNegozioOnline) {
@@ -108,11 +139,25 @@ public class ClientNegozioInterfaccia extends JFrame {
         btnCompraProdotti.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (statoNegozioOnline) {
-                    // Avvia un thread per l'invio di json al server
-                    controllerClientNegozio.startThreadCompraProdotti();
-                } else {
+                if (!statoNegozioOnline) {
                     JOptionPane.showMessageDialog(null, "Attenzione: nessuna connessione al server!");
+
+
+                }
+                // Avvia un thread per l'invio di json al server
+                if (progressBar1.getValue() == MAX_QUANTITA) {
+                    JOptionPane.showMessageDialog(null, "Quantità massima raggiunta", "Attenzione",
+                            JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                controllerClientNegozio.startThreadCompraProdotti();
+
+                try {
+                    setEnabled(false);
+                    Thread.sleep(1_000);
+                    setEnabled(true);
+                } catch (InterruptedException ex) {
+                    System.out.println(ex.getMessage());
                 }
             }
         });
@@ -121,11 +166,24 @@ public class ClientNegozioInterfaccia extends JFrame {
         btnVendiProdotti.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (statoNegozioOnline) {
-                    // Avvia un thread per l'invio di json al server
-                    controllerClientNegozio.startThreadVendiProdotti();
-                } else {
+                if (!statoNegozioOnline) {
                     JOptionPane.showMessageDialog(null, "Attenzione: nessuna connessione al server!");
+                    return;
+                }
+                // Avvia un thread per l'invio di json al server
+                if (progressBar1.getValue() <= 0) {
+                    JOptionPane.showMessageDialog(null, "Quantità minima raggiunta", "Attenzione",
+                            JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                controllerClientNegozio.startThreadVendiProdotti();
+
+                try {
+                    setEnabled(false);
+                    Thread.sleep(1_000);
+                    setEnabled(true);
+                } catch (InterruptedException ex) {
+                    System.out.println(ex.getMessage());
                 }
             }
         });
@@ -135,6 +193,21 @@ public class ClientNegozioInterfaccia extends JFrame {
 
             new ChangeIP(controllerClientNegozio.getClientConnessione());
             System.out.println(" CLICK: CHANGE btn IP");
+        });
+
+
+        btnSwitchUtente.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+                controllerClientNegozio.getClientConnessione().chiusuraConnessione();
+
+                SchermoCustomVendita schermoCustomVendita = new SchermoCustomVendita(controllerClientNegozio);
+                schermoCustomVendita.setStatoNegozioOnline(statoNegozioOnline);
+                schermoCustomVendita.changeTitle();
+
+
+            }
         });
     }
 
@@ -224,6 +297,7 @@ public class ClientNegozioInterfaccia extends JFrame {
                         transazioniTableModel.setValueAt("Richiesta accettata", riga, 4); // Imposta il nuovo stato
                         incrementaQuantitaCarrello(transazione.getIdProdotto(), transazione.getQuantita(),
                                 prodottiNegozio, prodottiCarrello);
+                        updateProgressBar(transazione.getQuantita());
                     }
 
                     System.out.println("Elemento trovato alla riga " + riga);
@@ -254,6 +328,7 @@ public class ClientNegozioInterfaccia extends JFrame {
                         transazioniTableModel.setValueAt("Richiesta accettata", riga, 4); // Imposta il nuovo stato
                         decrementaQuantitaCarrello(transazione.getIdProdotto(), transazione.getQuantita(),
                                 prodottiCarrello);
+                        updateProgressBar(-transazione.getQuantita());
                     }
 
                     System.out.println("Elemento trovato alla riga " + riga);
@@ -415,14 +490,14 @@ public class ClientNegozioInterfaccia extends JFrame {
 
     public void aggiornaTabellaProdottiNegozio(List<Prodotto> newProdottiNegozio) {
         SwingUtilities.invokeLater(() -> {
-            DefaultTableModel tableProdottiNegozio = (DefaultTableModel) tblNegozio.getModel();
-            tableProdottiNegozio.setRowCount(0);
+            DefaultTableModel model = (DefaultTableModel) tblNegozio.getModel();
+            model.setRowCount(0);
             // Aggiungi righe per ciascun prodotto nella lista
             for (Prodotto product : newProdottiNegozio) {
                 Object[] rowData = {product.getNome(), product.getPrezzo() + "€", product.getQuantitaDisponibile()};
-                tableProdottiNegozio.addRow(rowData);
+                model.addRow(rowData);
             }
-            tableProdottiNegozio.fireTableDataChanged();
+            model.fireTableDataChanged();
 
             System.out.println(" --> UI: Tabella dei prodotti nel negozio aggiornata!!");
         });
