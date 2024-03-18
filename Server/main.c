@@ -40,7 +40,7 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-    readProductsFromFile("products.csv");
+    readProductsFromFile("./products.csv");
     
     timestamp();
     printf("Starting sever on port %s", argv[1]);
