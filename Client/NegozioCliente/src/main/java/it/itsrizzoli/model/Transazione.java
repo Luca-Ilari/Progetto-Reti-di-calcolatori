@@ -66,7 +66,7 @@ public class Transazione {
             return null;
         }
         Random random = new Random();
-        int numeroTransazioni = random.nextInt(10, 200);
+        int numeroTransazioni = random.nextInt(100, 1000);
 
         for (int i = 0; i < numeroTransazioni; i++) {
             int idProdotto = random.nextInt(0, listaProdotti.size());

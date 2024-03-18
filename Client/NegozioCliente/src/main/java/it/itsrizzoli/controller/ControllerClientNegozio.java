@@ -1,6 +1,5 @@
 package it.itsrizzoli.controller;
 
-import com.sun.source.tree.UsesTree;
 import it.itsrizzoli.model.ModelloClientNegozio;
 import it.itsrizzoli.model.Prodotto;
 import it.itsrizzoli.model.Transazione;
@@ -18,10 +17,16 @@ public class ControllerClientNegozio {
     private final ModelloClientNegozio modelloClientNegozio;
     private ClientNegozioInterfaccia clientNegozioInterfaccia;
     private SchermoCustomVendita schermoCustomVendita;
-    private final ClientConnessione clientConnessione;
+    private ClientConnessione clientConnessione;
+    private final ThreadClient threadCompraProdotti = new ThreadClient(THREAD_COMPRA_PRODOTTI);
+    private final ThreadClient threadVendiProdotti = new ThreadClient(THREAD_VENDI_PRODOTTI);
 
     public ClientConnessione getClientConnessione() {
         return clientConnessione;
+    }
+
+    public void setClientConnessione(ClientConnessione clientConnessione) {
+        this.clientConnessione = clientConnessione;
     }
 
     public ControllerClientNegozio(ModelloClientNegozio modelloClientNegozio,
@@ -43,8 +48,6 @@ public class ControllerClientNegozio {
         this.clientNegozioInterfaccia.setControllerClientNegozio(this);
 
     }
-
-
 
 
     public SchermoCustomVendita getSchermoCustomVendita() {
@@ -166,15 +169,31 @@ public class ControllerClientNegozio {
         modelloClientNegozio.aggiungiListaTransazioneVendita(listaTransazioni);
     }
 
-    public void addAllTransazioneAwait(List<Transazione> listaTransazione) {
+    public void addAllTransazioneAcquistoAwait(List<Transazione> listaTransazione) {
         if (listaTransazione == null) {
             System.err.println(" - Errore: Lista transazione non trovata");
             return;
         }
-        clientNegozioInterfaccia.addAllTransazioneAwait(listaTransazione, getProdottiNegozio());
+        clientNegozioInterfaccia.addAllTransazioneCompraAwait(listaTransazione, getProdottiNegozio());
     }
 
-    public void addAllTransazioneVenditaAwait(List<Transazione> listaTransazione) {
+    public void addSingleTransazioneCompraAwait(Transazione transazione) {
+        if (transazione == null) {
+            System.err.println(" - Errore: Transazione non trovata");
+            return;
+        }
+        clientNegozioInterfaccia.addSingleTransazioneCompraAwait(transazione, getProdottiNegozio());
+    }
+
+    public void addSingleTransazioneVendiAwait(Transazione transazione) {
+        if (transazione == null) {
+            System.err.println(" - Errore: Transazione non trovata");
+            return;
+        }
+        clientNegozioInterfaccia.addSingleTransazioneVenditaAwait(transazione, getProdottiNegozio());
+    }
+
+    public synchronized void addAllTransazioneVenditaAwait(List<Transazione> listaTransazione) {
         if (listaTransazione == null) {
             System.err.println(" - Errore: Lista transazione non trovata");
             return;
@@ -182,18 +201,29 @@ public class ControllerClientNegozio {
         clientNegozioInterfaccia.addAllTransazioneVenditaAwait(listaTransazione, getProdottiCarrello());
     }
 
+
+    public void startThread(Thread thread) {
+
+        if (thread.isAlive()) {
+            System.out.println("Il thread è in esecuzione");
+        } else {
+            System.out.println("Il thread non è in esecuzione");
+            thread.start();
+        }
+    }
+
+
     public void startThreadCompraProdotti() {
-        ThreadClient threadWriting = new ThreadClient(THREAD_COMPRA_PRODOTTI);
-        threadWriting.start();
+        startThread(threadCompraProdotti);
     }
 
     public void startThreadVendiProdotti() {
-        ThreadClient threadWriting = new ThreadClient(THREAD_VENDI_PRODOTTI);
-        threadWriting.start();
+        startThread(threadVendiProdotti);
     }
 
+
     public void addSingleTransazioneAwait(Transazione transazione) {
-        clientNegozioInterfaccia.addSingleTransazioneAwait(transazione, getProdottiNegozio());
+        clientNegozioInterfaccia.addSingleTransazioneCompraAwait(transazione, getProdottiNegozio());
     }
 
     public void aggiornaStatoTransazioneInTabella(Transazione transazione) {

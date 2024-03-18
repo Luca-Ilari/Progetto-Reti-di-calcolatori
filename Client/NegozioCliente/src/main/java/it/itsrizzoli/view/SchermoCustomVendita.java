@@ -43,7 +43,7 @@ public class SchermoCustomVendita extends JFrame {
         SwingUtilities.invokeLater(() -> {
             setTitle("Negozio Online - " + "Interfaccia Client %d".formatted(idRandom));
             setContentPane(panel1);
-            setMinimumSize(new Dimension(900, 500));
+            setSize(new Dimension(500, 800));
             setDefaultCloseOperation(EXIT_ON_CLOSE);
 
             creazioneProdotti();
@@ -58,9 +58,14 @@ public class SchermoCustomVendita extends JFrame {
             progressBar.setBackground(Color.LIGHT_GRAY); // Colore dello sfondo della progress bar
             progressBar.setBorderPainted(false); // Rimuove il bordo
 
-            createCustomButton(Color.GRAY, Color.WHITE, btnChangeIP);
-            createCustomButton(Color.GRAY, Color.WHITE, btnSwitchUtente);
-            createCustomButton(Color.green, Color.WHITE, btnInvia);
+            setPropertyButton(Color.GRAY, Color.WHITE, btnChangeIP);
+            setPropertyButton(Color.GRAY, Color.WHITE, btnSwitchUtente);
+            setPropertyButton(Color.green, Color.WHITE, btnInvia);
+
+            setPropertyTextField(inputIdProdotto);
+            setPropertyTextField(inputNome);
+            setPropertyTextField(inputQuantita);
+            setPropertyTextField(inputViaggi);
             setLocationRelativeTo(null);
             setVisible(true);
 
@@ -171,12 +176,12 @@ public class SchermoCustomVendita extends JFrame {
 
     }
 
-    private void createCustomButton(Color backgroundColor, Color textColor, JButton button) {
+    private void setPropertyButton(Color backgroundColor, Color textColor, JButton button) {
         button.setForeground(textColor);
         button.setFocusPainted(false);
         button.setFont(new Font("Arial", Font.BOLD, 14));
-        button.setPreferredSize(new Dimension(150, 40));
-        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        button.setPreferredSize(new Dimension(80, 40));
+        button.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         button.setBackground(backgroundColor);
@@ -202,6 +207,29 @@ public class SchermoCustomVendita extends JFrame {
 
     }
 
+    private void setPropertyTextField(JTextField textField) {
+        textField.setPreferredSize(new Dimension(200, 30)); // Dimensioni del JTextField
+        textField.setFont(new Font("Arial", Font.PLAIN, 14)); // Impostazione del font e dello stile del testo
+        textField.setForeground(Color.BLACK); // Colore del testo
+        textField.setBackground(new Color(240, 240, 240)); // Colore di sfondo
+        textField.setBorder(BorderFactory.createLineBorder(Color.GRAY)); // Bordo del JTextField
+        textField.setCaretColor(Color.BLUE); // Colore del cursore
+
+        // Aggiungiamo un effetto di ombreggiatura al JTextField
+        textField.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                textField.setBorder(BorderFactory.createLineBorder(new Color(51, 153, 255))); // Cambia il colore del
+                // bordo quando il JTextField ottiene il focus
+            }
+
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                textField.setBorder(BorderFactory.createLineBorder(Color.GRAY)); // Ripristina il colore del bordo
+                // quando il JTextField perde il focus
+            }
+        });
+
+    }
+
     private void creaThreadInvioTransazione(int viaggi, int idProdotto, int quantita) {
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -219,9 +247,10 @@ public class SchermoCustomVendita extends JFrame {
                         progressoAttuale++;
                     }
                     progressBar.setValue(progressoAttuale);
+                    progressBar.setString(i + "/" + viaggi + " Transazioni");
 
                     if (progressBar.getValue() == 100) {
-                        progressBar.setString("Completed!");
+                        progressBar.setString("Finito!");
                         btnInvia.setEnabled(true);
 
                     }
@@ -296,7 +325,8 @@ public class SchermoCustomVendita extends JFrame {
     }
 
     public void changeTitle() {
-        labelStatoServer.setText("server: " + (statoNegozioOnline ? "Online" : "Offline"));
+        labelStatoServer.setText(statoNegozioOnline ? "Online" : "Offline");
+        labelStatoServer.setForeground(statoNegozioOnline ? Color.GREEN : Color.RED);
     }
 
     public void aggiornaTabellaProdottiNegozio(List<Prodotto> newProdottiNegozio) {

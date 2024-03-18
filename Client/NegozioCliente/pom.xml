@@ -14,7 +14,6 @@
         <repository>
             <id>localRepository</id>
             <name>Local Repository</name>
-            <url></url>
         </repository>
     </distributionManagement>
 
@@ -59,6 +58,7 @@
                 </configuration>
             </plugin>
         </plugins>
+
     </build>
 
 </project>

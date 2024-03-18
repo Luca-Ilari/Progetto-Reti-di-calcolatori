@@ -104,27 +104,17 @@ public class ClientConnessione {
 
     }
 
-    public void inviaTransazioniCompraProdotti() {
-        ObjectMapper objectMapper = new ObjectMapper();
-
+    public void inviaTransazioniAcquistaProdotti() {
         List<Transazione> sendTransazioni =
                 Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiNegozio(), true);
-
-        controllerClientNegozio.aggiungiListaTransazioneAcquisto(sendTransazioni);
-
-        controllerClientNegozio.addAllTransazioneAwait(sendTransazioni);
-        logger.info(" Inizio Transazioni da inviare al server.");
-
-        for (Transazione transazione : sendTransazioni) {
-            try {
-                String jsonString = getJsonTransazione(transazione, objectMapper, CodiciStatoServer.RIMUOVI_PRODOTTO);
-                out.println(jsonString);// Invia la transazione al server
-            } catch (JsonProcessingException e) {
-                logger.warning("Errore durante la conversione in JSON");
-            }
+        if (sendTransazioni == null) {
+            logger.severe("SendTransazione is null");
+            return;
         }
-        logger.info(" Fine Transazioni al server.");
 
+        inviaTransazioni(sendTransazioni, CodiciStatoServer.RIMUOVI_PRODOTTO, "Compra Prodotti");
+
+        logger.info(" Fine Transazioni al server.");
     }
 
     public void inviaTransazioniVendiProdotti() {
@@ -138,26 +128,35 @@ public class ClientConnessione {
         }
 
 
-        ObjectMapper objectMapper = new ObjectMapper();
-
         List<Transazione> sendTransazioni =
                 Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiCarrello(), false);
+        if (sendTransazioni == null) {
+            logger.severe("SendTransazione is null");
+            return;
+        }
 
+        inviaTransazioni(sendTransazioni, CodiciStatoServer.AGGIUNGI_PRODOTTO, "Vendi Prodotti");
 
-        controllerClientNegozio.aggiungiListaTransazioneVendita(sendTransazioni);
+        logger.info(" Fine Transazioni al server.");
+    }
 
-        controllerClientNegozio.addAllTransazioneVenditaAwait(sendTransazioni);
+    private void inviaTransazioni(List<Transazione> sendTransazioni, int CODICE_STATO, String action) {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        controllerClientNegozio.aggiungiListaTransazioneAcquisto(sendTransazioni);
+        controllerClientNegozio.addAllTransazioneAcquistoAwait(sendTransazioni);
 
         for (Transazione transazione : sendTransazioni) {
             try {
-                String jsonString = getJsonTransazione(transazione, objectMapper, CodiciStatoServer.AGGIUNGI_PRODOTTO);
-                out.println(jsonString);// Invia la transazione al server
+                String jsonString = getJsonTransazione(transazione, objectMapper, CODICE_STATO);
+                out.println(jsonString); // Invia la transazione al server
             } catch (JsonProcessingException e) {
                 logger.warning("Errore durante la conversione in JSON");
             }
         }
-        logger.info(" Fine Transazioni al server.");
+        logger.info("Fine " + action + " al server.");
     }
+
 
     public void inviaSingolaTransazione(Transazione transazione) {
 

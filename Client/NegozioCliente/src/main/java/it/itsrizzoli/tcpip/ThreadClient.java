@@ -2,14 +2,10 @@ package it.itsrizzoli.tcpip;
 
 
 import it.itsrizzoli.controller.ControllerClientNegozio;
-import it.itsrizzoli.model.Prodotto;
-
-import java.util.List;
 
 import static it.itsrizzoli.tools.TypeThread.*;
 
 public class ThreadClient extends Thread {
-    public static ControllerClientNegozio controllerClientNegozio;
     public static ClientConnessione clientConnessione;
     private final int typeThread;
     private boolean newConnessione = false;
@@ -57,7 +53,7 @@ public class ThreadClient extends Thread {
             case THREAD_COMPRA_PRODOTTI:
                 System.out.println("Thread di scrittura avviato. - COMPRA");
                 //clientConnessione.writeTransazioniJson(); // Avvio del loop di scrittura
-                clientConnessione.inviaTransazioniCompraProdotti();
+                clientConnessione.inviaTransazioniAcquistaProdotti();
                 message = "Thread di scrittura completato.";
                 break;
             case THREAD_VENDI_PRODOTTI:
