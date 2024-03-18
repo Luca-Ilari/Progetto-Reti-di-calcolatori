@@ -19,6 +19,8 @@ add_executable(Server
         include/utils/timeStamp.h
         include/sockets/socketFunctions.c
         include/sockets/socketFunctions.h
+        include/utils/loadFile.c
+        include/utils/loadFile.h
 )
 
 if(WIN32)
