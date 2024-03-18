@@ -25,11 +25,12 @@ public class SchermoCustomVendita extends JFrame {
     private JTextField inputQuantita;
     private JTextField inputViaggi;
     private JTextField inputNome;
-    private JButton switchUtenteButton;
+    private JButton btnSwitchUtente;
     private JLabel labelStatoServer;
+    private JButton btnChangeIP;
 
-    private List<Prodotto> listaProdotti = new ArrayList<>();
-    private ControllerClientNegozio controllerClientNegozio;
+    private final List<Prodotto> listaProdotti = new ArrayList<>();
+    private final ControllerClientNegozio controllerClientNegozio;
     private boolean statoNegozioOnline;
 
     public SchermoCustomVendita(ControllerClientNegozio controllerClientNegozio) {
@@ -52,13 +53,20 @@ public class SchermoCustomVendita extends JFrame {
             aggiungiListenerRigaTabella();
 
             progressBar.setStringPainted(true);
+            progressBar.setStringPainted(true); // Mostra il valore percentuale sulla progress bar
+            progressBar.setForeground(new Color(0, 102, 204)); // Colore della barra di avanzamento
+            progressBar.setBackground(Color.LIGHT_GRAY); // Colore dello sfondo della progress bar
+            progressBar.setBorderPainted(false); // Rimuove il bordo
 
+            createCustomButton(Color.GRAY, Color.WHITE, btnChangeIP);
+            createCustomButton(Color.GRAY, Color.WHITE, btnSwitchUtente);
+            createCustomButton(Color.green, Color.WHITE, btnInvia);
             setLocationRelativeTo(null);
             setVisible(true);
 
         });
 
-        switchUtenteButton.addActionListener(new ActionListener() {
+        btnSwitchUtente.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 dispose();
@@ -141,6 +149,57 @@ public class SchermoCustomVendita extends JFrame {
             }
         });
 
+        btnChangeIP.addActionListener(e -> {
+            setEnabled(false);
+            new ChangeIP(controllerClientNegozio.getClientConnessione(), this);
+            System.out.println(" CLICK: CHANGE btn IP");
+        });
+        btnSwitchUtente.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+                controllerClientNegozio.getClientConnessione().chiusuraConnessione();
+
+                SchermoCustomVendita schermoCustomVendita = new SchermoCustomVendita(controllerClientNegozio);
+                schermoCustomVendita.setStatoNegozioOnline(statoNegozioOnline);
+                schermoCustomVendita.changeTitle();
+
+
+            }
+        });
+
+
+    }
+
+    private void createCustomButton(Color backgroundColor, Color textColor, JButton button) {
+        button.setForeground(textColor);
+        button.setFocusPainted(false);
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setPreferredSize(new Dimension(150, 40));
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        button.setBackground(backgroundColor);
+
+        // Aggiunta di un effetto di ombreggiatura al passaggio del mouse
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setForeground(new Color(0, 102, 204)); // Cambia il colore del testo al passaggio del mouse
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setForeground(Color.WHITE); // Ripristina il colore del testo al mouse out
+            }
+        });
+
+        // Aggiunta dell'azione al pulsante
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Aggiungere l'azione desiderata qui
+            }
+        });
+
     }
 
     private void creaThreadInvioTransazione(int viaggi, int idProdotto, int quantita) {
@@ -149,9 +208,8 @@ public class SchermoCustomVendita extends JFrame {
             public void run() {
                 progressBar.setValue(0);
                 progressBar.setString(null);
-                int numGiri = viaggi;
-                int progressStep = 100 / numGiri;
-                int restoProgresso = 100 % numGiri;
+                int progressStep = 100 / viaggi;
+                int restoProgresso = 100 % viaggi;
 
                 for (int i = 0; i < viaggi; i++) {
                     Transazione transazione = new Transazione(idProdotto, quantita);
@@ -170,7 +228,7 @@ public class SchermoCustomVendita extends JFrame {
                     try {
                         Thread.sleep(new Random().nextInt(200, 1000));
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        System.err.println(e.getMessage());
                     }
                 }
 

@@ -6,25 +6,26 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class ChangeIP extends JFrame {
-    private JPanel panel;
     private JTextField textIp;
     private JButton btnAggiroanIp;
     private JPanel panelMainForm;
-    private JPanel panelTitle;
-    private JPanel panelInput;
     private JTextField textPorta;
-
+    private JFrame mainPanel;
     private ClientConnessione clientConnessione;
 
-    public ChangeIP(ClientConnessione clientConnessione) {
+    public ChangeIP(ClientConnessione clientConnessione, JFrame jFrame) {
 
+        this.mainPanel = jFrame;
         this.clientConnessione = clientConnessione;
 
         if (panelMainForm == null) {
             Panel panelError = new Panel();
-            JLabel labelError = new JLabel("ERRORE:caricamento main panel, chiudere la finestra - " + this.getClass().getName());
+            JLabel labelError =
+                    new JLabel("ERRORE:caricamento main panel, chiudere la finestra - " + this.getClass().getName());
 
 
             panelError.add(labelError);
@@ -38,7 +39,12 @@ public class ChangeIP extends JFrame {
         }
         setContentPane(panelMainForm);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                mainPanel.setEnabled(true); // Nascondi la finestra
+            }
+        });
         SwingUtilities.invokeLater(() -> {
             setConnectionDetails();
             implementaListenerBtn();
@@ -106,6 +112,7 @@ public class ChangeIP extends JFrame {
 
 
         // Elimina la finestra
+        this.mainPanel.setEnabled(true);
         dispose();
     }
 

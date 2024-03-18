@@ -32,7 +32,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     private JTable tblTransazioniVendita;
     private JScrollPane scrollPanelTransazioniVendita;
     private JButton btnSwitchUtente;
-    private JProgressBar progressBar1;
+    private JProgressBar progressBar;
 
 
     private boolean statoNegozioOnline = false;
@@ -66,8 +66,8 @@ public class ClientNegozioInterfaccia extends JFrame {
         setContentPane(mainPanel);
         SwingUtilities.invokeLater(() -> {
 
-            progressBar1.setStringPainted(true);
-            progressBar1.setMaximum(MAX_QUANTITA);
+            progressBar.setStringPainted(true);
+            progressBar.setMaximum(MAX_QUANTITA);
 
             // Creazione dei pannelli delle tabelle
             creaTabellaPanello(tblCarrello, carrelloColonne, scrollPanelCarrello);
@@ -82,7 +82,10 @@ public class ClientNegozioInterfaccia extends JFrame {
             setLabelProperties(labelCarrello, labelSize, smallFont);
             setLabelProperties(labelNegozio, labelSize, smallFont);
             setLabelProperties(labelStatoServer, labelSize, smallFont);
-
+            createCustomButton(Color.GRAY, Color.WHITE, btnChangeIP);
+            createCustomButton(Color.GRAY, Color.WHITE, btnSwitchUtente);
+            createCustomButton(Color.GREEN, Color.WHITE, btnCompraProdotti);
+            createCustomButton(Color.RED, Color.WHITE, btnVendiProdotti);
 
             pack();
             setLocationRelativeTo(null);
@@ -93,13 +96,13 @@ public class ClientNegozioInterfaccia extends JFrame {
     }
 
     public synchronized void updateProgressBar(int quantita) {
-        int newValue = progressBar1.getValue() + quantita;
+        int newValue = progressBar.getValue() + quantita;
 
         newValue = Math.max(newValue, 0);  // Assicurati che il valore non vada al di sotto di 0
 
         newValue = Math.min(newValue, MAX_QUANTITA);  // Assicurati che il valore non superi il valore massimo
 
-        progressBar1.setValue(newValue);
+        progressBar.setValue(newValue);
 
     }
 
@@ -142,7 +145,7 @@ public class ClientNegozioInterfaccia extends JFrame {
 
                 }
                 // Avvia un thread per l'invio di json al server
-                if (progressBar1.getValue() == MAX_QUANTITA) {
+                if (progressBar.getValue() == MAX_QUANTITA) {
                     JOptionPane.showMessageDialog(null, "Quantità massima raggiunta", "Attenzione",
                             JOptionPane.WARNING_MESSAGE);
                     return;
@@ -168,7 +171,7 @@ public class ClientNegozioInterfaccia extends JFrame {
                     return;
                 }
                 // Avvia un thread per l'invio di json al server
-                if (progressBar1.getValue() <= 0) {
+                if (progressBar.getValue() <= 0) {
                     JOptionPane.showMessageDialog(null, "Quantità minima raggiunta", "Attenzione",
                             JOptionPane.WARNING_MESSAGE);
                     return;
@@ -186,12 +189,10 @@ public class ClientNegozioInterfaccia extends JFrame {
         });
 
         btnChangeIP.addActionListener(e -> {
-            // Azione da eseguire quando il bottone viene premuto
-
-            new ChangeIP(controllerClientNegozio.getClientConnessione());
+            setEnabled(false);
+            new ChangeIP(controllerClientNegozio.getClientConnessione(), this);
             System.out.println(" CLICK: CHANGE btn IP");
         });
-
 
         btnSwitchUtente.addActionListener(new ActionListener() {
             @Override
@@ -206,6 +207,44 @@ public class ClientNegozioInterfaccia extends JFrame {
 
             }
         });
+        progressBar.setStringPainted(true);
+        progressBar.setStringPainted(true); // Mostra il valore percentuale sulla progress bar
+        progressBar.setForeground(new Color(0, 102, 204)); // Colore della barra di avanzamento
+        progressBar.setBackground(Color.LIGHT_GRAY); // Colore dello sfondo della progress bar
+        progressBar.setBorderPainted(false);
+
+    }
+
+    // Metodo per creare un pulsante personalizzato con un colore di sfondo specifico
+    private void createCustomButton(Color backgroundColor, Color textColor, JButton button) {
+        button.setForeground(textColor);
+        button.setFocusPainted(false);
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setPreferredSize(new Dimension(150, 40));
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        button.setBackground(backgroundColor);
+
+        // Aggiunta di un effetto di ombreggiatura al passaggio del mouse
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setForeground(new Color(0, 102, 204)); // Cambia il colore del testo al passaggio del mouse
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setForeground(Color.WHITE); // Ripristina il colore del testo al mouse out
+            }
+        });
+
+        // Aggiunta dell'azione al pulsante
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Aggiungere l'azione desiderata qui
+            }
+        });
+
     }
 
     private void creaTabellaPanello(JTable table, String[] colonneTabella, JScrollPane jScrollPane) {
@@ -239,7 +278,7 @@ public class ClientNegozioInterfaccia extends JFrame {
 
     }
 
-    public void addAllTransazioneAwait(List<Transazione> transazioneList, List<Prodotto> prodottiNegozio) {
+    public synchronized void addAllTransazioneAwait(List<Transazione> transazioneList, List<Prodotto> prodottiNegozio) {
         SwingUtilities.invokeLater(() -> {
             DefaultTableModel model = (DefaultTableModel) tblTransazioniAcquisto.getModel();
 
@@ -250,6 +289,11 @@ public class ClientNegozioInterfaccia extends JFrame {
                                 prodotto.getPrezzo() + "€", transazione.getQuantita(), "Attesa risposta"};
                         model.addRow(rowData);
                     }
+                }
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
             model.fireTableDataChanged();
@@ -510,7 +554,7 @@ public class ClientNegozioInterfaccia extends JFrame {
         tblTransazioniAcquisto.setPreferredScrollableViewportSize(tblTransazioniAcquisto.getPreferredSize());
     }
 
-    private static void azzeraElementiTable(DefaultTableModel defaultTableModel) {
+    public static void azzeraElementiTable(DefaultTableModel defaultTableModel) {
         defaultTableModel.setRowCount(0);
         defaultTableModel.fireTableDataChanged();
     }
