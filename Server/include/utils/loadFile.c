@@ -37,10 +37,10 @@ int customGetline(FILE *file, char *destBuffer, size_t bufferSize){
 
 int addProduct(char *name, long long quantity, float price){
     int newArraySize = sizeof(struct product) * (PRODUCT_NUMBER + 1);
-    serverProductList = realloc(serverProductList, newArraySize);//TODO MemoryLeak??
+    serverProductList = realloc(serverProductList, newArraySize);//TODO: MemoryLeak??
 
     serverProductList[PRODUCT_NUMBER].id = PRODUCT_NUMBER;
-    strcpy(serverProductList[PRODUCT_NUMBER].name, name); //TODO check name lenght
+    strcpy(serverProductList[PRODUCT_NUMBER].name, name); //TODO: check name lenght
     serverProductList[PRODUCT_NUMBER].quantity = quantity;
     serverProductList[PRODUCT_NUMBER].price = price;
 
@@ -65,10 +65,10 @@ void readProductsFromFile(char *fileName){
         char line[lineMaxLen];
         int lineRead = 1;
         while (getc(file) != EOF){
-            fseek(file, -1, SEEK_CUR); //rest cursor to line start
+            fseek(file, -1, SEEK_CUR); //reset cursor to line start
             int res = customGetline(file, line, lineMaxLen);
             if (res == EXIT_FAILURE){
-                printf("Error loading %s line %d is too long\nMax length is %d characters\n", fileName, lineRead, lineMaxLen);
+                printf("Error loading %s line %d is too long\nMax length is %zu characters\n", fileName, lineRead, lineMaxLen);
                 exit(-1);
             }
             //TODO: create a custom function to replace deprecate strtok()
@@ -80,7 +80,7 @@ void readProductsFromFile(char *fileName){
                 exit(-1);
             }
 
-            //TODO check for errors in conversion
+            //TODO: check for errors in conversion
             float floatPrice = strtof(price, NULL);
             long long quantity = strtoll(qt, NULL, 10);
 
