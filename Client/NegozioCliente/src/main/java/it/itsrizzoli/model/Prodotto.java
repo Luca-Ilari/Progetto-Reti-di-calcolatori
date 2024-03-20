@@ -13,6 +13,12 @@ public class Prodotto {
         this.quantitaDisponibile = quantitaDisponibile;
     }
 
+    public Prodotto(String nome, double prezzo, int quantitaDisponibile) {
+        this.nome = nome;
+        this.prezzo = prezzo;
+        this.quantitaDisponibile = quantitaDisponibile;
+    }
+
     public int getIdProdotto() {
         return idProdotto;
     }
@@ -47,11 +53,7 @@ public class Prodotto {
 
     @Override
     public String toString() {
-        return "Prodotto{" +
-                "idProdotto=" + idProdotto +
-                ", nome='" + nome + '\'' +
-                ", prezzo=" + prezzo +
-                ", quantitaDisponibile=" + quantitaDisponibile +
-                '}';
+        return "Prodotto{" + "idProdotto=" + idProdotto + ", nome='" + nome + '\'' + ", prezzo=" + prezzo + ", " +
+                "quantitaDisponibile=" + quantitaDisponibile + '}';
     }
 }

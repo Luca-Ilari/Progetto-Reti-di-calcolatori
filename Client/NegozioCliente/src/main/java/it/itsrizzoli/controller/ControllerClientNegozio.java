@@ -5,20 +5,26 @@ import it.itsrizzoli.model.Prodotto;
 import it.itsrizzoli.model.Transazione;
 import it.itsrizzoli.tcpip.ClientConnessione;
 import it.itsrizzoli.tcpip.ThreadClient;
+import it.itsrizzoli.tools.CodiciStatoServer;
 import it.itsrizzoli.view.ClientNegozioInterfaccia;
+import it.itsrizzoli.view.SchermoCustomVendita;
 
 import java.util.List;
 
-import static it.itsrizzoli.tools.TypeThread.THREAD_COMPRA_PRODOTTI;
-import static it.itsrizzoli.tools.TypeThread.THREAD_VENDI_PRODOTTI;
-
 public class ControllerClientNegozio {
     private final ModelloClientNegozio modelloClientNegozio;
-    private final ClientNegozioInterfaccia clientNegozioInterfaccia;
-    private final ClientConnessione clientConnessione;
+    private ClientNegozioInterfaccia clientNegozioInterfaccia;
+    private SchermoCustomVendita schermoCustomVendita;
+    private ClientConnessione clientConnessione;
+    private ThreadClient threadCompraProdotti;
+    private ThreadClient threadVendiProdotti;
 
     public ClientConnessione getClientConnessione() {
         return clientConnessione;
+    }
+
+    public void setClientConnessione(ClientConnessione clientConnessione) {
+        this.clientConnessione = clientConnessione;
     }
 
     public ControllerClientNegozio(ModelloClientNegozio modelloClientNegozio,
@@ -33,6 +39,27 @@ public class ControllerClientNegozio {
 
         clientConnessione.startConnessione();
     }
+
+
+    public void setClientNegozioInterfaccia(ClientNegozioInterfaccia clientNegozioInterfaccia) {
+        this.clientNegozioInterfaccia = clientNegozioInterfaccia;
+        this.clientNegozioInterfaccia.setControllerClientNegozio(this);
+
+    }
+
+
+    public SchermoCustomVendita getSchermoCustomVendita() {
+        return schermoCustomVendita;
+    }
+
+    public ClientNegozioInterfaccia getClientNegozioInterfaccia() {
+        return clientNegozioInterfaccia;
+    }
+
+    public void setSchermoCustomVendita(SchermoCustomVendita schermoCustomVendita) {
+        this.schermoCustomVendita = schermoCustomVendita;
+    }
+
 
     public ClientNegozioInterfaccia getClientNegozioGui() {
         return clientNegozioInterfaccia;
@@ -62,13 +89,16 @@ public class ControllerClientNegozio {
         modelloClientNegozio.setProdottiNegozio(prodottiNegozio);
     }
 
-    public synchronized void aggiornaProdottiNegozio(List<Prodotto> newProdottiNegozio) {
+    public void aggiornaProdottiNegozio(List<Prodotto> newProdottiNegozio) {
         modelloClientNegozio.setProdottiNegozio(newProdottiNegozio);
         clientNegozioInterfaccia.aggiornaTabellaProdottiNegozio(newProdottiNegozio);
+        if (schermoCustomVendita != null) {
+            schermoCustomVendita.aggiornaTabellaProdottiNegozio(newProdottiNegozio);
+        }
     }
 
     // Intuile
-    public synchronized void aggiornaProdottiCarrello(int idTransazione) {
+    public void aggiornaProdottiCarrello(int idTransazione) {
         Transazione transazione = modelloClientNegozio.trovaTransazione(idTransazione);
         if (transazione == null) {
             System.err.println(" - Errore: Transazione non trovata");
@@ -137,15 +167,31 @@ public class ControllerClientNegozio {
         modelloClientNegozio.aggiungiListaTransazioneVendita(listaTransazioni);
     }
 
-    public void addAllTransazioneAwait(List<Transazione> listaTransazione) {
+    public void addAllTransazioneAcquistoAwait(List<Transazione> listaTransazione) {
         if (listaTransazione == null) {
             System.err.println(" - Errore: Lista transazione non trovata");
             return;
         }
-        clientNegozioInterfaccia.addAllTransazioneAwait(listaTransazione, getProdottiNegozio());
+        clientNegozioInterfaccia.addAllTransazioneCompraAwait(listaTransazione, getProdottiNegozio());
     }
 
-    public void addAllTransazioneVenditaAwait(List<Transazione> listaTransazione) {
+    public void addSingleTransazioneCompraAwait(Transazione transazione) {
+        if (transazione == null) {
+            System.err.println(" - Errore: Transazione non trovata");
+            return;
+        }
+        clientNegozioInterfaccia.addSingleTransazioneCompraAwait(transazione, getProdottiNegozio());
+    }
+
+    public void addSingleTransazioneVendiAwait(Transazione transazione) {
+        if (transazione == null) {
+            System.err.println(" - Errore: Transazione non trovata");
+            return;
+        }
+        clientNegozioInterfaccia.addSingleTransazioneVenditaAwait(transazione, getProdottiNegozio());
+    }
+
+    public synchronized void addAllTransazioneVenditaAwait(List<Transazione> listaTransazione) {
         if (listaTransazione == null) {
             System.err.println(" - Errore: Lista transazione non trovata");
             return;
@@ -153,22 +199,59 @@ public class ControllerClientNegozio {
         clientNegozioInterfaccia.addAllTransazioneVenditaAwait(listaTransazione, getProdottiCarrello());
     }
 
+    public void startThread(int CODICE_STATO) {
+        String threadType = "";
+
+        switch (CODICE_STATO) {
+            case CodiciStatoServer.AGGIUNGI_PRODOTTO:
+                if (threadVendiProdotti != null && threadVendiProdotti.isAlive()) {
+                    threadVendiProdotti.interrupt();
+                    clientNegozioInterfaccia.changeNameButtonVendi(false);
+                } else {
+                    threadVendiProdotti = new ThreadClient(CODICE_STATO);
+                    threadVendiProdotti.start();
+                    threadType = "Thread di aggiunta prodotto";
+                    clientNegozioInterfaccia.changeNameButtonVendi(true);
+                }
+                break;
+            case CodiciStatoServer.RIMUOVI_PRODOTTO:
+                if (threadCompraProdotti != null && threadCompraProdotti.isAlive()) {
+                    threadCompraProdotti.interrupt();
+                    clientNegozioInterfaccia.changeNameButtonCompra(false);
+                } else {
+                    threadCompraProdotti = new ThreadClient(CODICE_STATO);
+                    threadCompraProdotti.start();
+                    threadType = "Thread di rimozione prodotto";
+                    clientNegozioInterfaccia.changeNameButtonCompra(true);
+                }
+                break;
+        }
+
+        System.out.println(!threadType.isEmpty() ? threadType + " avviato." :
+                "Nessuna azione eseguita: thread già " + "in" + " esecuzione o già inizializzato.");
+    }
+
+
     public void startThreadCompraProdotti() {
-        ThreadClient threadWriting = new ThreadClient(THREAD_COMPRA_PRODOTTI);
-        threadWriting.start();
+        startThread(CodiciStatoServer.RIMUOVI_PRODOTTO);
     }
 
     public void startThreadVendiProdotti() {
-        ThreadClient threadWriting = new ThreadClient(THREAD_VENDI_PRODOTTI);
-        threadWriting.start();
+        startThread(CodiciStatoServer.AGGIUNGI_PRODOTTO);
     }
 
+
     public void addSingleTransazioneAwait(Transazione transazione) {
-        clientNegozioInterfaccia.addSingleTransazioneAwait(transazione, getProdottiNegozio());
+        clientNegozioInterfaccia.addSingleTransazioneCompraAwait(transazione, getProdottiNegozio());
     }
 
     public void aggiornaStatoTransazioneInTabella(Transazione transazione) {
         clientNegozioInterfaccia.aggiornaStatoTransazioneInTabellaAcquisto(transazione, getProdottiNegozio(),
                 getProdottiCarrello());
     }
+
+    public int sommaQuantitaProdottoCarrello() {
+        return modelloClientNegozio.sommaQuantitaCarrello();
+    }
+
 }

@@ -95,5 +95,15 @@ public class ModelloClientNegozio {
         return null;
     }
 
+    public int sommaQuantitaCarrello() {
+        int somma = 0;
+
+        for (Prodotto prodotto : prodottiCarrello) {
+            somma += prodotto.getQuantitaDisponibile();
+        }
+
+        return somma;
+    }
+
 
 }

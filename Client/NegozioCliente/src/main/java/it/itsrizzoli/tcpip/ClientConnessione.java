@@ -104,27 +104,17 @@ public class ClientConnessione {
 
     }
 
-    public void inviaTransazioniCompraProdotti() {
-        ObjectMapper objectMapper = new ObjectMapper();
-
+    public void inviaTransazioniAcquistaProdotti() {
         List<Transazione> sendTransazioni =
-                Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiNegozio());
-
-        controllerClientNegozio.aggiungiListaTransazioneAcquisto(sendTransazioni);
-
-        controllerClientNegozio.addAllTransazioneAwait(sendTransazioni);
-        logger.info(" Inizio Transazioni da inviare al server.");
-
-        for (Transazione transazione : sendTransazioni) {
-            try {
-                String jsonString = getJsonTransazione(transazione, objectMapper, CodiciStatoServer.RIMUOVI_PRODOTTO);
-                out.println(jsonString);// Invia la transazione al server
-            } catch (JsonProcessingException e) {
-                logger.warning("Errore durante la conversione in JSON");
-            }
+                Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiNegozio(), true);
+        if (sendTransazioni == null) {
+            logger.severe("SendTransazione is null");
+            return;
         }
-        logger.info(" Fine Transazioni al server.");
 
+        inviaTransazioni(sendTransazioni, CodiciStatoServer.RIMUOVI_PRODOTTO, "Compra Prodotti");
+
+        logger.info(" Fine Transazioni al server.");
     }
 
     public void inviaTransazioniVendiProdotti() {
@@ -132,36 +122,67 @@ public class ClientConnessione {
         List<Prodotto> listaProdottiCarrello = controllerClientNegozio.getProdottiCarrello();
         if (listaProdottiCarrello.isEmpty()) {
             System.out.println("Attenzioen: Non ci sono prodotti nel carrello da vendere");
-            JOptionPane.showMessageDialog(null, "Attenzioen: Non ci sono prodotti nel carrello da vendere!!\n - Compra Prodotti prima.");
+            JOptionPane.showMessageDialog(null, "Attenzioen: Non ci sono prodotti nel carrello da vendere!!\n - " +
+                    "Compra Prodotti prima.");
             return;
         }
 
 
+        List<Transazione> sendTransazioni =
+                Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiCarrello(), false);
+        if (sendTransazioni == null) {
+            logger.severe("SendTransazione is null");
+            return;
+        }
+
+        inviaTransazioni(sendTransazioni, CodiciStatoServer.AGGIUNGI_PRODOTTO, "Vendi Prodotti");
+
+        logger.info(" Fine Transazioni al server.");
+    }
+
+    private void inviaTransazioni(List<Transazione> sendTransazioni, int CODICE_STATO, String action) {
         ObjectMapper objectMapper = new ObjectMapper();
 
-        List<Transazione> sendTransazioni =
-                Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiNegozio());
-
-
-        controllerClientNegozio.aggiungiListaTransazioneVendita(sendTransazioni);
-
-        controllerClientNegozio.addAllTransazioneVenditaAwait(sendTransazioni);
+        if (CODICE_STATO == CodiciStatoServer.AGGIUNGI_PRODOTTO) {
+            controllerClientNegozio.addAllTransazioneVenditaAwait(sendTransazioni);
+            controllerClientNegozio.aggiungiListaTransazioneVendita(sendTransazioni);
+        } else if (CODICE_STATO == CodiciStatoServer.RIMUOVI_PRODOTTO) {
+            controllerClientNegozio.addAllTransazioneAcquistoAwait(sendTransazioni);
+            controllerClientNegozio.aggiungiListaTransazioneAcquisto(sendTransazioni);
+        }
 
         for (Transazione transazione : sendTransazioni) {
             try {
-                String jsonString = getJsonTransazione(transazione, objectMapper, CodiciStatoServer.AGGIUNGI_PRODOTTO);
-                out.println(jsonString);// Invia la transazione al server
+                String jsonString = getJsonTransazione(transazione, objectMapper, CODICE_STATO);
+                out.println(jsonString); // Invia la transazione al server
             } catch (JsonProcessingException e) {
                 logger.warning("Errore durante la conversione in JSON");
             }
+            logger.info(action + ": " + transazione.toString());
+        }
+        logger.info("Fine " + action + " al server.");
+    }
+
+
+    public void inviaSingolaTransazione(Transazione transazione) {
+
+        if (transazione == null) {
+            logger.severe(" Transazione è null ");
+            return;
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            String jsonString = getJsonTransazione(transazione, objectMapper, CodiciStatoServer.AGGIUNGI_PRODOTTO);
+            out.println(jsonString);// Invia la transazione al server
+        } catch (JsonProcessingException e) {
+            logger.warning("Errore durante la conversione in JSON");
         }
         logger.info(" Fine Transazioni al server.");
     }
 
-
     private static String getJsonTransazione(Transazione transazione, ObjectMapper objectMapper, int CODICE_STATO) throws JsonProcessingException {
         ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put("codiceStato", CodiciStatoServer.RIMUOVI_PRODOTTO);
+        objectNode.put("codiceStato", CODICE_STATO);
 
         // Aggiungi direttamente l'oggetto transazione come nodo
         ObjectNode transazioneNode = objectMapper.convertValue(transazione, ObjectNode.class);
@@ -172,6 +193,25 @@ public class ClientConnessione {
 
         System.out.println("Transazione JSON: " + jsonString);
         return jsonString;
+    }
+
+    private static String getJsonTransazione(Transazione transazione, Prodotto prodotto, ObjectMapper objectMapper,
+                                             int CODICE_STATO) throws JsonProcessingException {
+        ObjectNode rootNode = objectMapper.createObjectNode();
+        rootNode.put("codiceStato", CODICE_STATO);
+
+        ObjectNode transazioneNode = rootNode.putObject("transazione");
+        transazioneNode.put("idTransazione", 123);
+
+        ObjectNode prodottoNode = transazioneNode.putObject("prodotto");
+        prodottoNode.put("idProdotto", prodotto.getIdProdotto());
+        prodottoNode.put("nome", prodotto.getNome());
+        prodottoNode.put("prezzo", prodotto.getPrezzo());
+        prodottoNode.put("quantita", prodotto.getQuantitaDisponibile());
+
+        String jsonOutput = rootNode.toPrettyString();
+        System.out.println(jsonOutput);
+        return jsonOutput;
     }
 
     private void gestioneJsonCodiceStato(String jsonResponse) {
