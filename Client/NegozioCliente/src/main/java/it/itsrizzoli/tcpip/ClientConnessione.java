@@ -164,7 +164,7 @@ public class ClientConnessione {
     }
 
 
-    public void inviaSingolaTransazione(Transazione transazione) {
+    public void inviaSingolaTransazione(Transazione transazione, int CODICE_STATO) {
 
         if (transazione == null) {
             logger.severe(" Transazione è null ");
@@ -172,7 +172,7 @@ public class ClientConnessione {
         }
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            String jsonString = getJsonTransazione(transazione, objectMapper, CodiciStatoServer.AGGIUNGI_PRODOTTO);
+            String jsonString = getJsonTransazione(transazione, objectMapper, CODICE_STATO);
             out.println(jsonString);// Invia la transazione al server
         } catch (JsonProcessingException e) {
             logger.warning("Errore durante la conversione in JSON");

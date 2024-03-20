@@ -67,6 +67,13 @@ public class ModelloClientNegozio {
     public void aggiungiListaTransazioneVendita(List<Transazione> listaTransazione) {
         this.listaTransazioneVendita.addAll(listaTransazione);
     }
+    public void aggiungiTransazioneAcquisto(Transazione transazione) {
+        this.listaTransazioneAcquisto.add(transazione);
+    }
+
+    public void aggiungiTransazioneVendita(Transazione transazione) {
+        this.listaTransazioneVendita.add(transazione);
+    }
 
     public void rimuoviTransazione(Transazione transazione) {
         listaTransazioneAcquisto.remove(transazione);
