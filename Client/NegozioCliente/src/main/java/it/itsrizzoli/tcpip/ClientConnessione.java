@@ -143,8 +143,13 @@ public class ClientConnessione {
     private void inviaTransazioni(List<Transazione> sendTransazioni, int CODICE_STATO, String action) {
         ObjectMapper objectMapper = new ObjectMapper();
 
-        controllerClientNegozio.aggiungiListaTransazioneAcquisto(sendTransazioni);
-        controllerClientNegozio.addAllTransazioneAcquistoAwait(sendTransazioni);
+        if (CODICE_STATO == CodiciStatoServer.AGGIUNGI_PRODOTTO) {
+            controllerClientNegozio.addAllTransazioneVenditaAwait(sendTransazioni);
+            controllerClientNegozio.aggiungiListaTransazioneVendita(sendTransazioni);
+        } else if (CODICE_STATO == CodiciStatoServer.RIMUOVI_PRODOTTO) {
+            controllerClientNegozio.addAllTransazioneAcquistoAwait(sendTransazioni);
+            controllerClientNegozio.aggiungiListaTransazioneAcquisto(sendTransazioni);
+        }
 
         for (Transazione transazione : sendTransazioni) {
             try {
@@ -153,6 +158,7 @@ public class ClientConnessione {
             } catch (JsonProcessingException e) {
                 logger.warning("Errore durante la conversione in JSON");
             }
+            logger.info(action + ": " + transazione.toString());
         }
         logger.info("Fine " + action + " al server.");
     }

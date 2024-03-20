@@ -3,6 +3,8 @@ package it.itsrizzoli.tcpip;
 
 import it.itsrizzoli.controller.ControllerClientNegozio;
 
+import java.util.Random;
+
 import static it.itsrizzoli.tools.TypeThread.*;
 
 public class ThreadClient extends Thread {
@@ -53,13 +55,26 @@ public class ThreadClient extends Thread {
             case THREAD_COMPRA_PRODOTTI:
                 System.out.println("Thread di scrittura avviato. - COMPRA");
                 //clientConnessione.writeTransazioniJson(); // Avvio del loop di scrittura
-                clientConnessione.inviaTransazioniAcquistaProdotti();
                 message = "Thread di scrittura completato.";
-                break;
+                while (true) {
+                    clientConnessione.inviaTransazioniAcquistaProdotti();
+                    try {
+                        Thread.sleep(new Random().nextInt(10, 10000));
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+
+                    }
+                }
             case THREAD_VENDI_PRODOTTI:
                 System.out.println("Thread di scrittura avviato. - VENDI");
-                clientConnessione.inviaTransazioniVendiProdotti();
-                break;
+                while (true) {
+                    clientConnessione.inviaTransazioniVendiProdotti();
+                    try {
+                        Thread.sleep(new Random().nextInt(10, 10000));
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             default:
                 System.err.println("Errore: Tipo di thread non valido.");
                 break;

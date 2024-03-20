@@ -5,21 +5,19 @@ import it.itsrizzoli.model.Prodotto;
 import it.itsrizzoli.model.Transazione;
 import it.itsrizzoli.tcpip.ClientConnessione;
 import it.itsrizzoli.tcpip.ThreadClient;
+import it.itsrizzoli.tools.CodiciStatoServer;
 import it.itsrizzoli.view.ClientNegozioInterfaccia;
 import it.itsrizzoli.view.SchermoCustomVendita;
 
 import java.util.List;
-
-import static it.itsrizzoli.tools.TypeThread.THREAD_COMPRA_PRODOTTI;
-import static it.itsrizzoli.tools.TypeThread.THREAD_VENDI_PRODOTTI;
 
 public class ControllerClientNegozio {
     private final ModelloClientNegozio modelloClientNegozio;
     private ClientNegozioInterfaccia clientNegozioInterfaccia;
     private SchermoCustomVendita schermoCustomVendita;
     private ClientConnessione clientConnessione;
-    private final ThreadClient threadCompraProdotti = new ThreadClient(THREAD_COMPRA_PRODOTTI);
-    private final ThreadClient threadVendiProdotti = new ThreadClient(THREAD_VENDI_PRODOTTI);
+    private ThreadClient threadCompraProdotti;
+    private ThreadClient threadVendiProdotti;
 
     public ClientConnessione getClientConnessione() {
         return clientConnessione;
@@ -91,7 +89,7 @@ public class ControllerClientNegozio {
         modelloClientNegozio.setProdottiNegozio(prodottiNegozio);
     }
 
-    public synchronized void aggiornaProdottiNegozio(List<Prodotto> newProdottiNegozio) {
+    public void aggiornaProdottiNegozio(List<Prodotto> newProdottiNegozio) {
         modelloClientNegozio.setProdottiNegozio(newProdottiNegozio);
         clientNegozioInterfaccia.aggiornaTabellaProdottiNegozio(newProdottiNegozio);
         if (schermoCustomVendita != null) {
@@ -100,7 +98,7 @@ public class ControllerClientNegozio {
     }
 
     // Intuile
-    public synchronized void aggiornaProdottiCarrello(int idTransazione) {
+    public void aggiornaProdottiCarrello(int idTransazione) {
         Transazione transazione = modelloClientNegozio.trovaTransazione(idTransazione);
         if (transazione == null) {
             System.err.println(" - Errore: Transazione non trovata");
@@ -201,24 +199,45 @@ public class ControllerClientNegozio {
         clientNegozioInterfaccia.addAllTransazioneVenditaAwait(listaTransazione, getProdottiCarrello());
     }
 
+    public void startThread(int CODICE_STATO) {
+        String threadType = "";
 
-    public void startThread(Thread thread) {
-
-        if (thread.isAlive()) {
-            System.out.println("Il thread è in esecuzione");
-        } else {
-            System.out.println("Il thread non è in esecuzione");
-            thread.start();
+        switch (CODICE_STATO) {
+            case CodiciStatoServer.AGGIUNGI_PRODOTTO:
+                if (threadVendiProdotti != null && threadVendiProdotti.isAlive()) {
+                    threadVendiProdotti.interrupt();
+                    clientNegozioInterfaccia.changeNameButtonVendi(false);
+                } else {
+                    threadVendiProdotti = new ThreadClient(CODICE_STATO);
+                    threadVendiProdotti.start();
+                    threadType = "Thread di aggiunta prodotto";
+                    clientNegozioInterfaccia.changeNameButtonVendi(true);
+                }
+                break;
+            case CodiciStatoServer.RIMUOVI_PRODOTTO:
+                if (threadCompraProdotti != null && threadCompraProdotti.isAlive()) {
+                    threadCompraProdotti.interrupt();
+                    clientNegozioInterfaccia.changeNameButtonCompra(false);
+                } else {
+                    threadCompraProdotti = new ThreadClient(CODICE_STATO);
+                    threadCompraProdotti.start();
+                    threadType = "Thread di rimozione prodotto";
+                    clientNegozioInterfaccia.changeNameButtonCompra(true);
+                }
+                break;
         }
+
+        System.out.println(!threadType.isEmpty() ? threadType + " avviato." :
+                "Nessuna azione eseguita: thread già " + "in" + " esecuzione o già inizializzato.");
     }
 
 
     public void startThreadCompraProdotti() {
-        startThread(threadCompraProdotti);
+        startThread(CodiciStatoServer.RIMUOVI_PRODOTTO);
     }
 
     public void startThreadVendiProdotti() {
-        startThread(threadVendiProdotti);
+        startThread(CodiciStatoServer.AGGIUNGI_PRODOTTO);
     }
 
 
@@ -231,5 +250,8 @@ public class ControllerClientNegozio {
                 getProdottiCarrello());
     }
 
+    public int sommaQuantitaProdottoCarrello() {
+        return modelloClientNegozio.sommaQuantitaCarrello();
+    }
 
 }
