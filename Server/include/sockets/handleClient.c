@@ -140,17 +140,52 @@ int handleClient(int sock, int *clientOrderedProducts){
     char tmp[BUFFER_SIZE];
     int jsonRead = 0;
     int jsonlen = 0;
-    memset(buffer, 0, BUFFER_SIZE);
-
     //Receive from client
-    while(jsonRead==0){
-      //  memset(buffer, 0, BUFFER_SIZE);
+    //while(jsonRead==0){
+    while(1){
+        memset(buffer, 0, BUFFER_SIZE);
         //jsonlen=0;
         int n = recv(sock, buffer, BUFFER_SIZE-1, 0);
         if (n <= 0){
             return -1;
         }
 
+       // printf("%c", test);
+        //for (int i = 0; i < strlen(buffer); ++i) {
+        int i = 0;
+         while (buffer[i] != '\n'){
+            char test =  buffer[i];
+            if (test == '|'){
+                memset(tmp, 0, BUFFER_SIZE);
+                strncpy(tmp,buffer+(i-jsonlen), jsonlen);
+
+                usleep(100*1000);//Sleep 0,1 second every transaction
+                timestamp();
+                printf("<- Handling json received from socket %d: %s",sock ,tmp);
+                int jsonStatusCode = -1;
+                int found = getJsonStatusCode(tmp, &jsonStatusCode);
+                if (found == 0){
+                    switch (jsonStatusCode) {
+                        case 2://Modify a product
+                            handleStatusCode2(sock,tmp,clientOrderedProducts);
+                            break;
+                        case 3:
+                            handleStatusCode3(sock,tmp,clientOrderedProducts);
+                            break;
+                    }
+                }else{
+                    timestamp();
+                    printf("X Socket %d sent an incorrect JSON", sock);
+                }
+
+                jsonlen=0;
+            }else if(test != '\n'){
+                jsonlen++;
+            }
+            i++;
+        }
+
+        /*
         for (int i = 0; i < n; ++i) {
             if (buffer[i] == '\r' && buffer[i+1] == '\n') {
                 usleep(100*1000);//Sleep 0,1 second every transaction
@@ -174,10 +209,10 @@ int handleClient(int sock, int *clientOrderedProducts){
                     timestamp();
                     printf("X Socket %d sent an incorrect JSON", sock);
                 }
-                jsonRead = 1;
+                //jsonRead = 1;
             }
             jsonlen++;
-        }
+        }*/
     }
     return 0;
 }
@@ -231,9 +266,9 @@ void *handleNewClient(void *newSockParam){
     setupNewClient(newsock);
 
     int res = 0;
-    while(res >= 0){
+    //while(res >= 0){
         res = handleClient(newsock,clientOrderedProducts);
-    }
+    //}
     timestamp();
     printf("Closing socket %d\n", newsock);
     closeSocket(newsock);
