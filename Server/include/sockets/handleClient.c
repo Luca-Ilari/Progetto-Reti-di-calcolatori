@@ -42,7 +42,8 @@ int tryToRemoveProduct(int productId, int nToRemove, int *clientOrderedProducts)
     
     if (serverProductList[index].quantity >= nToRemove){
         serverProductList[index].quantity -= nToRemove;
-        clientOrderedProducts[index] -= nToRemove;
+        clientOrderedProducts[index] += nToRemove;
+
         updateAllClients = 1;
     }else{
         customLeaveCriticalSection();
@@ -59,11 +60,11 @@ int tryToAddProduct(int productId, int nToAdd, int *clientOrderedProducts){
     customEnterCriticalSection();
     if(clientOrderedProducts[index] >= nToAdd){//if the client is trying to add product that he previusly removed
         serverProductList[index].quantity += nToAdd;
-        clientOrderedProducts[index] += nToAdd;
+        clientOrderedProducts[index] -= nToAdd;
         updateAllClients = 1;
     }else{
-        return -1;
         customLeaveCriticalSection();
+        return -1;
     }
     customLeaveCriticalSection();
     return 0;
@@ -158,7 +159,7 @@ int handleClient(int sock, int *clientOrderedProducts){
             if (test == '|'){
                 memset(tmp, 0, BUFFER_SIZE);
                 strncpy(tmp,buffer+(i-jsonlen), jsonlen);
-
+                i++;
                 usleep(100*1000);//Sleep 0,1 second every transaction
                 timestamp();
                 printf("<- Handling json received from socket %d: %s",sock ,tmp);
