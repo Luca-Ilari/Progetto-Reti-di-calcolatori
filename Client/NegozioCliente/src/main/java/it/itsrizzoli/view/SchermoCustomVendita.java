@@ -19,15 +19,16 @@ public class SchermoCustomVendita extends JFrame {
     private JPanel panel1;
     private JTextField inputIdProdotto;
     private JButton btnInvia;
-    private JProgressBar progressBar;
-    private JTable tblProdotti;
+    private JProgressBar progressBarTransazioni;
+    private JTable table;
     private JScrollPane scrollPanel;
     private JTextField inputQuantita;
     private JTextField inputViaggi;
     private JTextField inputNome;
-    private JButton btnSwitchUtente;
     private JLabel labelStatoServer;
     private JButton btnChangeIP;
+    private JRadioButton comprareRadioButton;
+    private JRadioButton vendereRadioButton;
 
     private final List<Prodotto> listaProdotti = new ArrayList<>();
     private final ControllerClientNegozio controllerClientNegozio;
@@ -37,14 +38,14 @@ public class SchermoCustomVendita extends JFrame {
         int idRandom = new Random().nextInt(0, 10000);
 
         this.controllerClientNegozio = controllerClientNegozio;
-        this.controllerClientNegozio.setSchermoCustomVendita(this);
-        controllerClientNegozio.getClientConnessione().startConnessione();
-
         SwingUtilities.invokeLater(() -> {
             setTitle("Negozio Online - " + "Interfaccia Client %d".formatted(idRandom));
             setContentPane(panel1);
-            setSize(new Dimension(500, 800));
-            setDefaultCloseOperation(EXIT_ON_CLOSE);
+            setMinimumSize(new Dimension(500, 700));
+            setMaximumSize(new Dimension(500, 700));
+            setPreferredSize(new Dimension(500, 700));
+
+            setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
             creazioneProdotti();
 
@@ -52,14 +53,13 @@ public class SchermoCustomVendita extends JFrame {
 
             aggiungiListenerRigaTabella();
 
-            progressBar.setStringPainted(true);
-            progressBar.setStringPainted(true); // Mostra il valore percentuale sulla progress bar
-            progressBar.setForeground(new Color(0, 102, 204)); // Colore della barra di avanzamento
-            progressBar.setBackground(Color.LIGHT_GRAY); // Colore dello sfondo della progress bar
-            progressBar.setBorderPainted(false); // Rimuove il bordo
+            progressBarTransazioni.setStringPainted(true);
+            progressBarTransazioni.setStringPainted(true); // Mostra il valore percentuale sulla progress bar
+            progressBarTransazioni.setForeground(new Color(0, 102, 204)); // Colore della barra di avanzamento
+            progressBarTransazioni.setBackground(Color.LIGHT_GRAY); // Colore dello sfondo della progress bar
+            progressBarTransazioni.setBorderPainted(false); // Rimuove il bordo
 
             setPropertyButton(Color.GRAY, Color.WHITE, btnChangeIP);
-            setPropertyButton(Color.GRAY, Color.WHITE, btnSwitchUtente);
             setPropertyButton(Color.green, Color.WHITE, btnInvia);
 
             setPropertyTextField(inputIdProdotto);
@@ -71,19 +71,6 @@ public class SchermoCustomVendita extends JFrame {
 
         });
 
-        btnSwitchUtente.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-                int idRandom = new Random().nextInt(0, 10000);
-                ClientNegozioInterfaccia clientNegozioInterfaccia =
-                        new ClientNegozioInterfaccia("Negozio Online - " + "Interfaccia Client %d".formatted(idRandom));
-
-                controllerClientNegozio.setClientNegozioInterfaccia(clientNegozioInterfaccia);
-                controllerClientNegozio.getClientConnessione().chiusuraConnessione();
-                controllerClientNegozio.getClientConnessione().startConnessione();
-            }
-        });
 
         btnInvia.addActionListener(new ActionListener() {
             @Override
@@ -98,7 +85,8 @@ public class SchermoCustomVendita extends JFrame {
 
 
                 btnInvia.setEnabled(false);
-                progressBar.setValue(0);
+                progressBarTransazioni.setValue(0);
+                progressBarTransazioni.setString("pronto!");
 
                 String idProdottoStr = inputIdProdotto.getText().trim();
                 String nome = inputNome.getText().trim();
@@ -158,19 +146,6 @@ public class SchermoCustomVendita extends JFrame {
             setEnabled(false);
             new ChangeIP(controllerClientNegozio.getClientConnessione(), this);
             System.out.println(" CLICK: CHANGE btn IP");
-        });
-        btnSwitchUtente.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-                controllerClientNegozio.getClientConnessione().chiusuraConnessione();
-
-                SchermoCustomVendita schermoCustomVendita = new SchermoCustomVendita(controllerClientNegozio);
-                schermoCustomVendita.setStatoNegozioOnline(statoNegozioOnline);
-                schermoCustomVendita.changeTitle();
-
-
-            }
         });
 
 
@@ -234,23 +209,23 @@ public class SchermoCustomVendita extends JFrame {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                progressBar.setValue(0);
-                progressBar.setString(null);
+                progressBarTransazioni.setValue(0);
+                progressBarTransazioni.setString("Pronto");
                 int progressStep = 100 / viaggi;
                 int restoProgresso = 100 % viaggi;
 
                 for (int i = 0; i < viaggi; i++) {
                     Transazione transazione = new Transazione(idProdotto, quantita);
-                    controllerClientNegozio.getClientConnessione().inviaSingolaTransazione(transazione);
-                    int progressoAttuale = progressBar.getValue() + progressStep;
+                   // controllerClientNegozio.getClientConnessione().inviaSingolaTransazione(transazione,);
+                    int progressoAttuale = progressBarTransazioni.getValue() + progressStep;
                     if (i < restoProgresso) {
                         progressoAttuale++;
                     }
-                    progressBar.setValue(progressoAttuale);
-                    progressBar.setString(i + "/" + viaggi + " Transazioni");
+                    progressBarTransazioni.setValue(progressoAttuale);
+                    progressBarTransazioni.setString(i + "/" + viaggi + " Transazioni");
 
-                    if (progressBar.getValue() == 100) {
-                        progressBar.setString("Finito!");
+                    if (progressBarTransazioni.getValue() == 100) {
+                        progressBarTransazioni.setString("Finito!");
                         btnInvia.setEnabled(true);
 
                     }
@@ -286,27 +261,20 @@ public class SchermoCustomVendita extends JFrame {
 
         DefaultTableModel model = new DefaultTableModel(data, columnNames);
 
-        tblProdotti.setModel(model);
-        tblProdotti.setCellSelectionEnabled(true);
-        tblProdotti.setRowSelectionAllowed(true);
-        tblProdotti.setColumnSelectionAllowed(false);
-        tblProdotti.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Imposta la tabella come non editabile
-        tblProdotti.setDefaultEditor(Object.class, null);
         aggiungiListenerRigaTabella();
-        scrollPanel.setViewportView(tblProdotti);
+        scrollPanel.setViewportView(table);
     }
 
     public void aggiungiListenerRigaTabella() {
-        tblProdotti.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent event) {
                 if (!event.getValueIsAdjusting()) {
-                    int selectedRow = tblProdotti.getSelectedRow();
+                    int selectedRow = table.getSelectedRow();
                     if (selectedRow != -1) {
                         System.out.println("Hai cliccato sulla riga: " + selectedRow);
-                        int idProdotto = (int) tblProdotti.getValueAt(selectedRow, 0);
-                        String nome = (String) tblProdotti.getValueAt(selectedRow, 1);
+                        int idProdotto = (int) table.getValueAt(selectedRow, 0);
+                        String nome = (String) table.getValueAt(selectedRow, 1);
                         inputIdProdotto.setText(String.valueOf(idProdotto));
                         inputNome.setText(nome);
                     }
@@ -331,7 +299,7 @@ public class SchermoCustomVendita extends JFrame {
 
     public void aggiornaTabellaProdottiNegozio(List<Prodotto> newProdottiNegozio) {
         SwingUtilities.invokeLater(() -> {
-            DefaultTableModel tableProdottiNegozio = (DefaultTableModel) tblProdotti.getModel();
+            DefaultTableModel tableProdottiNegozio = (DefaultTableModel) table.getModel();
             tableProdottiNegozio.setRowCount(0);
             // Aggiungi righe per ciascun prodotto nella lista
             for (Prodotto product : newProdottiNegozio) {

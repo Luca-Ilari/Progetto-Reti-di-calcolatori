@@ -180,7 +180,9 @@ public class ControllerClientNegozio {
             System.err.println(" - Errore: Transazione non trovata");
             return;
         }
+        modelloClientNegozio.aggiungiTransazioneAcquisto(transazione);
         clientNegozioInterfaccia.addSingleTransazioneCompraAwait(transazione, getProdottiNegozio());
+
     }
 
     public void addSingleTransazioneVendiAwait(Transazione transazione) {
@@ -188,7 +190,8 @@ public class ControllerClientNegozio {
             System.err.println(" - Errore: Transazione non trovata");
             return;
         }
-        clientNegozioInterfaccia.addSingleTransazioneVenditaAwait(transazione, getProdottiNegozio());
+        modelloClientNegozio.aggiungiTransazioneVendita(transazione);
+        clientNegozioInterfaccia.addSingleTransazioneVenditaAwait(transazione, getProdottiCarrello());
     }
 
     public synchronized void addAllTransazioneVenditaAwait(List<Transazione> listaTransazione) {
@@ -199,30 +202,41 @@ public class ControllerClientNegozio {
         clientNegozioInterfaccia.addAllTransazioneVenditaAwait(listaTransazione, getProdottiCarrello());
     }
 
-    public void startThread(int CODICE_STATO) {
+    public void startThread(int CODICE_STATO, boolean stato) {
         String threadType = "";
 
         switch (CODICE_STATO) {
             case CodiciStatoServer.AGGIUNGI_PRODOTTO:
-                if (threadVendiProdotti != null && threadVendiProdotti.isAlive()) {
-                    threadVendiProdotti.interrupt();
-                    clientNegozioInterfaccia.changeNameButtonVendi(false);
+                if (threadVendiProdotti != null) {
+                    threadVendiProdotti.setAttivo(stato);
+                    if (!threadVendiProdotti.isAttivo()) {
+                        threadVendiProdotti = new ThreadClient(CODICE_STATO);
+                        threadVendiProdotti.start();
+                        threadType = "Thread di aggiunta prodotto";
+                    }
                 } else {
                     threadVendiProdotti = new ThreadClient(CODICE_STATO);
                     threadVendiProdotti.start();
-                    threadType = "Thread di aggiunta prodotto";
-                    clientNegozioInterfaccia.changeNameButtonVendi(true);
                 }
                 break;
             case CodiciStatoServer.RIMUOVI_PRODOTTO:
-                if (threadCompraProdotti != null && threadCompraProdotti.isAlive()) {
-                    threadCompraProdotti.interrupt();
-                    clientNegozioInterfaccia.changeNameButtonCompra(false);
+                if (threadCompraProdotti != null) {
+                    threadCompraProdotti.setAttivo(stato);
+                    if (!threadCompraProdotti.isAttivo()) {
+                        threadCompraProdotti = new ThreadClient(CODICE_STATO);
+                        threadCompraProdotti.start();
+                        threadType = "Thread di rimozione prodotto";
+                    }
+
                 } else {
                     threadCompraProdotti = new ThreadClient(CODICE_STATO);
                     threadCompraProdotti.start();
+                }
+
+                if (!threadCompraProdotti.isAttivo()) {
+                    threadCompraProdotti = new ThreadClient(CODICE_STATO);
+                    threadCompraProdotti.start();
                     threadType = "Thread di rimozione prodotto";
-                    clientNegozioInterfaccia.changeNameButtonCompra(true);
                 }
                 break;
         }
@@ -232,18 +246,14 @@ public class ControllerClientNegozio {
     }
 
 
-    public void startThreadCompraProdotti() {
-        startThread(CodiciStatoServer.RIMUOVI_PRODOTTO);
+    public void startThreadCompraProdotti(boolean state) {
+        startThread(CodiciStatoServer.RIMUOVI_PRODOTTO, state);
     }
 
-    public void startThreadVendiProdotti() {
-        startThread(CodiciStatoServer.AGGIUNGI_PRODOTTO);
+    public void startThreadVendiProdotti(boolean state) {
+        startThread(CodiciStatoServer.AGGIUNGI_PRODOTTO, state);
     }
 
-
-    public void addSingleTransazioneAwait(Transazione transazione) {
-        clientNegozioInterfaccia.addSingleTransazioneCompraAwait(transazione, getProdottiNegozio());
-    }
 
     public void aggiornaStatoTransazioneInTabella(Transazione transazione) {
         clientNegozioInterfaccia.aggiornaStatoTransazioneInTabellaAcquisto(transazione, getProdottiNegozio(),

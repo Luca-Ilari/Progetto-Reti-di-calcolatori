@@ -10,6 +10,7 @@ import static it.itsrizzoli.tools.TypeThread.*;
 public class ThreadClient extends Thread {
     public static ClientConnessione clientConnessione;
     private final int typeThread;
+    private boolean isAttivo;
     private boolean newConnessione = false;
 
     public ThreadClient(ControllerClientNegozio controllerClientNegozio, int typeThread) {
@@ -19,6 +20,15 @@ public class ThreadClient extends Thread {
 
     public ThreadClient(int typeThread) {
         this.typeThread = typeThread;
+        this.isAttivo = true;
+    }
+
+    public boolean isAttivo() {
+        return isAttivo;
+    }
+
+    public void setAttivo(boolean attivo) {
+        isAttivo = attivo;
     }
 
     public void setNewConnessione(boolean newConnessione) {
@@ -55,26 +65,14 @@ public class ThreadClient extends Thread {
             case THREAD_COMPRA_PRODOTTI:
                 System.out.println("Thread di scrittura avviato. - COMPRA");
                 //clientConnessione.writeTransazioniJson(); // Avvio del loop di scrittura
-                message = "Thread di scrittura completato.";
-                while (true) {
-                    clientConnessione.inviaTransazioniAcquistaProdotti();
-                    try {
-                        Thread.sleep(new Random().nextInt(10, 10000));
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-
-                    }
-                }
+                message = "Thread di scrittura compra completato.";
+                clientConnessione.inviaTransazioniAcquistaProdotti();
+                break;
             case THREAD_VENDI_PRODOTTI:
                 System.out.println("Thread di scrittura avviato. - VENDI");
-                while (true) {
-                    clientConnessione.inviaTransazioniVendiProdotti();
-                    try {
-                        Thread.sleep(new Random().nextInt(10, 10000));
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
+                clientConnessione.inviaTransazioniVendiProdotti();
+                message = "Thread di scrittura vendi completato.";
+                break;
             default:
                 System.err.println("Errore: Tipo di thread non valido.");
                 break;
