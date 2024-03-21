@@ -96,7 +96,6 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
             String max = String.valueOf(MAX_QUANTITA);
 
 
-
             border.setTitle(border.getTitle() + max);
             panelMaxQuantita.setBorder(border);
             // Creazione dei pannelli delle tabelle
@@ -321,21 +320,24 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
 
                 boolean isVendita = radioBtnVendi.isSelected();
 
+                String message = isVendita ? "Quantità totale richiesta non disponibile." : "Stai chiedendo una " +
+                        "quantità oltre il limite massimo.";
+                String messageTitle = isVendita ? "Attenzione: Quantità Minima" : "Attenzione: Quantità Massima";
+                quantita = isVendita ? -quantita : quantita;
+
                 for (int i = 1; i <= viaggi; i++) {
-                    int quantitaTotale = isVendita ? getQuantita() - (i * quantita) : getQuantita() + (i * quantita);
-                    String messaggio = isVendita ? "La disponibilità della quantità delle transazioni supera cio che "
-                            + "hai comprato!" :
-                            "La somma delle quantità delle transazione supera il limite di  " + MAX_QUANTITA;
+                    int quantitaTotale = getQuantita() + (i * quantita);
 
                     if ((isVendita && quantitaTotale < 0) || (!isVendita && quantitaTotale > MAX_QUANTITA)) {
-                        String tipoMessaggio = isVendita ? "Quantità Minima" : "Quantità Massima";
-                        JOptionPane.showMessageDialog(null,
-                                messaggio + (quantitaTotale + quantita * viaggi) + "/" + MAX_QUANTITA, tipoMessaggio,
-                                JOptionPane.WARNING_MESSAGE);
+                        int finalQuantita = getQuantita() + viaggi * quantita;
+                        JOptionPane.showMessageDialog(null, message + "\n" + finalQuantita + "/" + MAX_QUANTITA + " " +
+                                "prodotti", messageTitle, JOptionPane.WARNING_MESSAGE);
                         btnInviaTransazione.setEnabled(true);
                         return;
                     }
                 }
+
+
                 btnStopTransazioni.setVisible(true);
                 btnInviaTransazione.setVisible(false);
                 isStopThread = false;
