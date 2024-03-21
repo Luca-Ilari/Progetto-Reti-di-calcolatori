@@ -6,8 +6,7 @@ import it.itsrizzoli.model.Transazione;
 import it.itsrizzoli.tools.CodiciStatoServer;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -18,7 +17,7 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.Random;
 
-public class ClientNegozioInterfaccia extends JFrame {
+public class ClientNegozioInterfaccia extends JFrame implements Runnable {
     private JTable tblCarrello;
     private JTable tblNegozio;
     private JTable tblTransazioniAcquisto;
@@ -42,6 +41,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     private JProgressBar progressBarTransazioni;
     private JProgressBar progressBarQuantita;
     private JButton btnStopTransazioni;
+    private JPanel panelMaxQuantita;
 
 
     private boolean statoNegozioOnline = false;
@@ -51,7 +51,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     private final String[] transazioniColonne = {"Number", "Prodotto", "Prezzo", "Quantità", "Stato"};
 
 
-    public final static int MAX_QUANTITA = 10_000;
+    public final static int MAX_QUANTITA = 100_000;
     public static final String WAITING_CONFIRMATION = "In attesa";
     public static final String SUCCESS_RESPONSE = "Completato";
     public static final String PRODUCT_FINISHED_NEGOZIO = "Esaurito (negoziante)";
@@ -84,12 +84,21 @@ public class ClientNegozioInterfaccia extends JFrame {
             setPreferredSize(new Dimension(1400, 800));
 
             setContentPane(mainPanel);
-            setProperietaProgressBar(progressBarQuantita, MAX_QUANTITA);
-            setProperietaProgressBar(progressBarTransazioni, 100);
+            setProperietaProgressBar(progressBarQuantita, MAX_QUANTITA, Color.ORANGE);
+            setProperietaProgressBar(progressBarTransazioni, 100, Color.BLUE);
             progressBarTransazioni.setString("pronto!");
 
             panelCreaTransazione.setVisible(false);
 
+            // Creazione di un bordo con il titolo desiderato
+            TitledBorder border = (TitledBorder) panelMaxQuantita.getBorder();
+
+            String max = String.valueOf(MAX_QUANTITA);
+
+
+
+            border.setTitle(border.getTitle() + max);
+            panelMaxQuantita.setBorder(border);
             // Creazione dei pannelli delle tabelle
             creaTabellaPanello(tblCarrello, carrelloColonne, scrollPanelCarrello);
             creaTabellaPanello(tblNegozio, articoliNegozioColonne, scrolPanelNegozio);
@@ -156,9 +165,9 @@ public class ClientNegozioInterfaccia extends JFrame {
         });
     }
 
-    private void setProperietaProgressBar(JProgressBar progressBar, int max) {
+    private void setProperietaProgressBar(JProgressBar progressBar, int max, Color color) {
         progressBar.setStringPainted(true);
-        progressBar.setForeground(new Color(0, 102, 204)); // Colore della barra di avanzamento
+        progressBar.setForeground(color); // Colore della barra di avanzamento
         progressBar.setBackground(Color.LIGHT_GRAY); // Colore dello sfondo della progress bar
         progressBar.setBorderPainted(false);
         progressBar.setMaximum(max);
@@ -174,7 +183,7 @@ public class ClientNegozioInterfaccia extends JFrame {
         radioButton.setOpaque(false);
     }
 
-    public synchronized void updateProgressBar(int quantita) {
+    public synchronized int updateProgressBar(int quantita) {
         int currentValue = progressBarQuantita.getValue();
         int newValue = currentValue + quantita;
 
@@ -183,13 +192,17 @@ public class ClientNegozioInterfaccia extends JFrame {
         newValue = Math.min(newValue, MAX_QUANTITA);
 
         progressBarQuantita.setString(newValue + " / " + MAX_QUANTITA + " Prodotti");
-        if (MAX_QUANTITA == newValue) {
-            progressBarQuantita.setString("Spazio finito!");
-        }
 
         progressBarQuantita.setValue(newValue);
-    }
 
+        if (newValue == 0) {
+            return -1;
+        } else if (newValue == MAX_QUANTITA) {
+            return +1;
+        }
+        return 0;
+
+    }
 
 
     public synchronized int getQuantita() {
@@ -233,12 +246,10 @@ public class ClientNegozioInterfaccia extends JFrame {
         });
         btnCreaTransazioni.addActionListener(e -> {
 
-            if (panelCreaTransazione.isVisible()) {
-                btnCreaTransazioni.setText("Chiudi Finestra");
-            } else {
-                btnCreaTransazioni.setText("Compra & Vendi");
-            }
             panelCreaTransazione.setVisible(!panelCreaTransazione.isVisible());     // Inverte la visibilità del
+
+            btnCreaTransazioni.setText(panelCreaTransazione.isVisible() ? "Chiudi Finestra" : "Compra - Vendi");
+
             // pannello
         });
 
@@ -312,18 +323,22 @@ public class ClientNegozioInterfaccia extends JFrame {
 
                 for (int i = 1; i <= viaggi; i++) {
                     int quantitaTotale = isVendita ? getQuantita() - (i * quantita) : getQuantita() + (i * quantita);
-                    String messaggio = isVendita ? "Quantità non disponibile, il totale: " : ("Quantità Massima " +
-                            "raggiunta %d , il totale:").formatted(MAX_QUANTITA);
+                    String messaggio = isVendita ? "La disponibilità della quantità delle transazioni supera cio che "
+                            + "hai comprato!" :
+                            "La somma delle quantità delle transazione supera il limite di  " + MAX_QUANTITA;
 
                     if ((isVendita && quantitaTotale < 0) || (!isVendita && quantitaTotale > MAX_QUANTITA)) {
                         String tipoMessaggio = isVendita ? "Quantità Minima" : "Quantità Massima";
-                        JOptionPane.showMessageDialog(null, messaggio + quantita * viaggi, tipoMessaggio,
+                        JOptionPane.showMessageDialog(null,
+                                messaggio + (quantitaTotale + quantita * viaggi) + "/" + MAX_QUANTITA, tipoMessaggio,
                                 JOptionPane.WARNING_MESSAGE);
                         btnInviaTransazione.setEnabled(true);
                         return;
                     }
                 }
                 btnStopTransazioni.setVisible(true);
+                btnInviaTransazione.setVisible(false);
+                isStopThread = false;
                 creaThreadInvioTransazione(viaggi, idProdotto, quantita, isVendita);
 
             }
@@ -332,9 +347,8 @@ public class ClientNegozioInterfaccia extends JFrame {
         btnStopTransazioni.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(mainPanel, "Stop Transazioni");
-                thread.setPriority(MAXIMIZED_HORIZ);
-                thread.interrupt();
+                isStopThread = true;
+                progressBarTransazioni.setString(progressBarTransazioni.getString() + " conclusi ");
             }
         });
     }
@@ -379,6 +393,13 @@ public class ClientNegozioInterfaccia extends JFrame {
             progressBarTransazioni.setMaximum(viaggi);
 
             for (int i = 1; i <= viaggi; i++) {
+
+                if (isStopThread) {
+                    System.out.println("Thread fermato:");
+                    btnInviaTransazione.setVisible(true);
+                    btnInviaTransazione.setEnabled(true);
+                    break;
+                }
                 Transazione transazione = new Transazione(idProdotto, quantita);
                 //invia transazione
                 int codiceStato = isVendita ? CodiciStatoServer.AGGIUNGI_PRODOTTO : CodiciStatoServer.RIMUOVI_PRODOTTO;
@@ -407,6 +428,7 @@ public class ClientNegozioInterfaccia extends JFrame {
                     e.printStackTrace();
                 }
             }
+            btnInviaTransazione.setVisible(true);
             btnStopTransazioni.setVisible(false);
         });
         thread.start();
@@ -588,7 +610,7 @@ public class ClientNegozioInterfaccia extends JFrame {
                         boolean isFull = decrementaQuantitaCarrello(transazione.getIdProdotto(),
                                 transazione.getQuantita(), prodottiCarrello);
                         if (isFull) {
-                            transazioniTableModel.setValueAt(QUANTITA_MASSIMA_RAGGIUNTA, riga, 4); // Imposta il
+                            transazioniTableModel.setValueAt(QUANTITA_MINIMIA_RAGGIUNTA, riga, 4); // Imposta il
                             // nuovo stato
                             break;
                         }
@@ -773,9 +795,13 @@ public class ClientNegozioInterfaccia extends JFrame {
                 }
 
                 modelloCarrello.setValueAt(String.valueOf(nuovaQuantita), riga, 1); // Aggiorna la quantità
-                modelloCarrello.fireTableDataChanged();
-                updateProgressBar(-quantitaTogliere);
 
+                int stato = updateProgressBar(-quantitaTogliere);
+                if (stato == -1) {
+                    modelloCarrello.removeRow(riga);
+                }
+
+                modelloCarrello.fireTableDataChanged();
                 return false;
             }
         }
@@ -834,6 +860,11 @@ public class ClientNegozioInterfaccia extends JFrame {
         label.setFont(font);
     }
 
+    private boolean isStopThread;
 
+    @Override
+    public void run() {
+
+    }
 }
 

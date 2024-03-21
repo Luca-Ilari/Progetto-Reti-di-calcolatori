@@ -261,7 +261,6 @@ public class SchermoCustomVendita extends JFrame {
 
         DefaultTableModel model = new DefaultTableModel(data, columnNames);
 
-
         aggiungiListenerRigaTabella();
         scrollPanel.setViewportView(table);
     }

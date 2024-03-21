@@ -154,6 +154,7 @@ public class ClientConnessione {
         for (Transazione transazione : sendTransazioni) {
             try {
                 String jsonString = getJsonTransazione(transazione, objectMapper, CODICE_STATO);
+                System.out.println(jsonString);
                 out.println(jsonString); // Invia la transazione al server
             } catch (JsonProcessingException e) {
                 logger.warning("Errore durante la conversione in JSON");
@@ -191,8 +192,7 @@ public class ClientConnessione {
         String jsonString = objectMapper.writeValueAsString(objectNode);
 
 
-        System.out.println("Transazione JSON: " + jsonString);
-        return jsonString;
+        return jsonString+"|";
     }
 
     private static String getJsonTransazione(Transazione transazione, Prodotto prodotto, ObjectMapper objectMapper,
@@ -337,7 +337,7 @@ public class ClientConnessione {
                 logger.info("Tentativo di riconnessione...");
 
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(500);
                 } catch (InterruptedException ex) {
                     // Gestisci l'eccezione se il thread viene interrotto durante il sonno
                     logger.severe(e.getMessage());
