@@ -36,12 +36,15 @@ public class ChangeIP extends JFrame {
                 setVisible(true);
                 return;
             }
+
             setContentPane(panelMainForm);
             setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+
             addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent e) {
-                    mainPanel.setEnabled(true); // Nascondi la finestra
+                    mainPanel.setEnabled(true); // Attiva la finestra main quando chiudi questa finestra
                 }
             });
 

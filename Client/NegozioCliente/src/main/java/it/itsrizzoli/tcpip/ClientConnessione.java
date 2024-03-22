@@ -32,7 +32,6 @@ public class ClientConnessione {
 
     private ControllerClientNegozio controllerClientNegozio;
 
-    private ThreadClient threadConnessione;
 
     public ClientConnessione() {
         attivaColoreLogger();
@@ -57,7 +56,20 @@ public class ClientConnessione {
     }
 
     public void startConnessione() {
-        threadConnessione = new ThreadClient(controllerClientNegozio, THREAD_CONNESSIONE_READ);
+        Thread threadConnessione = new Thread(() -> {
+            String message = "";
+            System.out.println("Thread di tentativo connessione avviato.");
+
+            tentaConnessione(); // Tentativo di connessione
+
+            aggiornaStato(true);
+
+                readLoop(); // Avvio del loop di lettura
+
+            aggiornaStato(false);
+
+            if (!message.isEmpty()) System.err.println("Messaggio: " + message);
+        });
         threadConnessione.start();
     }
 
@@ -192,7 +204,7 @@ public class ClientConnessione {
         String jsonString = objectMapper.writeValueAsString(objectNode);
 
 
-        return jsonString+"|";
+        return jsonString + "|";
     }
 
     private static String getJsonTransazione(Transazione transazione, Prodotto prodotto, ObjectMapper objectMapper,
@@ -306,9 +318,7 @@ public class ClientConnessione {
     }
 
     public void chiusuraConnessione() {
-        if (threadConnessione != null) {
-            threadConnessione.setNewConnessione(true);
-        }
+        onConnessione = false;
 
         try {
             if (out != null) {

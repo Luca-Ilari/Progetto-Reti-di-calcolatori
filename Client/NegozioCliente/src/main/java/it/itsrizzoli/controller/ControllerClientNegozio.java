@@ -4,20 +4,14 @@ import it.itsrizzoli.model.ModelloClientNegozio;
 import it.itsrizzoli.model.Prodotto;
 import it.itsrizzoli.model.Transazione;
 import it.itsrizzoli.tcpip.ClientConnessione;
-import it.itsrizzoli.tcpip.ThreadClient;
-import it.itsrizzoli.tools.CodiciStatoServer;
 import it.itsrizzoli.view.ClientNegozioInterfaccia;
-import it.itsrizzoli.view.SchermoCustomVendita;
 
 import java.util.List;
 
 public class ControllerClientNegozio {
     private final ModelloClientNegozio modelloClientNegozio;
     private ClientNegozioInterfaccia clientNegozioInterfaccia;
-    private SchermoCustomVendita schermoCustomVendita;
     private ClientConnessione clientConnessione;
-    private ThreadClient threadCompraProdotti;
-    private ThreadClient threadVendiProdotti;
 
     public ClientConnessione getClientConnessione() {
         return clientConnessione;
@@ -48,18 +42,10 @@ public class ControllerClientNegozio {
     }
 
 
-    public SchermoCustomVendita getSchermoCustomVendita() {
-        return schermoCustomVendita;
-    }
 
     public ClientNegozioInterfaccia getClientNegozioInterfaccia() {
         return clientNegozioInterfaccia;
     }
-
-    public void setSchermoCustomVendita(SchermoCustomVendita schermoCustomVendita) {
-        this.schermoCustomVendita = schermoCustomVendita;
-    }
-
 
     public ClientNegozioInterfaccia getClientNegozioGui() {
         return clientNegozioInterfaccia;
@@ -92,9 +78,6 @@ public class ControllerClientNegozio {
     public void aggiornaProdottiNegozio(List<Prodotto> newProdottiNegozio) {
         modelloClientNegozio.setProdottiNegozio(newProdottiNegozio);
         clientNegozioInterfaccia.aggiornaTabellaProdottiNegozio(newProdottiNegozio);
-        if (schermoCustomVendita != null) {
-            schermoCustomVendita.aggiornaTabellaProdottiNegozio(newProdottiNegozio);
-        }
     }
 
     // Intuile
@@ -200,58 +183,6 @@ public class ControllerClientNegozio {
             return;
         }
         clientNegozioInterfaccia.addAllTransazioneVenditaAwait(listaTransazione, getProdottiCarrello());
-    }
-
-    public void startThread(int CODICE_STATO, boolean stato) {
-        String threadType = "";
-
-        switch (CODICE_STATO) {
-            case CodiciStatoServer.AGGIUNGI_PRODOTTO:
-                if (threadVendiProdotti != null) {
-                    threadVendiProdotti.setAttivo(stato);
-                    if (!threadVendiProdotti.isAttivo()) {
-                        threadVendiProdotti = new ThreadClient(CODICE_STATO);
-                        threadVendiProdotti.start();
-                        threadType = "Thread di aggiunta prodotto";
-                    }
-                } else {
-                    threadVendiProdotti = new ThreadClient(CODICE_STATO);
-                    threadVendiProdotti.start();
-                }
-                break;
-            case CodiciStatoServer.RIMUOVI_PRODOTTO:
-                if (threadCompraProdotti != null) {
-                    threadCompraProdotti.setAttivo(stato);
-                    if (!threadCompraProdotti.isAttivo()) {
-                        threadCompraProdotti = new ThreadClient(CODICE_STATO);
-                        threadCompraProdotti.start();
-                        threadType = "Thread di rimozione prodotto";
-                    }
-
-                } else {
-                    threadCompraProdotti = new ThreadClient(CODICE_STATO);
-                    threadCompraProdotti.start();
-                }
-
-                if (!threadCompraProdotti.isAttivo()) {
-                    threadCompraProdotti = new ThreadClient(CODICE_STATO);
-                    threadCompraProdotti.start();
-                    threadType = "Thread di rimozione prodotto";
-                }
-                break;
-        }
-
-        System.out.println(!threadType.isEmpty() ? threadType + " avviato." :
-                "Nessuna azione eseguita: thread già " + "in" + " esecuzione o già inizializzato.");
-    }
-
-
-    public void startThreadCompraProdotti(boolean state) {
-        startThread(CodiciStatoServer.RIMUOVI_PRODOTTO, state);
-    }
-
-    public void startThreadVendiProdotti(boolean state) {
-        startThread(CodiciStatoServer.AGGIUNGI_PRODOTTO, state);
     }
 
 
