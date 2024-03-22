@@ -99,8 +99,8 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
     }
 
     private void aggioranQuantitaRichiestaLabel() {
-        String numberForm = creaNumberFormatter(MAX_QUANTITA);
-
+        boolean isVeNDITA = radioBtnVendi.isSelected();
+        String numberForm = creaNumberFormatter(isVeNDITA ? getQuantita() : MAX_QUANTITA);
         String quantitaStr = inputQuantita.getText().trim();
         String viaggiStr = inputViaggi.getText().trim();
 
@@ -186,6 +186,8 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
             public void actionPerformed(ActionEvent e) {
                 if (radioBtnCompra.isSelected()) {
                     radioBtnVendi.setSelected(false); // Disattiva il radio button per la vendita
+                    labelQuantitaTot.setText(0 + " / " + creaNumberFormatter(MAX_QUANTITA) + " prodotti");
+
                 }
             }
         });
@@ -195,7 +197,11 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
             public void actionPerformed(ActionEvent e) {
                 if (radioBtnVendi.isSelected()) {
                     radioBtnCompra.setSelected(false); // Disattiva il radio button per l'acquisto
+                    labelQuantitaTot.setText(0 + " / " + creaNumberFormatter(getQuantita()) + " prodotti");
+
                 }
+
+
             }
         });
     }
