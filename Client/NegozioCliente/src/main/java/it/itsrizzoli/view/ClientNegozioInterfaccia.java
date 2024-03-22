@@ -106,12 +106,10 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
 
         if (quantitaStr.isEmpty() || viaggiStr.isEmpty()) {
             labelQuantitaTot.setText(0 + " / " + numberForm + " prodotti");
-
             return;
         }
         if (!quantitaStr.matches("\\d+") || !viaggiStr.matches("\\d+")) {
             labelQuantitaTot.setText(0 + " / " + numberForm + " prodotti");
-
             return;
         }
         int q = Integer.parseInt(quantitaStr);
