@@ -182,26 +182,18 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
     }
 
     private void attivaListenerRadioButton() {
-        radioBtnCompra.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (radioBtnCompra.isSelected()) {
-                    radioBtnVendi.setSelected(false); // Disattiva il radio button per la vendita
-                    labelQuantitaTot.setText(0 + " / " + creaNumberFormatter(MAX_QUANTITA) + " prodotti");
-
-                }
+        radioBtnCompra.addActionListener(e -> {
+            if (radioBtnCompra.isSelected()) {
+                radioBtnVendi.setSelected(false); // Disattiva il radio button per la vendita
+                labelQuantitaTot.setText(0 + " / " + creaNumberFormatter(MAX_QUANTITA) + " prodotti");
             }
         });
 
 // Aggiungi un ActionListener al radio button per la vendita
-        radioBtnVendi.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (radioBtnVendi.isSelected()) {
-                    radioBtnCompra.setSelected(false); // Disattiva il radio button per l'acquisto
-                    labelQuantitaTot.setText(0 + " / " + creaNumberFormatter(getQuantita()) + " prodotti");
-
-                }
-
-
+        radioBtnVendi.addActionListener(e -> {
+            if (radioBtnVendi.isSelected()) {
+                radioBtnCompra.setSelected(false); // Disattiva il radio button per l'acquisto
+                labelQuantitaTot.setText(0 + " / " + creaNumberFormatter(getQuantita()) + " prodotti");
             }
         });
     }
