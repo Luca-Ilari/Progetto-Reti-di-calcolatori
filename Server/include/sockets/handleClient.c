@@ -33,6 +33,7 @@ int findProductToModify(int productId){
     }
     return -1;
 }
+
 int tryToRemoveProduct(int productId, int nToRemove, int *clientOrderedProducts){
     int index = findProductToModify(productId);
     if (nToRemove < 1 || index == -1)
@@ -52,6 +53,7 @@ int tryToRemoveProduct(int productId, int nToRemove, int *clientOrderedProducts)
     customLeaveCriticalSection();
     return 0;
 }
+
 int tryToAddProduct(int productId, int nToAdd, int *clientOrderedProducts){
     int index = findProductToModify(productId);
     if(index == -1 || nToAdd < 1)
@@ -136,86 +138,56 @@ int handleStatusCode3(int sock, char *buffer, int *clientOrderedProducts){
     return 0;
 }
 
-int handleClient(int sock, int *clientOrderedProducts){
+void executeJsonOperation(int jsonStatusCode, int sock, char *json, int *clientOrderedProducts) {
+    switch (jsonStatusCode) {//Handle different json status code
+        case 2://Modify a product
+            handleStatusCode2(sock, json, clientOrderedProducts);
+            break;
+        case 3:
+            handleStatusCode3(sock, json, clientOrderedProducts);
+            break;
+    }
+}
+
+//**This function receives the JSON sent by the client, decodes it and sends the response to the client
+// if the client sends more than 1 json this function splits them and handles them one by one
+// Every json that the client sends terminate with |  */
+void handleClient(int sock, int *clientOrderedProducts){
     char buffer[BUFFER_SIZE];
-    char tmp[BUFFER_SIZE];
-    int jsonRead = 0;
+    char currentJson[BUFFER_SIZE];
     int jsonlen = 0;
-    //Receive from client
-    //while(jsonRead==0){
+
     while(1){
         memset(buffer, 0, BUFFER_SIZE);
-        //jsonlen=0;
         int n = recv(sock, buffer, BUFFER_SIZE-1, 0);
         if (n <= 0){
-            return -1;
+            return;
         }
 
-       // printf("%c", test);
-        //for (int i = 0; i < strlen(buffer); ++i) {
         int i = 0;
-         while (buffer[i] != '\n'){
-            char test =  buffer[i];
-            if (test == '|'){
-                memset(tmp, 0, BUFFER_SIZE);
-                strncpy(tmp,buffer+(i-jsonlen), jsonlen);
+        while (buffer[i] != '\n'){
+            char currentChar =  buffer[i];
+            if (currentChar == '|'){ // if it's the end of the json
+                memset(currentJson, 0, BUFFER_SIZE);
+                strncpy(currentJson, buffer + (i - jsonlen), jsonlen);  //Copy the json in the buffer to currentJson. If there is more than a json in the buffer it copies only the current one
                 i++;
-                usleep(100*1000);//Sleep 0,1 second every transaction
                 timestamp();
-                printf("<- Handling json received from socket %d: %s",sock ,tmp);
+                printf("<- Handling json received from socket %d: %s", sock , currentJson);
                 int jsonStatusCode = -1;
-                int found = getJsonStatusCode(tmp, &jsonStatusCode);
+                int found = getJsonStatusCode(currentJson, &jsonStatusCode);
                 if (found == 0){
-                    switch (jsonStatusCode) {
-                        case 2://Modify a product
-                            handleStatusCode2(sock,tmp,clientOrderedProducts);
-                            break;
-                        case 3:
-                            handleStatusCode3(sock,tmp,clientOrderedProducts);
-                            break;
-                    }
+                    executeJsonOperation(jsonStatusCode, sock, currentJson, clientOrderedProducts);
                 }else{
                     timestamp();
                     printf("X Socket %d sent an incorrect JSON", sock);
                 }
-
-                jsonlen=0;
-            }else if(test != '\n'){
+                jsonlen=0; //reset length to start again with the next json
+            }else if(currentChar != '\n'){
                 jsonlen++;
             }
             i++;
         }
-
-        /*
-        for (int i = 0; i < n; ++i) {
-            if (buffer[i] == '\r' && buffer[i+1] == '\n') {
-                usleep(100*1000);//Sleep 0,1 second every transaction
-                memset(tmp, 0, BUFFER_SIZE);
-                strncpy(tmp,buffer+(i-jsonlen),jsonlen);
-                jsonlen = 0;
-                timestamp();
-                printf("<- Handling json received from socket %d: %s",sock ,tmp);
-                int jsonStatusCode = -1;
-                int found = getJsonStatusCode(tmp, &jsonStatusCode);
-                if (found == 0){
-                    switch (jsonStatusCode) {
-                        case 2://Modify a product
-                            handleStatusCode2(sock,tmp,clientOrderedProducts);
-                            break;
-                        case 3:
-                            handleStatusCode3(sock,tmp,clientOrderedProducts);
-                            break;
-                    }
-                }else{
-                    timestamp();
-                    printf("X Socket %d sent an incorrect JSON", sock);
-                }
-                //jsonRead = 1;
-            }
-            jsonlen++;
-        }*/
     }
-    return 0;
 }
 
 int setupNewClient(int newsock){
@@ -266,10 +238,8 @@ void *handleNewClient(void *newSockParam){
     
     setupNewClient(newsock);
 
-    int res = 0;
-    //while(res >= 0){
-        res = handleClient(newsock,clientOrderedProducts);
-    //}
+    handleClient(newsock,clientOrderedProducts);
+
     timestamp();
     printf("Closing socket %d\n", newsock);
     closeSocket(newsock);
