@@ -93,10 +93,9 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
             // Creazione di un bordo con il titolo desiderato
             TitledBorder border = (TitledBorder) panelMaxQuantita.getBorder();
 
-            String max = String.valueOf(MAX_QUANTITA);
+            String MAX_QUANTITA_FORMATTER = creaNumberFormatter(MAX_QUANTITA);
 
-
-            border.setTitle(border.getTitle() + max);
+            border.setTitle(border.getTitle() + MAX_QUANTITA_FORMATTER);
             panelMaxQuantita.setBorder(border);
             // Creazione dei pannelli delle tabelle
             creaTabellaPanello(tblCarrello, carrelloColonne, scrollPanelCarrello);
@@ -189,8 +188,8 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
         newValue = Math.max(newValue, 0);
 
         newValue = Math.min(newValue, MAX_QUANTITA);
-
-        progressBarQuantita.setString(newValue + " / " + MAX_QUANTITA + " Prodotti");
+        String MAX_QUANTITA_FORMATTER = creaNumberFormatter(MAX_QUANTITA);
+        progressBarQuantita.setString(newValue + " / " + MAX_QUANTITA_FORMATTER + " Prodotti");
 
         progressBarQuantita.setValue(newValue);
 
@@ -323,15 +322,15 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
                 String message = isVendita ? "Quantità totale richiesta non disponibile." : "Stai chiedendo una " +
                         "quantità oltre il limite massimo.";
                 String messageTitle = isVendita ? "Attenzione: Quantità Minima" : "Attenzione: Quantità Massima";
-                quantita = isVendita ? -quantita : quantita;
-
+                String MAX_QUANTITA_FORMATTER = creaNumberFormatter(MAX_QUANTITA);
                 for (int i = 1; i <= viaggi; i++) {
-                    int quantitaTotale = getQuantita() + (i * quantita);
+                    int quantitaTotale = getQuantita() + (i * (isVendita ? -quantita : quantita));
 
                     if ((isVendita && quantitaTotale < 0) || (!isVendita && quantitaTotale > MAX_QUANTITA)) {
-                        int finalQuantita = getQuantita() + viaggi * quantita;
-                        JOptionPane.showMessageDialog(null, message + "\n" + finalQuantita + "/" + MAX_QUANTITA + " " +
-                                "prodotti", messageTitle, JOptionPane.WARNING_MESSAGE);
+                        int finalQuantita = getQuantita() + viaggi * (isVendita ? -quantita : quantita);
+                        JOptionPane.showMessageDialog(null,
+                                message + "\n" + finalQuantita + "/" + MAX_QUANTITA_FORMATTER + " " + "prodotti", messageTitle,
+                                JOptionPane.WARNING_MESSAGE);
                         btnInviaTransazione.setEnabled(true);
                         return;
                     }
@@ -386,15 +385,18 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
     }
 
 
-    private Thread thread;
+    private String creaNumberFormatter(int n) {
+        return String.format("%,d", n).replace(",", ".");
+    }
 
-    private void creaThreadInvioTransazione(int viaggi, int idProdotto, int quantita, boolean isVendita) {
-        thread = new Thread(() -> {
+    private void creaThreadInvioTransazione(int nTransazioni, int idProdotto, int quantita, boolean isVendita) {
+        String nTransazioniFormater = creaNumberFormatter(nTransazioni);
+        Thread thread = new Thread(() -> {
             progressBarTransazioni.setValue(0);
             progressBarTransazioni.setString(null);
-            progressBarTransazioni.setMaximum(viaggi);
+            progressBarTransazioni.setMaximum(nTransazioni);
 
-            for (int i = 1; i <= viaggi; i++) {
+            for (int i = 1; i <= nTransazioni; i++) {
 
                 if (isStopThread) {
                     System.out.println("Thread fermato:");
@@ -415,10 +417,10 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
                 }
                 int progressoAttuale = progressBarTransazioni.getValue() + 1;
                 progressBarTransazioni.setValue(progressoAttuale);
-                progressBarTransazioni.setString(progressoAttuale + "/" + (viaggi) + " Transazioni");
+                progressBarTransazioni.setString(progressoAttuale + "/" + (nTransazioniFormater) + " Transazioni");
 
                 // Abilita il pulsante solo quando tutte le transazioni sono state inviate
-                if (progressoAttuale == viaggi) {
+                if (progressoAttuale == nTransazioni) {
                     progressBarTransazioni.setString("Finito!");
                     btnInviaTransazione.setEnabled(true);
                 }
