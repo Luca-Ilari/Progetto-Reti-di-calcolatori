@@ -7,5 +7,8 @@
 
 #define MAX_CLIENT 20
 #define BUFFER_SIZE 1024*8
+#define RIMUOVI_PRODOTTO 2
+#define AGGIUNGI_PRODOTTO 3
+
 
 #endif //SERVER_DEFINE_H
