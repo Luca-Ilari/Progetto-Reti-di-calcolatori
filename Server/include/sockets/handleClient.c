@@ -165,12 +165,18 @@ void handleClient(int sock, int *clientOrderedProducts){
         }
 
         int i = 0;
-        while (buffer[i] != '\n'){
+        while (buffer[i] != '\0'){
             char currentChar =  buffer[i];
             if (currentChar == '|'){ // if it's the end of the json
                 memset(currentJson, 0, BUFFER_SIZE);
                 strncpy(currentJson, buffer + (i - jsonlen), jsonlen);  //Copy the json in the buffer to currentJson. If there is more than a json in the buffer it copies only the current one
                 i++;
+                for (int j = 0; j < 5; ++j) {
+                j = j;
+                for (int b = 0; b < 100000000; ++b) {
+//
+                   }
+                }
                 timestamp();
                 printf("<- Handling json received from socket %d: %s", sock , currentJson);
                 int jsonStatusCode = -1;
@@ -233,7 +239,7 @@ DWORD WINAPI handleNewClient(void *newSockParam) {
 void *handleNewClient(void *newSockParam){
 #endif
     int newsock = *(int*)(newSockParam);
-    /*array to track the number of product removed by the client*/
+    //array to track the number of product removed by the client
     int clientOrderedProducts[PRODUCT_NUMBER];
     
     setupNewClient(newsock);

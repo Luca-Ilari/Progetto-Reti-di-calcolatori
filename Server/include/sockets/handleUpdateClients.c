@@ -25,8 +25,8 @@ void *handleUpdateClients(void *params){
     while(1){
         customEnterCriticalSection();
         if (updateAllClients == 1){
-            timestamp();
-            printf("-> Sending updated list to all client");
+            //timestamp();
+            //printf("-> Sending updated list to all client");
             for (int i = 0; i < nConnectedClient; ++i){
                 sendProductListToClient(connectedSockets[i]);
             }
