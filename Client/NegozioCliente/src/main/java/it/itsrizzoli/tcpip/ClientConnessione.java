@@ -8,6 +8,7 @@ import it.itsrizzoli.controller.ControllerClientNegozio;
 import it.itsrizzoli.model.Prodotto;
 import it.itsrizzoli.model.Transazione;
 import it.itsrizzoli.tools.CodiciStatoServer;
+import it.itsrizzoli.view.ClientNegozioInterfaccia;
 
 import javax.swing.*;
 import java.io.*;
@@ -18,8 +19,6 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-
-import static it.itsrizzoli.tools.TypeThread.*;
 
 public class ClientConnessione {
     private Socket clientSocket;
@@ -57,21 +56,30 @@ public class ClientConnessione {
 
     public void startConnessione() {
         Thread threadConnessione = new Thread(() -> {
-            String message = "";
-            System.out.println("Thread di tentativo connessione avviato.");
+            while (true) {
+                System.out.println("Thread di tentativo di connessione avviato.");
+                try {
+                    tentaConnessione();
 
-            tentaConnessione(); // Tentativo di connessione
+                    aggiornaStato(true);
 
-            aggiornaStato(true);
+                    readLoop();
 
-                readLoop(); // Avvio del loop di lettura
-
-            aggiornaStato(false);
-
-            if (!message.isEmpty()) System.err.println("Messaggio: " + message);
+                    terminaConnessioneConErroreServer();
+                } catch (Exception e) {
+                    System.err.println("Errore durante la connessione: " + e.getMessage());
+                }
+            }
         });
         threadConnessione.start();
     }
+
+    private void terminaConnessioneConErroreServer() {
+        aggiornaStato(false);
+        ClientNegozioInterfaccia clientNegozioInterfaccia = controllerClientNegozio.getClientNegozioInterfaccia();
+        clientNegozioInterfaccia.aggiornaStatoTransazioneServerError();
+    }
+
 
     public void aggiornaIP(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
@@ -90,10 +98,11 @@ public class ClientConnessione {
     public void aggiornaStato(boolean stato) {
         this.onConnessione = stato;
         this.controllerClientNegozio.aggiornaStatoConnessione(stato);
+
     }
 
 
-    protected boolean readLoop() {
+    protected void readLoop() {
         String message = "Thread di connessione completato.\n---- SESSIONE AVVIATA ----";
         logger.warning(message);
 
@@ -112,70 +121,7 @@ public class ClientConnessione {
         message = "Thread di lettura completato.\n---- SESSIONE TERMINATA ----";
         logger.warning(message);
 
-        return true;
-
     }
-
-    public void inviaTransazioniAcquistaProdotti() {
-        List<Transazione> sendTransazioni =
-                Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiNegozio(), true);
-        if (sendTransazioni == null) {
-            logger.severe("SendTransazione is null");
-            return;
-        }
-
-        inviaTransazioni(sendTransazioni, CodiciStatoServer.RIMUOVI_PRODOTTO, "Compra Prodotti");
-
-        logger.info(" Fine Transazioni al server.");
-    }
-
-    public void inviaTransazioniVendiProdotti() {
-        // Controllo se sono presenti dei prodotti da vendere
-        List<Prodotto> listaProdottiCarrello = controllerClientNegozio.getProdottiCarrello();
-        if (listaProdottiCarrello.isEmpty()) {
-            System.out.println("Attenzioen: Non ci sono prodotti nel carrello da vendere");
-            JOptionPane.showMessageDialog(null, "Attenzioen: Non ci sono prodotti nel carrello da vendere!!\n - " +
-                    "Compra Prodotti prima.");
-            return;
-        }
-
-
-        List<Transazione> sendTransazioni =
-                Transazione.creaListaTransazioniRandom(controllerClientNegozio.getProdottiCarrello(), false);
-        if (sendTransazioni == null) {
-            logger.severe("SendTransazione is null");
-            return;
-        }
-
-        inviaTransazioni(sendTransazioni, CodiciStatoServer.AGGIUNGI_PRODOTTO, "Vendi Prodotti");
-
-        logger.info(" Fine Transazioni al server.");
-    }
-
-    private void inviaTransazioni(List<Transazione> sendTransazioni, int CODICE_STATO, String action) {
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        if (CODICE_STATO == CodiciStatoServer.AGGIUNGI_PRODOTTO) {
-            controllerClientNegozio.addAllTransazioneVenditaAwait(sendTransazioni);
-            controllerClientNegozio.aggiungiListaTransazioneVendita(sendTransazioni);
-        } else if (CODICE_STATO == CodiciStatoServer.RIMUOVI_PRODOTTO) {
-            controllerClientNegozio.addAllTransazioneAcquistoAwait(sendTransazioni);
-            controllerClientNegozio.aggiungiListaTransazioneAcquisto(sendTransazioni);
-        }
-
-        for (Transazione transazione : sendTransazioni) {
-            try {
-                String jsonString = getJsonTransazione(transazione, objectMapper, CODICE_STATO);
-                System.out.println(jsonString);
-                out.println(jsonString); // Invia la transazione al server
-            } catch (JsonProcessingException e) {
-                logger.warning("Errore durante la conversione in JSON");
-            }
-            logger.info(action + ": " + transazione.toString());
-        }
-        logger.info("Fine " + action + " al server.");
-    }
-
 
     public void inviaSingolaTransazione(Transazione transazione, int CODICE_STATO) {
 
@@ -193,7 +139,7 @@ public class ClientConnessione {
         logger.info(" Fine Transazioni al server.");
     }
 
-    private static String getJsonTransazione(Transazione transazione, ObjectMapper objectMapper, int CODICE_STATO) throws JsonProcessingException {
+    private String getJsonTransazione(Transazione transazione, ObjectMapper objectMapper, int CODICE_STATO) throws JsonProcessingException {
         ObjectNode objectNode = objectMapper.createObjectNode();
         objectNode.put("codiceStato", CODICE_STATO);
 
@@ -207,8 +153,8 @@ public class ClientConnessione {
         return jsonString + "|";
     }
 
-    private static String getJsonTransazione(Transazione transazione, Prodotto prodotto, ObjectMapper objectMapper,
-                                             int CODICE_STATO) throws JsonProcessingException {
+    private String getJsonTransazione(Transazione transazione, Prodotto prodotto, ObjectMapper objectMapper,
+                                      int CODICE_STATO) throws JsonProcessingException {
         ObjectNode rootNode = objectMapper.createObjectNode();
         rootNode.put("codiceStato", CODICE_STATO);
 
@@ -227,72 +173,56 @@ public class ClientConnessione {
     }
 
     private void gestioneJsonCodiceStato(String jsonResponse) {
-        JsonNode jsonNode;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            jsonNode = objectMapper.readTree(jsonResponse);
-        } catch (JsonProcessingException e) {
-            System.err.println(" Attenzione: non è un json");
-            return;
-        }
+            JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
+            int codeStatus = jsonNode.has("codiceStato") ? jsonNode.get("codiceStato").asInt() : -1;
 
-        int codeStatus;
-        try {
-            codeStatus = jsonNode.get("codiceStato").asInt();
-
-        } catch (NullPointerException e) {
-            logger.info(e.getMessage());
-            return;
-        }
-        switch (codeStatus) {
-            case CodiciStatoServer.START_SESSION:
-                logger.info("Client riceve codice Status 1: Avvio sessione");
-                break;
-            case CodiciStatoServer.RIMUOVI_PRODOTTO:
-                System.out.println("Client riceve codice Status 2: Rimozione prodotto dal Negozio");
-                break;
-            case CodiciStatoServer.AGGIUNGI_PRODOTTO:
-                System.out.println("Client riceve codice Status 3: Aggiunta prodotto al Negozio");
-                break;
-            case CodiciStatoServer.LISTA_PRODOTTI_AGGIORNATO:
-                List<Prodotto> listaProdotti = recuperoListaProdottiJson(jsonNode);
-                if (listaProdotti == null) {
-                    System.out.println(" ATTENZIONE: lista Prodotti null");
+            switch (codeStatus) {
+                case CodiciStatoServer.LISTA_PRODOTTI_AGGIORNATO:
+                    List<Prodotto> listaProdotti = recuperoListaProdottiJson(jsonNode);
+                    if (listaProdotti == null) {
+                        System.out.println("ATTENZIONE: lista Prodotti null");
+                        break;
+                    }
+                    controllerClientNegozio.aggiornaProdottiNegozio(listaProdotti);
                     break;
-                }
-                //aggiorna negozio prodotti UI
-                controllerClientNegozio.aggiornaProdottiNegozio(listaProdotti);
-                break;
-            case CodiciStatoServer.SUCCESSO_TRANSAZIONE_ACQUISTO:
-                logger.info("Client riceve codice Status 5 : Successo nella Transazione - Acquisto");
-                int idTransazione = jsonNode.get("idTransazione").asInt();
-                controllerClientNegozio.aggiornaStateTransazioneId(idTransazione, false);
-                break;
-
-            case CodiciStatoServer.SUCCESSO_TRANSAZIONE_VENDITA:
-                logger.info("Client riceve codice Status 6 : Successo nella Transazione - Vendita");
-                idTransazione = jsonNode.get("idTransazione").asInt();
-                controllerClientNegozio.aggiornaStateTransazioneId(idTransazione, true);
-                break;
-            case CodiciStatoServer.FAIL_SESSION:
-                System.out.println("Client riceve codice Status -1: Fallimento sessione");
-                break;
-            case CodiciStatoServer.FAIL_RIMUOVI_PRODOTTO:
-                System.out.println("Client riceve codice Status -2: Fallimento rimozione prodotto dal Negozio");
-                idTransazione = jsonNode.get("idTransazione").asInt();
-                controllerClientNegozio.aggiornaStateTransazioneFail(idTransazione, false);
-                break;
-            case CodiciStatoServer.FAIL_AGGIUNGI_PRODOTTO:
-                System.out.println("Client riceve codice Status -3: Fallimento aggiunta prodotto al Negozio");
-                idTransazione = jsonNode.get("idTransazione").asInt();
-                controllerClientNegozio.aggiornaStateTransazioneFail(idTransazione, true);
-                break;
-            default:
-                System.out.println("Errore: Codice di stato non valido.");
-                break;
+                case CodiciStatoServer.SUCCESSO_TRANSAZIONE_ACQUISTO:
+                    gestioneSuccessoTransazione(jsonNode, false);
+                    break;
+                case CodiciStatoServer.SUCCESSO_TRANSAZIONE_VENDITA:
+                    gestioneSuccessoTransazione(jsonNode, true);
+                    break;
+                case CodiciStatoServer.FAIL_RIMUOVI_PRODOTTO:
+                    gestioneFallimentoTransazione(jsonNode, false);
+                    break;
+                case CodiciStatoServer.FAIL_AGGIUNGI_PRODOTTO:
+                    gestioneFallimentoTransazione(jsonNode, true);
+                    break;
+                default:
+                    System.out.println("Errore: Codice di stato non valido.");
+                    break;
+            }
+        } catch (JsonProcessingException e) {
+            System.err.println("Attenzione: non è un json");
         }
     }
+
+    private void gestioneSuccessoTransazione(JsonNode jsonNode, boolean isVendita) {
+        String transactionType = isVendita ? "Vendita" : "Acquisto";
+        logger.info("Client riceve codice Status " + (isVendita ? "6" : "5") + " : Successo nella Transazione - " + transactionType);
+        int idTransazione = jsonNode.has("idTransazione") ? jsonNode.get("idTransazione").asInt() : -1;
+        controllerClientNegozio.aggiornaStateTransazioneId(idTransazione, isVendita);
+    }
+
+    private void gestioneFallimentoTransazione(JsonNode jsonNode, boolean isAggiunta) {
+        String transactionType = isAggiunta ? "aggiunta" : "rimozione";
+        int idTransazione = jsonNode.has("idTransazione") ? jsonNode.get("idTransazione").asInt() : -1;
+        System.out.println("Client riceve codice Status -" + (isAggiunta ? "3" : "2") + ": Fallimento " + transactionType + " prodotto dal Negozio");
+        controllerClientNegozio.aggiornaStateTransazioneFail(idTransazione, isAggiunta);
+    }
+
 
     private List<Prodotto> recuperoListaProdottiJson(JsonNode jsonNode) { // Recupero gli articoli Negozio
         logger.info("Client riceve codice Status 4: Lista prodotti aggiornata");
@@ -374,18 +304,12 @@ public class ClientConnessione {
                 String message = record.getMessage();
 
                 // Assegna il colore in base al livello del log
-                String color = "";
-                switch (levelName) {
-                    case "INFO":
-                        color = "\u001B[34m"; // Blu
-                        break;
-                    case "WARNING":
-                        color = "\u001B[33m"; // Giallo
-                        break;
-                    case "SEVERE":
-                        color = "\u001B[31m"; // Rosso
-                        break;
-                }
+                String color = switch (levelName) {
+                    case "INFO" -> "\u001B[34m"; // Blu
+                    case "WARNING" -> "\u001B[33m"; // Giallo
+                    case "SEVERE" -> "\u001B[31m";
+                    default -> ""; // Rosso
+                };
                 // Resetta il colore dopo il messaggio
                 String resetColor = "\u001B[0m";
 
