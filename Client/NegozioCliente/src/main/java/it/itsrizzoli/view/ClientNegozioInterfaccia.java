@@ -5,6 +5,7 @@ import it.itsrizzoli.model.Prodotto;
 import it.itsrizzoli.model.Transazione;
 import it.itsrizzoli.tcpip.ClientConnessione;
 import it.itsrizzoli.tools.CodiciStatoServer;
+import it.itsrizzoli.tools.EStato;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -17,11 +18,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class ClientNegozioInterfaccia extends JFrame implements Runnable {
+public class ClientNegozioInterfaccia extends JFrame {
     private JTable tblCarrello;
     private JTable tblNegozio;
     private JTable tblTransazioniAcquisto;
@@ -48,30 +48,22 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
     private JPanel panelMaxQuantita;
     private JLabel labelQuantitaTot;
 
-
-    private boolean statoNegozioOnline = false;
+    private boolean isConnessoAlServer = false;
     private ControllerClientNegozio controllerClientNegozio;
     private final String[] articoliNegozioColonne = {"Id", "Prodotto", "Prezzo", "Disponibile"};
     private final String[] carrelloColonne = {"Prodotto", "Quantità"};
     private final String[] transazioniColonne = {"Number", "Prodotto", "Prezzo", "Quantità", "Stato"};
 
+    private boolean isFermoThreadTransazioni;
+    public static final int MAX_QUANTITA = 100_000;
 
-    public final static int MAX_QUANTITA = 100_000;
-    public static final String WAITING_CONFIRMATION = "In attesa";
-    public static final String SUCCESS_RESPONSE = "Completato";
-    public static final String PRODUCT_FINISHED_NEGOZIO = "Esaurito (negoziante)";
-    public static final String PRODUCT_FINISHED_CLIENTE = "Esaurito (cliente)";
-    public static final String QUANTITA_MASSIMA_RAGGIUNTA = "Error: max quantità";
-    public static final String QUANTITA_MINIMIA_RAGGIUNTA = "Error: min quantità";
 
-    // esaurito per il cliente
+    private static final int COLONNA_STATO = 4;
 
 
     public ClientNegozioInterfaccia(String titolo) {
-        SwingUtilities.invokeLater(() -> {
-            inizializza(titolo);
-        });
 
+        SwingUtilities.invokeLater(() -> inizializza(titolo));
 
     }
 
@@ -80,42 +72,44 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
             @Override
             public void insertUpdate(DocumentEvent e) {
                 // Metodo chiamato quando viene inserito del testo nel JTextField
-                aggioranQuantitaRichiestaLabel();
+                aggiornaQuantitaRichiestaLabel();
 
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
                 // Metodo chiamato quando viene rimosso del testo dal JTextField
-                aggioranQuantitaRichiestaLabel();
+                aggiornaQuantitaRichiestaLabel();
             }
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-                aggioranQuantitaRichiestaLabel();
+                aggiornaQuantitaRichiestaLabel();
 
             }
         });
     }
 
-    private void aggioranQuantitaRichiestaLabel() {
-        boolean isVeNDITA = radioBtnVendi.isSelected();
-        String numberForm = creaNumberFormatter(isVeNDITA ? getQuantita() : MAX_QUANTITA);
+    private void aggiornaQuantitaRichiestaLabel() {
+        boolean isVendita = radioBtnVendi.isSelected();
+        String numberFormat = creaNumberFormatter(MAX_QUANTITA);
         String quantitaStr = inputQuantita.getText().trim();
         String viaggiStr = inputViaggi.getText().trim();
 
-        if (quantitaStr.isEmpty() || viaggiStr.isEmpty()) {
-            labelQuantitaTot.setText(0 + " / " + numberForm + " prodotti");
+        if (quantitaStr.isEmpty() || viaggiStr.isEmpty() || !quantitaStr.matches("\\d+") || !viaggiStr.matches("\\d+")) {
+            labelQuantitaTot.setText("0 / " + numberFormat + " prodotti");
             return;
         }
-        if (!quantitaStr.matches("\\d+") || !viaggiStr.matches("\\d+")) {
-            labelQuantitaTot.setText(0 + " / " + numberForm + " prodotti");
-            return;
-        }
-        int q = Integer.parseInt(quantitaStr);
+
+        int quantita = Integer.parseInt(quantitaStr);
         int nTransazioni = Integer.parseInt(viaggiStr);
-        String qN = creaNumberFormatter(q * nTransazioni);
-        labelQuantitaTot.setText(qN + " / " + numberForm + " prodotti");
+        int quantitaTotale = getQuantita() + (isVendita ? -quantita : quantita) * nTransazioni;
+        String quantitaTotaleFormat = creaNumberFormatter(quantitaTotale);
+        labelQuantitaTot.setText(quantitaTotaleFormat + " / " + numberFormat + " prodotti");
+
+        // Imposta il colore del testo in base alla quantità totale
+        labelQuantitaTot.setForeground(quantitaTotale < 0 || quantitaTotale > MAX_QUANTITA ? Color.RED : Color.GRAY);
+
     }
 
     public void setControllerClientNegozio(ControllerClientNegozio controllerClientNegozio) {
@@ -185,16 +179,16 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
         radioBtnCompra.addActionListener(e -> {
             if (radioBtnCompra.isSelected()) {
                 radioBtnVendi.setSelected(false); // Disattiva il radio button per la vendita
-                labelQuantitaTot.setText(0 + " / " + creaNumberFormatter(MAX_QUANTITA) + " prodotti");
             }
+            aggiornaQuantitaRichiestaLabel();
         });
 
 // Aggiungi un ActionListener al radio button per la vendita
         radioBtnVendi.addActionListener(e -> {
             if (radioBtnVendi.isSelected()) {
                 radioBtnCompra.setSelected(false); // Disattiva il radio button per l'acquisto
-                labelQuantitaTot.setText(0 + " / " + creaNumberFormatter(getQuantita()) + " prodotti");
             }
+            aggiornaQuantitaRichiestaLabel();
         });
     }
 
@@ -289,8 +283,15 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
     }
 
     public void aggiornaStatoNegozio(boolean statoNegozioOnline) {
-        this.statoNegozioOnline = statoNegozioOnline;
+        this.isConnessoAlServer = statoNegozioOnline;
         changeTitle();
+        if (!statoNegozioOnline) {
+            stopThread();
+        }
+    }
+
+    public void stopThread() {
+        isFermoThreadTransazioni = true;
     }
 
     private void attivaListenerBtn() {
@@ -309,105 +310,99 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
         });
 
 
-        btnInviaTransazione.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+        btnInviaTransazione.addActionListener(e -> {
 
-                if (!controllerClientNegozio.getClientConnessione().onConnessione) {
-                    JOptionPane.showMessageDialog(null, "Non sei connesso a un server!", "Errore",
-                            JOptionPane.ERROR_MESSAGE);
-                    return;
-
-                }
-
-
-                btnInviaTransazione.setEnabled(false);
-                progressBarTransazioni.setValue(0);
-                progressBarTransazioni.setString("pronti!");
-                String idProdottoStr = inputIdProdotto.getText().trim();
-                String nome = inputNome.getText().trim();
-                String quantitaStr = inputQuantita.getText().trim();
-                String viaggiStr = inputViaggi.getText().trim();
-
-                if (idProdottoStr.isEmpty() || nome.isEmpty() || quantitaStr.isEmpty() || viaggiStr.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "Per favore, inserisci tutti i campi.", "Avviso",
-                            JOptionPane.WARNING_MESSAGE);
-                    btnInviaTransazione.setEnabled(true);
-                    return;
-                }
-
-                int idProdotto;
-                int quantita;
-                int viaggi;
-
-                try {
-                    idProdotto = Integer.parseInt(idProdottoStr);
-                    quantita = Integer.parseInt(quantitaStr);
-                    viaggi = Integer.parseInt(viaggiStr);
-
-                    if (idProdotto < 0 || quantita <= 0 || viaggi <= 0) {
-                        JOptionPane.showMessageDialog(null, "I valori devono essere maggiori di zero.", "Errore",
-                                JOptionPane.ERROR_MESSAGE);
-                        btnInviaTransazione.setEnabled(true);
-                        return;
-                    }
-                } catch (NumberFormatException ex) {
-                    System.out.println(ex.getMessage());
-                    JOptionPane.showMessageDialog(null, "Inserisci solo numeri validi nei campi.", "Errore",
-                            JOptionPane.ERROR_MESSAGE);
-                    btnInviaTransazione.setEnabled(true);
-                    return;
-                }
-
-                boolean trovatoProdotto = false;
-                for (Prodotto prodotto : controllerClientNegozio.getProdottiNegozio()) {
-                    if (prodotto.getIdProdotto() == idProdotto) {
-                        trovatoProdotto = true;
-                        break;
-
-                    }
-                }
-                if (!trovatoProdotto) {
-                    JOptionPane.showMessageDialog(null, "Il prodotto selezionato non è disponibile nel negozio.",
-                            "Prodotto non trovato", JOptionPane.WARNING_MESSAGE);
-                    btnInviaTransazione.setEnabled(true);
-                    return;
-                }
-
-                boolean isVendita = radioBtnVendi.isSelected();
-
-                String message = isVendita ? "Quantità totale richiesta non disponibile." : "Stai chiedendo una " +
-                        "quantità oltre il limite massimo.";
-                String messageTitle = isVendita ? "Attenzione: Quantità Minima" : "Attenzione: Quantità Massima";
-                String MAX_QUANTITA_FORMATTER = creaNumberFormatter(MAX_QUANTITA);
-                for (int i = 1; i <= viaggi; i++) {
-                    int quantitaTotale = getQuantita() + (i * (isVendita ? -quantita : quantita));
-
-                    if ((isVendita && quantitaTotale < 0) || (!isVendita && quantitaTotale > MAX_QUANTITA)) {
-                        int finalQuantita = getQuantita() + viaggi * (isVendita ? -quantita : quantita);
-                        JOptionPane.showMessageDialog(null,
-                                message + "\n" + finalQuantita + "/" + MAX_QUANTITA_FORMATTER + " " + "prodotti",
-                                messageTitle, JOptionPane.WARNING_MESSAGE);
-                        btnInviaTransazione.setEnabled(true);
-                        return;
-                    }
-                }
-
-
-                btnStopTransazioni.setVisible(true);
-                btnInviaTransazione.setVisible(false);
-                isStopThread = false;
-                creaThreadInvioTransazione(viaggi, idProdotto, quantita, isVendita);
+            if (!controllerClientNegozio.getClientConnessione().onConnessione) {
+                JOptionPane.showMessageDialog(null, "Non sei connesso a un server!", "Errore",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
 
             }
+
+
+            btnInviaTransazione.setEnabled(false);
+            progressBarTransazioni.setValue(0);
+            progressBarTransazioni.setString("pronti!");
+            String idProdottoStr = inputIdProdotto.getText().trim();
+            String nome = inputNome.getText().trim();
+            String quantitaStr = inputQuantita.getText().trim();
+            String viaggiStr = inputViaggi.getText().trim();
+
+            if (idProdottoStr.isEmpty() || nome.isEmpty() || quantitaStr.isEmpty() || viaggiStr.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Per favore, inserisci tutti i campi.", "Avviso",
+                        JOptionPane.WARNING_MESSAGE);
+                btnInviaTransazione.setEnabled(true);
+                return;
+            }
+
+            int idProdotto;
+            int quantita;
+            int viaggi;
+
+            try {
+                idProdotto = Integer.parseInt(idProdottoStr);
+                quantita = Integer.parseInt(quantitaStr);
+                viaggi = Integer.parseInt(viaggiStr);
+
+                if (idProdotto < 0 || quantita <= 0 || viaggi <= 0) {
+                    JOptionPane.showMessageDialog(null, "I valori devono essere maggiori di zero.", "Errore",
+                            JOptionPane.ERROR_MESSAGE);
+                    btnInviaTransazione.setEnabled(true);
+                    return;
+                }
+            } catch (NumberFormatException ex) {
+                System.out.println(ex.getMessage());
+                JOptionPane.showMessageDialog(null, "Inserisci solo numeri validi nei campi.", "Errore",
+                        JOptionPane.ERROR_MESSAGE);
+                btnInviaTransazione.setEnabled(true);
+                return;
+            }
+
+            boolean trovatoProdotto = false;
+            for (Prodotto prodotto : controllerClientNegozio.getProdottiNegozio()) {
+                if (prodotto.getIdProdotto() == idProdotto) {
+                    trovatoProdotto = true;
+                    break;
+
+                }
+            }
+            if (!trovatoProdotto) {
+                JOptionPane.showMessageDialog(null, "Il prodotto selezionato non è disponibile nel negozio.",
+                        "Prodotto non trovato", JOptionPane.WARNING_MESSAGE);
+                btnInviaTransazione.setEnabled(true);
+                return;
+            }
+
+            boolean isVendita = radioBtnVendi.isSelected();
+
+            String message = isVendita ? "Quantità totale richiesta non disponibile." : "Stai chiedendo una " +
+                    "quantità oltre il limite massimo.";
+            String messageTitle = isVendita ? "Attenzione: Quantità Minima" : "Attenzione: Quantità Massima";
+            String MAX_QUANTITA_FORMATTER = creaNumberFormatter(MAX_QUANTITA);
+            for (int i = 1; i <= viaggi; i++) {
+                int quantitaTotale = getQuantita() + (i * (isVendita ? -quantita : quantita));
+
+                if ((isVendita && quantitaTotale < 0) || (!isVendita && quantitaTotale > MAX_QUANTITA)) {
+                    int finalQuantita = getQuantita() + viaggi * (isVendita ? -quantita : quantita);
+                    JOptionPane.showMessageDialog(null,
+                            message + "\n" + finalQuantita + "/" + MAX_QUANTITA_FORMATTER + " " + "prodotti",
+                            messageTitle, JOptionPane.WARNING_MESSAGE);
+                    btnInviaTransazione.setEnabled(true);
+                    return;
+                }
+            }
+
+
+            btnStopTransazioni.setVisible(true);
+            btnInviaTransazione.setVisible(false);
+            isFermoThreadTransazioni = false;
+            creaThreadInvioTransazione(viaggi, idProdotto, quantita, isVendita);
+
         });
 
-        btnStopTransazioni.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                isStopThread = true;
-                progressBarTransazioni.setString(progressBarTransazioni.getString() + " conclusi ");
-            }
+        btnStopTransazioni.addActionListener(e -> {
+            isFermoThreadTransazioni = true;
+            progressBarTransazioni.setString(progressBarTransazioni.getString() + " conclusi ");
         });
     }
 
@@ -455,10 +450,11 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
 
             for (int i = 1; i <= nTransazioni; i++) {
 
-                if (isStopThread) {
+                if (isFermoThreadTransazioni) {
                     System.out.println("Thread fermato:");
                     btnInviaTransazione.setVisible(true);
                     btnInviaTransazione.setEnabled(true);
+                    isFermoThreadTransazioni = true;
                     break;
                 }
                 Transazione transazione = new Transazione(idProdotto, quantita);
@@ -522,7 +518,7 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
             for (Prodotto prodotto : prodottiNegozio) {
                 if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
                     Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(), prodotto.getPrezzo() +
-                            "€", transazione.getQuantita(), WAITING_CONFIRMATION};
+                            "€", transazione.getQuantita(), EStato.IN_ATTESA_DI_CONFERMA.getValue()};
                     model.addRow(rowData);
                 }
             }
@@ -542,7 +538,8 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
                 for (Prodotto prodotto : prodottiNegozio) {
                     if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
                         Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(),
-                                prodotto.getPrezzo() + "€", transazione.getQuantita(), WAITING_CONFIRMATION};
+                                prodotto.getPrezzo() + "€", transazione.getQuantita(),
+                                EStato.IN_ATTESA_DI_CONFERMA.getValue()};
                         model.addRow(rowData);
                         trovatoNelCarrello = true;
                     }
@@ -570,7 +567,8 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
                 for (Prodotto prodotto : prodottiCarrello) {
                     if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
                         Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(),
-                                prodotto.getPrezzo() + "€", transazione.getQuantita(), WAITING_CONFIRMATION};
+                                prodotto.getPrezzo() + "€", transazione.getQuantita(),
+                                EStato.IN_ATTESA_DI_CONFERMA.getValue()};
                         model.addRow(rowData);
                         trovatoNelCarrello = true;
                     }
@@ -596,7 +594,7 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
             for (Prodotto prodotto : prodottiCarrello) {
                 if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
                     Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(), prodotto.getPrezzo() +
-                            "€", transazione.getQuantita(), WAITING_CONFIRMATION};
+                            "€", transazione.getQuantita(), EStato.IN_ATTESA_DI_CONFERMA.getValue()};
                     model.addRow(rowData);
                 }
             }
@@ -615,23 +613,26 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
             // Aggiorna il valore nella colonna "Stato" alla riga
             for (int riga = 0; riga < transazioniTableModel.getRowCount(); riga++) {
                 int idTransazioneRow = (int) transazioniTableModel.getValueAt(riga, 0); // Converte l'oggetto in Integer
-                String statoTransazione = (String) transazioniTableModel.getValueAt(riga, 4);
-                if (idTransazioneRow == transazione.getIdTransazione()) {
-                    if (statoTransazione.equals(WAITING_CONFIRMATION)) {
-                        boolean isFull = incrementaQuantitaCarrello(transazione.getIdProdotto(),
-                                transazione.getQuantita(), prodottiNegozio, prodottiCarrello);
-                        if (isFull) {
-                            transazioniTableModel.setValueAt(QUANTITA_MASSIMA_RAGGIUNTA, riga, 4); // Imposta il
-                            // nuovo stato
-                            break;
-                        }
-                        transazioniTableModel.setValueAt(SUCCESS_RESPONSE, riga, 4); // Imposta il nuovo stato
-                    }
-
-                    System.out.println("Elemento trovato alla riga " + riga);
-
-                    break;
+                if (idTransazioneRow != transazione.getIdTransazione()) {
+                    continue;
                 }
+                String statoTransazione = (String) transazioniTableModel.getValueAt(riga, COLONNA_STATO);
+                if (statoTransazione.equals(EStato.IN_ATTESA_DI_CONFERMA.getValue())) {
+                    boolean isFull = incrementaQuantitaCarrello(transazione.getIdProdotto(),
+                            transazione.getQuantita(), prodottiNegozio, prodottiCarrello);
+                    if (isFull) {
+                        transazioniTableModel.setValueAt(EStato.QUANTITA_MASSIMA_RAGGIUNTA.getValue(), riga,
+                                COLONNA_STATO); // Imposta il
+                        // nuovo stato
+                        break;
+                    }
+                    transazioniTableModel.setValueAt(EStato.COMPLETATO.getValue(), riga, COLONNA_STATO); // Imposta
+                    // il nuovo stato
+                }
+
+                System.out.println("Elemento trovato alla riga " + riga);
+
+                break;
             }
 
             transazioniTableModel.fireTableDataChanged();
@@ -650,22 +651,25 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
             // Aggiorna il valore nella colonna "Stato" alla riga
             for (int riga = 0; riga < transazioniTableModel.getRowCount(); riga++) {
                 int idTransazioneRow = (int) transazioniTableModel.getValueAt(riga, 0); // Converte l'oggetto in Integer
-                String statoTransazione = (String) transazioniTableModel.getValueAt(riga, 4);
-                if (idTransazioneRow == transazione.getIdTransazione()) {
-                    if (statoTransazione.equals(WAITING_CONFIRMATION)) {
-                        boolean isFull = decrementaQuantitaCarrello(transazione.getIdProdotto(),
-                                transazione.getQuantita(), prodottiCarrello);
-                        if (isFull) {
-                            transazioniTableModel.setValueAt(QUANTITA_MINIMIA_RAGGIUNTA, riga, 4); // Imposta il
-                            // nuovo stato
-                            break;
-                        }
-                        transazioniTableModel.setValueAt(SUCCESS_RESPONSE, riga, 4); // Imposta il nuovo stato
-                    }
-                    System.out.println("Elemento trovato alla riga " + riga);
-
-                    break;
+                if (idTransazioneRow != transazione.getIdTransazione()) {
+                    continue;
                 }
+                String statoTransazione = (String) transazioniTableModel.getValueAt(riga, COLONNA_STATO);
+                if (statoTransazione.equals(EStato.IN_ATTESA_DI_CONFERMA.getValue())) {
+                    boolean isFull = decrementaQuantitaCarrello(transazione.getIdProdotto(),
+                            transazione.getQuantita(), prodottiCarrello);
+                    if (isFull) {
+                        transazioniTableModel.setValueAt(EStato.QUANTITA_MINIMA_RAGGIUNTA.getValue(), riga,
+                                COLONNA_STATO); // Imposta il
+                        // nuovo stato
+                        break;
+                    }
+                    transazioniTableModel.setValueAt(EStato.COMPLETATO.getValue(), riga, COLONNA_STATO); // Imposta
+                    // il nuovo stato
+                }
+                System.out.println("Elemento trovato alla riga " + riga);
+
+                break;
             }
 
             transazioniTableModel.fireTableDataChanged();
@@ -677,6 +681,32 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
         });
 
     }
+
+    public void aggiornaStatoTransazioneServerError() {
+        SwingUtilities.invokeLater(() -> {
+
+            DefaultTableModel venditaTableModel = (DefaultTableModel) tblTransazioniVendita.getModel();
+            aggiornaStatoTransazioni(venditaTableModel);
+
+            DefaultTableModel acquistoTableModel = (DefaultTableModel) tblTransazioniAcquisto.getModel();
+            aggiornaStatoTransazioni(acquistoTableModel);
+
+            System.out.println(" --> UI: Lista transazioni aggiornata!!");
+        });
+    }
+
+    private void aggiornaStatoTransazioni(DefaultTableModel transazioniTableModel) {
+
+        for (int riga = 0; riga < transazioniTableModel.getRowCount(); riga++) {
+            String statoTransazione = (String) transazioniTableModel.getValueAt(riga, COLONNA_STATO);
+            if (EStato.IN_ATTESA_DI_CONFERMA.getValue().equals(statoTransazione)) {
+                transazioniTableModel.setValueAt(EStato.ERRORE_DEL_SERVER.getValue(), riga, COLONNA_STATO);
+                System.out.println("Transazione trovata alla riga " + riga);
+            }
+        }
+        transazioniTableModel.fireTableDataChanged();
+    }
+
 
     public void aggiornaStateTransazioneFail(Transazione transazione, boolean isVendita) {
         SwingUtilities.invokeLater(() -> {
@@ -692,13 +722,15 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
                 int idTransazioneRow = (int) transazioniTableModel.getValueAt(riga, 0); // Converte l'oggetto in Integer
                 String statoTransazione = (String) transazioniTableModel.getValueAt(riga, 4);
                 if (idTransazioneRow == transazione.getIdTransazione()) {
-                    if (statoTransazione.equals(WAITING_CONFIRMATION)) {
+                    if (statoTransazione.equals(EStato.IN_ATTESA_DI_CONFERMA.getValue())) {
 
                         if (isVendita) {
-                            transazioniTableModel.setValueAt(PRODUCT_FINISHED_CLIENTE, riga, 4); // Imposta il nuovo
+                            transazioniTableModel.setValueAt(EStato.PRODOTTO_ESAURITO_CLIENTE.getValue(), riga, 4);
+                            // Imposta il nuovo
                             // stato
                         } else {
-                            transazioniTableModel.setValueAt(PRODUCT_FINISHED_NEGOZIO, riga, 4); // Imposta il nuovo
+                            transazioniTableModel.setValueAt(EStato.PRODOTTO_ESAURITO_NEGOZIO.getValue(), riga, 4);
+                            // Imposta il nuovo
                             // stato
                         }
                         System.out.println("Elemento trovato alla riga " + riga);
@@ -716,48 +748,6 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
             // Aggiorna o inserisci prodotto nel carrello
         });
 
-
-    }
-
-
-    public synchronized void aggiornaQuantitaCarrello(int idProdotto, int quantitaAggiunta,
-                                                      List<Prodotto> prodottiNegozio, List<Prodotto> prodottiCarrello
-            , boolean controllaCarrello) {
-        DefaultTableModel modelloCarrello = (DefaultTableModel) tblCarrello.getModel();
-        Prodotto prodotto = null;
-
-       /* if (controllaCarrello) {
-            prodotto = trovaProdottoLista(idProdotto, prodottiCarrello);
-        }
-        if (prodotto == null) {
-            // Inserimento del nuovo prodotto nel carrello
-            Prodotto nuovoProdotto = trovaProdottoLista(idProdotto, prodottiNegozio);
-            if (nuovoProdotto == null) {
-                System.out.println("Errore: Prodotto non presente nel negozio.");
-                return;
-            }
-            nuovoProdotto.setQuantitaDisponibile(quantitaAggiunta);
-            prodottiCarrello.add(nuovoProdotto);
-
-            modelloCarrello.addRow(new String[]{nuovoProdotto.getNome(), String.valueOf(quantitaAggiunta)});
-        } else {
-            // Aggiornamento della quantità del prodotto nel carrello
-            for (int riga = 0; riga < modelloCarrello.getRowCount(); riga++) {
-                String nomeProdotto = (String) tblNegozio.getValueAt(riga, 1);
-                if (nomeProdotto.equals(prodotto.getNome())) {
-                    int quantita = Integer.parseInt((String) tblCarrello.getValueAt(riga, 1));
-                    System.out.println("Elemento trovato alla riga " + riga);
-                    int nuovaQuantita = quantita + quantitaAggiunta;
-                    nuovaQuantita = Math.min(nuovaQuantita, MAX_QUANTITA);
-                    if (getQuantita() < MAX_QUANTITA) {
-                        modelloCarrello.setValueAt(String.valueOf(nuovaQuantita), riga, 1); // Aggiorna la quantità
-                    }
-
-                    modelloCarrello.fireTableDataChanged();
-                    break;
-                }
-            }
-        }*/
 
     }
 
@@ -873,8 +863,8 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
     }
 
     public void changeTitle() {
-        labelStatoServer.setText(statoNegozioOnline ? "Online" : "Offline");
-        labelStatoServer.setForeground(statoNegozioOnline ? Color.GREEN : Color.RED);
+        labelStatoServer.setText(isConnessoAlServer ? "Online" : "Offline");
+        labelStatoServer.setForeground(isConnessoAlServer ? Color.GREEN : Color.RED);
     }
 
     public void allLimitResponsiveTable(JTable table) {
@@ -885,11 +875,6 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
             preferredSize.width = maxWidth;
         }
         table.setPreferredScrollableViewportSize(preferredSize);
-    }
-
-    public static void azzeraElementiTable(DefaultTableModel defaultTableModel) {
-        defaultTableModel.setRowCount(0);
-        defaultTableModel.fireTableDataChanged();
     }
 
     private Prodotto trovaProdottoLista(int idProdotto, List<Prodotto> prodotti) {
@@ -906,11 +891,6 @@ public class ClientNegozioInterfaccia extends JFrame implements Runnable {
         label.setFont(font);
     }
 
-    private boolean isStopThread;
 
-    @Override
-    public void run() {
-
-    }
 }
 

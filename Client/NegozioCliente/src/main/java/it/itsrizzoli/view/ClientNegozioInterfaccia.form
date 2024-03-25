@@ -476,7 +476,7 @@
                             </constraints>
                             <properties>
                               <font name="JetBrains Mono" size="12" style="2"/>
-                              <text value="Quantita Richiesta:"/>
+                              <text value="Dopo l'ordine:"/>
                             </properties>
                           </component>
                           <component id="8e1a1" class="javax.swing.JLabel" binding="labelQuantitaTot">

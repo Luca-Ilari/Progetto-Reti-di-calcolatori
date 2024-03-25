@@ -171,7 +171,6 @@ void handleClient(int sock, int *clientOrderedProducts){
                 memset(currentJson, 0, BUFFER_SIZE);
                 strncpy(currentJson, buffer + (i - jsonlen), jsonlen);  //Copy the json in the buffer to currentJson. If there is more than a json in the buffer it copies only the current one
                 i++;
-
                 timestamp();
                 printf("<- Handling json received from socket %d: %s", sock , currentJson);
                 int jsonStatusCode = -1;
