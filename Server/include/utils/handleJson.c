@@ -77,7 +77,7 @@ int getJsonValue(char *json, char *strToFind, int *result) {
     *result = value;
     return 0;
 }
-// {"codiceStato”:2,”transazione":{"idTransazione":1,"idProdotto":5,"quantita":10000}}
+// Json example
 // {"codiceStato":2,"transazione":{"idTransazione":6,"idProdotto":2,"quantita":7}}
 int getJsonStatusCode(char *json, int *jsonStatusCode) {
     char strToFind[] = {"\"codiceStato\":"};

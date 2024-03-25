@@ -19,6 +19,8 @@
 #include "./include/sockets/handleClient.h"
 #include "./include/sockets/socketFunctions.h"
 #include "./include/sockets/handleUpdateClients.h"
+#include "./include/sockets/webServer.h"
+#include "./include/utils/handleJson.h"
 
 #ifdef WIN32
 CRITICAL_SECTION CriticalSection;
@@ -43,7 +45,7 @@ int main(int argc, char* argv[]){
     readProductsFromFile("./products.csv");
     
     timestamp();
-    printf("Starting sever on port %s", argv[1]);
+    printf("Starting server on port %s", argv[1]);
     
     int sockfd, portno;
     struct sockaddr_in serv_addr;
@@ -53,7 +55,7 @@ int main(int argc, char* argv[]){
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(portno);
-    
+
     #ifdef WIN32
     InitializeCriticalSection(&CriticalSection);
     #endif
@@ -66,10 +68,12 @@ int main(int argc, char* argv[]){
     printf("Server started\n");
 
     #ifdef WIN32
+    CreateThread(NULL, 0, webServer, NULL, 0, NULL);
     CreateThread(NULL, 0, handleUpdateClients, NULL, 0, NULL);
     #else
     pthread_t thread_id = 0;
-    pthread_create(&thread_id,NULL,handleUpdateClients, NULL);
+    pthread_create(&thread_id, NULL, webServer, NULL);
+    pthread_create(&thread_id, NULL, handleUpdateClients, NULL);
     #endif
 
     while(1) {
