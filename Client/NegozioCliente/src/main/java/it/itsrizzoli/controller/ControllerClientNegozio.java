@@ -21,26 +21,26 @@ public class ControllerClientNegozio {
         this.clientConnessione = clientConnessione;
     }
 
-    public ControllerClientNegozio(ModelloClientNegozio modelloClientNegozio,
-                                   ClientNegozioInterfaccia clientNegozioInterfaccia,
-                                   ClientConnessione clientConnessione) {
+    public ControllerClientNegozio(ModelloClientNegozio modelloClientNegozio, ClientConnessione clientConnessione,
+                                   ClientNegozioInterfaccia clientNegozioInterfaccia) {
         this.modelloClientNegozio = modelloClientNegozio;
-        this.clientNegozioInterfaccia = clientNegozioInterfaccia;
         this.clientConnessione = clientConnessione;
+        this.clientNegozioInterfaccia = clientNegozioInterfaccia;
 
-        clientConnessione.setControllerClientNegozio(this);
-        clientNegozioInterfaccia.setControllerClientNegozio(this);
-
-        clientConnessione.startConnessione();
+        initialize();
     }
 
+    private void initialize() {
+        clientConnessione.setControllerClientNegozio(this);
+        clientNegozioInterfaccia.setControllerClientNegozio(this);
+        clientConnessione.startConnessione();
+    }
 
     public void setClientNegozioInterfaccia(ClientNegozioInterfaccia clientNegozioInterfaccia) {
         this.clientNegozioInterfaccia = clientNegozioInterfaccia;
         this.clientNegozioInterfaccia.setControllerClientNegozio(this);
 
     }
-
 
 
     public ClientNegozioInterfaccia getClientNegozioInterfaccia() {
@@ -67,6 +67,10 @@ public class ControllerClientNegozio {
         return modelloClientNegozio.getListaTransazioneAcquisto();
     }
 
+    public void removeProdottoCarrello(String nomeProdotto) {
+        modelloClientNegozio.rimuoviProdottoCarrello(nomeProdotto);
+    }
+
     public void setProdottiCarrello(List<Prodotto> prodottiCarrello) {
         modelloClientNegozio.setProdottiCarrello(prodottiCarrello);
     }
@@ -78,31 +82,6 @@ public class ControllerClientNegozio {
     public void aggiornaProdottiNegozio(List<Prodotto> newProdottiNegozio) {
         modelloClientNegozio.setProdottiNegozio(newProdottiNegozio);
         clientNegozioInterfaccia.aggiornaTabellaProdottiNegozio(newProdottiNegozio);
-    }
-
-    // Intuile
-    public void aggiornaProdottiCarrello(int idTransazione) {
-        Transazione transazione = modelloClientNegozio.trovaTransazione(idTransazione);
-        if (transazione == null) {
-            System.err.println(" - Errore: Transazione non trovata");
-            return;
-        }
-        Prodotto prodottoEdit = null;
-        for (Prodotto prodotto : modelloClientNegozio.getProdottiCarrello()) {
-            if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
-                int quantitaRimasta = prodotto.getQuantitaDisponibile() - transazione.getQuantita();
-                if (quantitaRimasta < 0) {
-                    System.out.println(" ATTENZIONE: Prodotto finito con ID " + prodotto.getIdProdotto());
-                    break;
-                }
-                prodotto.setQuantitaDisponibile(quantitaRimasta);
-                prodottoEdit = prodotto;
-            }
-        }
-
-        clientNegozioInterfaccia.aggiornaQuantitaCarrello(prodottoEdit.getIdProdotto(),
-                prodottoEdit.getQuantitaDisponibile(), getProdottiNegozio(), getProdottiCarrello(), false);
-
     }
 
     public void aggiornaStatoConnessione(boolean statoConnessione) {
@@ -135,27 +114,7 @@ public class ControllerClientNegozio {
             System.err.println(" - Errore: Transazione non trovata");
             return;
         }
-        if (isTipoVendita) {
-            clientNegozioInterfaccia.aggiornaStateTransazioneFail(transazione, isTipoVendita);
-        } else {
-            clientNegozioInterfaccia.aggiornaStateTransazioneFail(transazione, isTipoVendita);
-        }
-    }
-
-    public void aggiungiListaTransazioneAcquisto(List<Transazione> listaTransazioni) {
-        modelloClientNegozio.aggiungiListaTransazioneAcquisto(listaTransazioni);
-    }
-
-    public void aggiungiListaTransazioneVendita(List<Transazione> listaTransazioni) {
-        modelloClientNegozio.aggiungiListaTransazioneVendita(listaTransazioni);
-    }
-
-    public void addAllTransazioneAcquistoAwait(List<Transazione> listaTransazione) {
-        if (listaTransazione == null) {
-            System.err.println(" - Errore: Lista transazione non trovata");
-            return;
-        }
-        clientNegozioInterfaccia.addAllTransazioneCompraAwait(listaTransazione, getProdottiNegozio());
+        clientNegozioInterfaccia.aggiornaStateTransazioneFail(transazione, isTipoVendita);
     }
 
     public void addSingleTransazioneCompraAwait(Transazione transazione) {
@@ -177,22 +136,11 @@ public class ControllerClientNegozio {
         clientNegozioInterfaccia.addSingleTransazioneVenditaAwait(transazione, getProdottiCarrello());
     }
 
-    public synchronized void addAllTransazioneVenditaAwait(List<Transazione> listaTransazione) {
-        if (listaTransazione == null) {
-            System.err.println(" - Errore: Lista transazione non trovata");
-            return;
-        }
-        clientNegozioInterfaccia.addAllTransazioneVenditaAwait(listaTransazione, getProdottiCarrello());
+
+    public void azzeraDati() {
+        modelloClientNegozio.azzeraDati();
+        clientNegozioInterfaccia.svuotaTabelleDati();
     }
 
-
-    public void aggiornaStatoTransazioneInTabella(Transazione transazione) {
-        clientNegozioInterfaccia.aggiornaStatoTransazioneInTabellaAcquisto(transazione, getProdottiNegozio(),
-                getProdottiCarrello());
-    }
-
-    public int sommaQuantitaProdottoCarrello() {
-        return modelloClientNegozio.sommaQuantitaCarrello();
-    }
 
 }

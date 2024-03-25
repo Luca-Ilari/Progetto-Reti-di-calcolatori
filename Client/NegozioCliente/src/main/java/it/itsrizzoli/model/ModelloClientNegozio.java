@@ -5,19 +5,11 @@ import java.util.List;
 
 public class ModelloClientNegozio {
     private boolean statoNegozioOnline = false;
+    private List<Prodotto> prodottiCarrello = new ArrayList<>();
+    private List<Prodotto> prodottiNegozio = new ArrayList<>();
+    private List<Transazione> listaTransazioneAcquisto = new ArrayList<>();
+    private List<Transazione> listaTransazioneVendita = new ArrayList<>();
 
-    private List<Prodotto> prodottiCarrello;
-    private List<Prodotto> prodottiNegozio;
-    private List<Transazione> listaTransazioneAcquisto;
-    private List<Transazione> listaTransazioneVendita;
-
-
-    public ModelloClientNegozio() {
-        prodottiNegozio = new ArrayList<>();
-        prodottiCarrello = new ArrayList<>();
-        listaTransazioneAcquisto = new ArrayList<>();
-        listaTransazioneVendita = new ArrayList<>();
-    }
 
     public boolean isStatoNegozioOnline() {
         return statoNegozioOnline;
@@ -67,6 +59,7 @@ public class ModelloClientNegozio {
     public void aggiungiListaTransazioneVendita(List<Transazione> listaTransazione) {
         this.listaTransazioneVendita.addAll(listaTransazione);
     }
+
     public void aggiungiTransazioneAcquisto(Transazione transazione) {
         this.listaTransazioneAcquisto.add(transazione);
     }
@@ -79,7 +72,12 @@ public class ModelloClientNegozio {
         listaTransazioneAcquisto.remove(transazione);
     }
 
-    private Prodotto trovaProdottoLista(int idProdotto, List<Prodotto> prodotti) {
+    public void rimuoviProdottoCarrello(String nomeProdotto) {
+        Prodotto prodotto = trovaProdotto(nomeProdotto, prodottiCarrello);
+        prodottiCarrello.remove(prodotto);
+    }
+
+    private Prodotto trovaProdotto(int idProdotto, List<Prodotto> prodotti) {
         for (Prodotto prodotto : prodotti) {
             if (prodotto.getIdProdotto() == idProdotto) {
                 return prodotto;
@@ -102,6 +100,15 @@ public class ModelloClientNegozio {
         return null;
     }
 
+    public Prodotto trovaProdotto(String nomeProdotto, List<Prodotto> lista) {
+        for (Prodotto prodotto : lista) {
+            if (prodotto.getNome().equals(nomeProdotto)) {
+                return prodotto;
+            }
+        }
+        return null;
+    }
+
     public int sommaQuantitaCarrello() {
         int somma = 0;
 
@@ -113,4 +120,10 @@ public class ModelloClientNegozio {
     }
 
 
+    public void azzeraDati() {
+        prodottiCarrello.clear();
+        prodottiNegozio.clear();
+        listaTransazioneVendita.clear();
+        listaTransazioneAcquisto.clear();
+    }
 }

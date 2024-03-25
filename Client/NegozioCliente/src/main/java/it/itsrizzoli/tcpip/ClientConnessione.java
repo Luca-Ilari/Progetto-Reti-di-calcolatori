@@ -10,7 +10,6 @@ import it.itsrizzoli.model.Transazione;
 import it.itsrizzoli.tools.CodiciStatoServer;
 import it.itsrizzoli.view.ClientNegozioInterfaccia;
 
-import javax.swing.*;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
@@ -77,7 +76,10 @@ public class ClientConnessione {
     private void terminaConnessioneConErroreServer() {
         aggiornaStato(false);
         ClientNegozioInterfaccia clientNegozioInterfaccia = controllerClientNegozio.getClientNegozioInterfaccia();
+
         clientNegozioInterfaccia.aggiornaStatoTransazioneServerError();
+
+        controllerClientNegozio.azzeraDati();
     }
 
 
@@ -102,7 +104,7 @@ public class ClientConnessione {
     }
 
 
-    protected void readLoop() {
+    private void readLoop() {
         String message = "Thread di connessione completato.\n---- SESSIONE AVVIATA ----";
         logger.warning(message);
 

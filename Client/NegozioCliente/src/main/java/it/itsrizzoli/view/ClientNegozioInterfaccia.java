@@ -427,13 +427,6 @@ public class ClientNegozioInterfaccia extends JFrame {
             }
         });
 
-        // Aggiunta dell'azione al pulsante
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Aggiungere l'azione desiderata qui
-            }
-        });
     }
 
 
@@ -484,7 +477,7 @@ public class ClientNegozioInterfaccia extends JFrame {
                     Thread.sleep(new Random().nextInt(100, 300)); // Aggiungi un piccolo ritardo tra le transazioni
                     // per evitare sovraccarichi
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    System.out.println(e.getMessage());
                 }
             }
             btnInviaTransazione.setVisible(true);
@@ -558,34 +551,6 @@ public class ClientNegozioInterfaccia extends JFrame {
 
     }
 
-    public void addAllTransazioneVenditaAwait(List<Transazione> transazioneList, List<Prodotto> prodottiCarrello) {
-        SwingUtilities.invokeLater(() -> {
-            DefaultTableModel model = (DefaultTableModel) tblTransazioniVendita.getModel();
-
-            boolean trovatoNelCarrello = false;
-            for (Transazione transazione : transazioneList) {
-                for (Prodotto prodotto : prodottiCarrello) {
-                    if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
-                        Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(),
-                                prodotto.getPrezzo() + "€", transazione.getQuantita(),
-                                EStato.IN_ATTESA_DI_CONFERMA.getValue()};
-                        model.addRow(rowData);
-                        trovatoNelCarrello = true;
-                    }
-                }
-            }
-            model.fireTableDataChanged();
-
-            if (!trovatoNelCarrello) {
-                JOptionPane.showMessageDialog(null, "Nessun Prodotto della transazione è presente nel Carrello",
-                        "Attenzione", JOptionPane.WARNING_MESSAGE);
-            }
-
-            System.out.println(" --> UI: Lista transazione aggiunta!!");
-
-        });
-
-    }
 
     public void addSingleTransazioneVenditaAwait(Transazione transazione, List<Prodotto> prodottiCarrello) {
         SwingUtilities.invokeLater(() -> {
@@ -819,27 +784,29 @@ public class ClientNegozioInterfaccia extends JFrame {
         // Aggiornamento della quantità del prodotto nel carrello
         for (int riga = 0; riga < modelloCarrello.getRowCount(); riga++) {
             String nomeProdotto = (String) tblCarrello.getValueAt(riga, 0);
-            if (nomeProdotto.equals(prodotto.getNome())) {
-                System.out.println("Elemento trovato alla riga " + riga);
-
-                int quantitaDisponibile = Integer.parseInt((String) tblCarrello.getValueAt(riga, 1));
-                int nuovaQuantita = quantitaDisponibile - quantitaTogliere;
-
-                if (getQuantita() - quantitaTogliere < 0) {
-                    System.out.println(" Attenzione: la quantità richieste non è disponibile ");
-                    return true;
-                }
-
-                modelloCarrello.setValueAt(String.valueOf(nuovaQuantita), riga, 1); // Aggiorna la quantità
-
-                int stato = updateProgressBar(-quantitaTogliere);
-                if (stato == -1) {
-                    modelloCarrello.removeRow(riga);
-                }
-
-                modelloCarrello.fireTableDataChanged();
-                return false;
+            if (!nomeProdotto.equals(prodotto.getNome())) {
+                continue;
             }
+            System.out.println("Elemento trovato alla riga " + riga);
+
+            int quantitaDisponibile = Integer.parseInt((String) tblCarrello.getValueAt(riga, 1));
+            int nuovaQuantita = quantitaDisponibile - quantitaTogliere;
+
+            if (getQuantita() - quantitaTogliere < 0) {
+                System.out.println(" Attenzione: la quantità richieste non è disponibile ");
+                return true;
+            }
+
+            modelloCarrello.setValueAt(String.valueOf(nuovaQuantita), riga, 1); // Aggiorna la quantità
+
+            int stato = updateProgressBar(-quantitaTogliere);
+            if (stato == -1) {
+                modelloCarrello.removeRow(riga);
+                controllerClientNegozio.removeProdottoCarrello(nomeProdotto);
+            }
+
+            modelloCarrello.fireTableDataChanged();
+            return false;
         }
 
 
@@ -867,16 +834,6 @@ public class ClientNegozioInterfaccia extends JFrame {
         labelStatoServer.setForeground(isConnessoAlServer ? Color.GREEN : Color.RED);
     }
 
-    public void allLimitResponsiveTable(JTable table) {
-        Dimension preferredSize = table.getPreferredSize();
-        int maxWidth = 400; // Imposta la larghezza massima desiderata
-
-        if (preferredSize.width > maxWidth) {
-            preferredSize.width = maxWidth;
-        }
-        table.setPreferredScrollableViewportSize(preferredSize);
-    }
-
     private Prodotto trovaProdottoLista(int idProdotto, List<Prodotto> prodotti) {
         for (Prodotto prodotto : prodotti) {
             if (prodotto.getIdProdotto() == idProdotto) {
@@ -889,6 +846,29 @@ public class ClientNegozioInterfaccia extends JFrame {
     private void setLabelProperties(JLabel label, Dimension size, Font font) {
         label.setPreferredSize(size);
         label.setFont(font);
+    }
+
+
+    public void svuotaTabelleDati() {
+        svuotaTabella(tblCarrello);
+        svuotaTabella(tblNegozio);
+        svuotaTabella(tblTransazioniAcquisto);
+        svuotaTabella(tblTransazioniVendita);
+
+        progressBarQuantita.setValue(0);
+        progressBarQuantita.setString(null);
+
+        progressBarTransazioni.setValue(0);
+        progressBarTransazioni.setString(null);
+
+
+        labelQuantitaTot.setText(0 + "/" + creaNumberFormatter(MAX_QUANTITA) + " prodotti");
+
+    }
+
+    private void svuotaTabella(JTable table) {
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        model.setRowCount(0);
     }
 
 
