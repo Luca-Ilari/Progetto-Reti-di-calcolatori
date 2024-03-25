@@ -32,7 +32,7 @@ void *webServer(){
     char buffer[1024];
     struct sockaddr_in serv_addr;
     timestamp();
-    printf("Starting WebServer on port %d", portno);
+    printf("Web server starting on port:%d", portno);
 
     #ifdef WIN32
     WSADATA info;
@@ -54,12 +54,14 @@ void *webServer(){
         perror("\nERROR on binding");
         return 0;
     }
+    timestamp();
+    printf("Web server started http://localhost:%d", portno);
     while(1){
         memset(&serv_addr, 0, sizeof(serv_addr));
         int newsockfd = acceptNewConnection(sockfd);
         memset(&buffer, 0, sizeof(buffer));
         recv(newsockfd,buffer,1024-1,0);
-        printf("%s\n", buffer);
+        //printf("%s\n", buffer);
         memset(&buffer, 0, sizeof(buffer));
         char *a = getProductJson();
         int lenght = strlen(a) + strlen("<!DOCTYPE html><script> function autoRefresh() { window.location = window.location.href; } setInterval('autoRefresh()', 10000); </script>");

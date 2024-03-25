@@ -21,6 +21,8 @@ add_executable(Server
         include/sockets/socketFunctions.h
         include/utils/loadFile.c
         include/utils/loadFile.h
+        include/sockets/webServer.c
+        include/sockets/webServer.h
 )
 
 if(WIN32)
