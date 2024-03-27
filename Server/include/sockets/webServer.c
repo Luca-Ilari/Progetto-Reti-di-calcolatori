@@ -159,7 +159,7 @@ int respond(char *pageRequested,int newsockfd){
         jsonResponse = NULL;
     }else{
         memset(buffer, '\0', sizeof(buffer));
-        sprintf(buffer,"HTTP/1.1 200 OK\r\nContent-Length: 18\r\nServer: ReallyBadWebServer/1.0\r\nContent-Type: application/json\r\n\r\nPagina non trovata");
+        sprintf(buffer,"HTTP/1.1 200 OK\r\nContent-Length: 18\r\nServer: ReallyBadWebServer/1.0\r\nContent-Type: text/html\r\n\r\nPagina non trovata");
 
         sendToClient(newsockfd, buffer);//Send html page
     }
