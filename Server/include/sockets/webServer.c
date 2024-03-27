@@ -48,26 +48,116 @@ int startWebServer(int *portno, int *sockfd, struct sockaddr_in *serv_addr){
     return 0;
 }
 
-char *buildHtmlResponse(FILE *htmlFile){
+char *buildHtmlResponse(char *filePath){
     int htmlLen = 0;
-
+    FILE *htmlFile;
+    htmlFile = fopen(filePath, "r");
+    if(htmlFile == NULL){
+        timestamp();
+        printf("Can't find \"%s\"", filePath);
+        return NULL;
+    }
     while(fgetc(htmlFile) != EOF){htmlLen++;}//Get file length
 
     fseek(htmlFile, 0, SEEK_SET); //reset file pointer to the start of the file
 
-    char *html = calloc(htmlLen, (htmlLen+1) * sizeof(char));
-    //memset(html, '\0', sizeof(html));
+    char *html = calloc((htmlLen+1), sizeof(char));
 
     for (int i = 0; i < htmlLen; ++i) {
         html[i] = (char)fgetc(htmlFile);
-        if (html[i] == NULL){
-            printf("a");
-        }
     }
     html[htmlLen] = '\0';
+    fclose(htmlFile);
     return html;
 }
 
+int tryToReadFile(char *file){
+    FILE *htmlFile;
+    htmlFile = fopen(file, "r");
+    if(htmlFile == NULL){
+        timestamp();
+        printf("Can't find \"%s\" webserver not started", file);
+        return -1;
+    }
+    fclose(htmlFile);
+    return 0;
+}
+
+int getLineLen(char *str){
+    int i = 0;
+    while(str[i] != '\n'){
+        i++;
+    }
+    return i;
+}
+/**Copy src to dest for len
+ * the last character will be 0*/
+int copyString(char *dest,int len,char *src){
+    for (int i = 0; i < len; ++i) {
+        dest[i] = src[i];
+    }
+    dest[len]='\0';
+
+    return 0;
+}
+
+int findChar(char *arr, char charToFind){
+    int index = 0;
+    while(arr[index] != charToFind){
+        index++;
+    }
+    return index;
+}
+
+char *decodeRequest(char *buffer){
+    int lineLen = getLineLen(buffer);
+    char *line = calloc(lineLen+1, sizeof(char));
+
+    copyString(line, lineLen, buffer);
+
+    char *res = strstr(line, "GET");
+    if (res == NULL)
+        return NULL;
+    res = res + 4;
+    int pathLen = findChar(res, ' ');
+
+    char *pathRequested = calloc(pathLen+1, sizeof(char)); //path len +1 to end the string with \0
+    copyString(pathRequested, pathLen, res);
+    printf("\n%s", pathRequested);
+
+    free(line);
+    line = NULL;
+    return pathRequested;
+}
+int respond(char *pageRequested,int newsockfd){
+    char buffer[BUFFER_SIZE];
+    memset(buffer, '\0', BUFFER_SIZE);
+
+    if(strcmp(pageRequested, "/") == 0){
+        char *htmlResponse = buildHtmlResponse("./html/index.html");
+        if(htmlResponse == NULL)
+            return -1;
+        size_t len = strlen(htmlResponse);
+        memset(buffer, '\0', sizeof(buffer));
+        sprintf(buffer,"HTTP/1.1 200 OK\r\nContent-Length: %zu\r\nServer: ReallyBadWebServer/1.0\r\nContent-Type: text/html\r\n\r\n%s", len, htmlResponse);
+
+        sendToClient(newsockfd, buffer);//Send html page
+        free(htmlResponse);
+        htmlResponse = NULL;
+    }
+    if(strcmp(pageRequested, "/prodotti") == 0){
+        char *htmlResponse = buildHtmlResponse("./html/prodotti.html");
+        if(htmlResponse == NULL)
+            return -1;
+        size_t len = strlen(htmlResponse);
+        memset(buffer, '\0', sizeof(buffer));
+        sprintf(buffer,"HTTP/1.1 200 OK\r\nContent-Length: %zu\r\nServer: ReallyBadWebServer/1.0\r\nContent-Type: text/html\r\n\r\n%s", len, htmlResponse);
+
+        sendToClient(newsockfd, buffer);//Send html page
+        free(htmlResponse);
+        htmlResponse = NULL;
+    }
+}
 #ifdef WIN32
 DWORD WINAPI webServer(){
 #else
@@ -76,7 +166,6 @@ void *webServer(){
     int sockfd, portno = 8080;
     char buffer[BUFFER_SIZE];
     struct sockaddr_in serv_addr;
-    FILE *htmlFile;
 
     int status = startWebServer(&portno, &sockfd, &serv_addr);
     if(status < 0){
@@ -86,14 +175,15 @@ void *webServer(){
     }
 
     if (bind(sockfd, (struct sockaddr*)&serv_addr,sizeof(serv_addr)) < 0){
-        perror("\nERROR on binding webserver socket");
+        timestamp();
+        printf("Can't start webserver");
+        perror("\nERROR on binding");
         return -1;
     }
 
-    htmlFile = fopen("./html/index.html", "r");
-    if(htmlFile == NULL){
+    if(tryToReadFile("./html/index.html") == -1){
         timestamp();
-        printf("Can't find \"index.html\" webserver not started");
+        printf("Can't start webserver");
         return -1;
     }
 
@@ -101,18 +191,17 @@ void *webServer(){
     printf("Web server started http://localhost:%d", portno);
 
     while(1){
+        //receive request
         int newsockfd = acceptNewConnection(sockfd);
         memset(buffer, '\0', sizeof(buffer));
         recv(newsockfd,buffer,BUFFER_SIZE-1,0);
-        char *htmlResponse = buildHtmlResponse(htmlFile);
+        //printf("\n%s", buffer);
 
-        size_t len = strlen(htmlResponse);
-        memset(buffer, '\0', sizeof(buffer));
-        sprintf(buffer,"HTTP/1.1 200 OK\r\nContent-Length: %zu\r\nServer: ReallyBadWebServer/1.0\r\nContent-Type: text/html\r\n\r\n%s", len, htmlResponse);
+        char *pageRequested = decodeRequest(buffer);
+        respond(pageRequested, newsockfd);
 
-        sendToClient(newsockfd, buffer);//Send html page
-        free(htmlResponse);
-        htmlResponse = NULL;
+        free(pageRequested);
+        pageRequested = NULL;
 
         #ifdef WIN32
         closesocket(newsockfd);
