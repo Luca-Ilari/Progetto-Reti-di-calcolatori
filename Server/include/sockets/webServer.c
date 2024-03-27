@@ -90,6 +90,7 @@ int getLineLen(char *str){
     }
     return i;
 }
+
 /**Copy src to dest for len
  * the last character will be 0*/
 int copyString(char *dest,int len,char *src){
@@ -129,6 +130,7 @@ char *decodeRequest(char *buffer){
     line = NULL;
     return pathRequested;
 }
+
 int respond(char *pageRequested,int newsockfd){
     char buffer[BUFFER_SIZE];
     memset(buffer, '\0', BUFFER_SIZE);
@@ -144,20 +146,25 @@ int respond(char *pageRequested,int newsockfd){
         sendToClient(newsockfd, buffer);//Send html page
         free(htmlResponse);
         htmlResponse = NULL;
-    }
-    if(strcmp(pageRequested, "/prodotti") == 0){
-        char *htmlResponse = buildHtmlResponse("./html/prodotti.html");
-        if(htmlResponse == NULL)
+    }else if(strcmp(pageRequested, "/prodotti") == 0){
+        char *jsonResponse = getProductJson();
+        if(jsonResponse == NULL)
             return -1;
-        size_t len = strlen(htmlResponse);
+        size_t len = strlen(jsonResponse);
         memset(buffer, '\0', sizeof(buffer));
-        sprintf(buffer,"HTTP/1.1 200 OK\r\nContent-Length: %zu\r\nServer: ReallyBadWebServer/1.0\r\nContent-Type: text/html\r\n\r\n%s", len, htmlResponse);
+        sprintf(buffer,"HTTP/1.1 200 OK\r\nContent-Length: %zu\r\nServer: ReallyBadWebServer/1.0\r\nContent-Type: application/json\r\n\r\n%s", len, jsonResponse);
 
         sendToClient(newsockfd, buffer);//Send html page
-        free(htmlResponse);
-        htmlResponse = NULL;
+        free(jsonResponse);
+        jsonResponse = NULL;
+    }else{
+        memset(buffer, '\0', sizeof(buffer));
+        sprintf(buffer,"HTTP/1.1 200 OK\r\nContent-Length: 18\r\nServer: ReallyBadWebServer/1.0\r\nContent-Type: application/json\r\n\r\nPagina non trovata");
+
+        sendToClient(newsockfd, buffer);//Send html page
     }
 }
+
 #ifdef WIN32
 DWORD WINAPI webServer(){
 #else
@@ -195,11 +202,9 @@ void *webServer(){
         int newsockfd = acceptNewConnection(sockfd);
         memset(buffer, '\0', sizeof(buffer));
         recv(newsockfd,buffer,BUFFER_SIZE-1,0);
-        //printf("\n%s", buffer);
-
+ 
         char *pageRequested = decodeRequest(buffer);
         respond(pageRequested, newsockfd);
-
         free(pageRequested);
         pageRequested = NULL;
 
