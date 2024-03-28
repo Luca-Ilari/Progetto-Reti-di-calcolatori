@@ -20,7 +20,7 @@
 extern int connectedSockets[MAX_CLIENT];
 extern int nConnectedClient;
 #ifdef WIN32
-//TODO
+extern HANDLE semaphore;
 #elif __APPLE__
 extern dispatch_semaphore_t semaphore;
 #else
@@ -34,11 +34,11 @@ void *handleUpdateClients(void *params){
 #endif
     while(1){
         #ifdef WIN32
-        //TODO
+        WaitForSingleObject(semaphore, INFINITE);
         #elif __APPLE__
         dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
         #else
-        sem_wait(semUpdateAllClients);
+        sem_wait(&semUpdateAllClients);
         #endif
         customEnterCriticalSection();
         for (int i = 0; i < nConnectedClient; ++i){

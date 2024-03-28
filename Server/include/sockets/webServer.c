@@ -25,7 +25,6 @@
 #include "../utils/handleJson.h"
 
 int startWebServer(int *portno, int *sockfd, struct sockaddr_in *serv_addr){
-
     timestamp();
     printf("Web server starting on port:%d", *portno);
 
@@ -190,11 +189,8 @@ void *webServer(){
         printf("Can't start webserver");
         return -1;
     }
-
     if (bind(sockfd, (struct sockaddr*)&serv_addr,sizeof(serv_addr)) < 0){
-        timestamp();
-        printf("Can't start webserver");
-        perror("\nERROR on binding");
+        perror("\nCan't start webserver");
         return -1;
     }
 

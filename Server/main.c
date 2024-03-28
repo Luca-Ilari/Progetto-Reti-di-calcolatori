@@ -29,21 +29,19 @@
 #include "./include/sockets/socketFunctions.h"
 #include "./include/sockets/handleUpdateClients.h"
 #include "./include/sockets/webServer.h"
-#include "./include/utils/handleJson.h"
 
 #ifdef WIN32
 CRITICAL_SECTION CriticalSection;
+HANDLE semaphore; //semaphore to handle client updates
+#elif __APPLE__
+pthread_mutex_t CriticalSection;
+dispatch_semaphore_t semaphore; //semaphore to handle client updates
 #else
 pthread_mutex_t CriticalSection;
+sem_t semUpdateAllClients; //semaphore to handle client updates
 #endif
 
-#ifdef __APPLE__
-dispatch_semaphore_t semaphore;
-#elif WIN32
 
-#else
-sem_t semUpdateAllClients;
-#endif
 int nConnectedClient = 0;
 int connectedSockets[MAX_CLIENT];
 
@@ -73,7 +71,7 @@ int main(int argc, char* argv[]){
 
     #ifdef WIN32
     InitializeCriticalSection(&CriticalSection);
-    //TODO init semaphore
+    semaphore = CreateSemaphore(NULL,0,1,NULL);
     #elif __APPLE__
     semaphore = dispatch_semaphore_create(0);
     #else

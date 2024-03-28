@@ -25,7 +25,7 @@ extern struct product *serverProductList;
 extern int PRODUCT_NUMBER;
 extern int nConnectedClient;
 #ifdef WIN32
-//TODO
+extern HANDLE semaphore;
 #elif __APPLE__
 extern dispatch_semaphore_t semaphore;
 #else
@@ -57,11 +57,11 @@ int tryToRemoveProduct(int productId, int nToRemove, int *clientOrderedProducts)
         clientOrderedProducts[index] += nToRemove;
 
         #ifdef WIN32
-        //TODO
+        ReleaseSemaphore(semaphore,1,NULL);
         #elif __APPLE__
         dispatch_semaphore_signal(semaphore);
         #else
-        sem_post(semUpdateAllClients);
+        sem_post(&semUpdateAllClients);
         #endif
      }else{
         customLeaveCriticalSection();
@@ -85,7 +85,7 @@ int tryToAddProduct(int productId, int nToAdd, int *clientOrderedProducts){
         #elif __APPLE__
         dispatch_semaphore_signal(semaphore);
         #else
-        sem_post(semUpdateAllClients);
+        sem_post(&semUpdateAllClients);
         #endif
     }else{
         customLeaveCriticalSection();
