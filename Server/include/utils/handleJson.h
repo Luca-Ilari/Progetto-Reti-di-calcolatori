@@ -6,6 +6,7 @@
 #define SERVER_HANDLEJSON_H
 
 char *getProductJson();
+char *getClientsJson();
 struct jsonTransaction *getJsonTransaction(char *json);
 int getJsonStatusCode(char *json, int *jsonStatusCode);
 

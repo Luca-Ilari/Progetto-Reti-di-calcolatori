@@ -124,8 +124,6 @@ char *decodeRequest(char *buffer){
 
     char *pathRequested = calloc(pathLen+1, sizeof(char)); //path len +1 to end the string with \0
     copyString(pathRequested, pathLen, res);
-    printf("\n%s", pathRequested);
-
     free(line);
     line = NULL;
     return pathRequested;
@@ -154,14 +152,26 @@ int respond(char *pageRequested,int newsockfd){
         memset(buffer, '\0', sizeof(buffer));
         sprintf(buffer,"HTTP/1.1 200 OK\r\nContent-Length: %zu\r\nServer: ReallyBadWebServer/1.0\r\nContent-Type: application/json\r\n\r\n%s", len, jsonResponse);
 
-        sendToClient(newsockfd, buffer);//Send html page
+        sendToClient(newsockfd, buffer);//Send json response
+        free(jsonResponse);
+        jsonResponse = NULL;
+        
+    }else if(strcmp(pageRequested, "/clients") == 0){
+        char *jsonResponse = getClientsJson();
+        if(jsonResponse == NULL)
+            return -1;
+        size_t len = strlen(jsonResponse);
+        memset(buffer, '\0', sizeof(buffer));
+        sprintf(buffer,"HTTP/1.1 200 OK\r\nContent-Length: %zu\r\nServer: ReallyBadWebServer/1.0\r\nContent-Type: application/json\r\n\r\n%s", len, jsonResponse);
+
+        sendToClient(newsockfd, buffer);//Send json response
         free(jsonResponse);
         jsonResponse = NULL;
     }else{
         memset(buffer, '\0', sizeof(buffer));
         sprintf(buffer,"HTTP/1.1 200 OK\r\nContent-Length: 18\r\nServer: ReallyBadWebServer/1.0\r\nContent-Type: text/html\r\n\r\nPagina non trovata");
 
-        sendToClient(newsockfd, buffer);//Send html page
+        sendToClient(newsockfd, buffer);//Send html response
     }
 }
 
@@ -199,7 +209,7 @@ void *webServer(){
 
     while(1){
         //receive request
-        int newsockfd = acceptNewConnection(sockfd);
+        int newsockfd = acceptNewConnection(sockfd,0);
         memset(buffer, '\0', sizeof(buffer));
         recv(newsockfd,buffer,BUFFER_SIZE-1,0);
  

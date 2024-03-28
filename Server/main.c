@@ -79,7 +79,7 @@ int main(int argc, char* argv[]){
     while(1) {
         if (nConnectedClient < MAX_CLIENT){
             memset(&serv_addr, 0, sizeof(serv_addr));
-            int newsockfd = acceptNewConnection(sockfd);
+            int newsockfd = acceptNewConnection(sockfd, 1);
 
             if (newsockfd > 0) {
                 int *param = &newsockfd;

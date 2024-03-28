@@ -19,7 +19,24 @@
 
 extern struct product *serverProductList;
 extern int PRODUCT_NUMBER;
+extern int connectedSockets[MAX_CLIENT];
+extern int nConnectedClient;
 
+/**The json returned should be freed*/
+char *getClientsJson(){
+    char *json = calloc(100, sizeof(char));
+
+    strcat(json, "{");
+    char tmp[50];
+    memset(tmp, '\0', 50);
+    sprintf(tmp, "\"connectedClients\":%d", nConnectedClient);
+    strcat(json, tmp);
+    strcat(json, "}\n");
+    
+    return json;
+}
+
+/**The json returned should be freed*/
 char *getProductJson(){
     char json[1024];
     memset(&json, 0, sizeof(json));

@@ -40,7 +40,9 @@
             <th>Quantità</th>
         </tr>
     </table>
-    <div id="container"></div>
+    
+    <h1 >Numero client connessi:</h1>
+    <h2 id="clientNumber">0</h2>
     
     <script>
         function updateTable(jsonData){
@@ -52,22 +54,22 @@
             }catch{
             }
             for(obj in jsonData.prodotti){
-                let row = table.insertRow(1); // We are adding at the end
+                let row = table.insertRow(1);
                 let c1 = row.insertCell(0);
                 let c2 = row.insertCell(1);
                 let c3 = row.insertCell(2);
              
-                // Add data to c1 and c2
                 c1.innerText = jsonData.prodotti[obj].nome
                 c2.innerText = jsonData.prodotti[obj].prezzo
                 c3.innerText = jsonData.prodotti[obj].quantitaDisponibile
             }
-      
-         
+        }
+        function updateN(json){
+            let x = json.connectedClients;
+            document.getElementById("clientNumber").textContent=x;
         }
         
-        
-        function getProdotti(){
+        function updateProdotti(){
             fetch('/prodotti', {
                 method: 'GET',
                 headers: {
@@ -77,12 +79,25 @@
             .then(response => response.json())
             .then(response => updateTable(response))
         }
-        
-        function autoRefresh() {
-            getProdotti();
+        function updateClientNumber(){
+            fetch('/clients', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(response => updateN(response))
+            
         }
         
-        setInterval('autoRefresh()', 1000);
+        function update(){
+            updateProdotti();
+            updateClientNumber();
+        }
+        
+        update();
+        setInterval('update()', 1000);
     </script>
 </body>
 </html>

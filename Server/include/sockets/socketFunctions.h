@@ -6,7 +6,7 @@
 #define SERVER_SOCKETFUNCTIONS_H
 
 int setupSocket(int argc);
-int acceptNewConnection(int sockfd);
+int acceptNewConnection(int sockfd, short log);
 int sendToClient(int sock, char *buffer);
 void sendProductListToClient(int sock);
 

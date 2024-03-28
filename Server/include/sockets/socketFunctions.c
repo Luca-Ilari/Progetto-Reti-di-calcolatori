@@ -41,7 +41,7 @@ int setupSocket(int argc){
     return sockfd;
 }
 
-int acceptNewConnection(int sockfd){
+int acceptNewConnection(int sockfd, short log){
     struct sockaddr_in cli_addr;
     listen(sockfd, 2);
     socklen_t clientLenght = sizeof(cli_addr);
@@ -52,8 +52,10 @@ int acceptNewConnection(int sockfd){
     }
     char *sockIp= inet_ntoa(cli_addr.sin_addr);
 
-    timestamp();
-    printf("+ New socket %d connected from: %s", newsocket, sockIp);
+    if (log == 1){
+        timestamp();
+        printf("+ New socket %d connected from: %s", newsocket, sockIp);
+    }
     return newsocket;
 }
 int sendToClient(int sock, char *buffer) {
