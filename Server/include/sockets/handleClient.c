@@ -7,6 +7,11 @@
 #elif __APPLE__
 #include <string.h>
 #include <sys/socket.h>
+#include <dispatch/dispatch.h>
+#else
+#include <string.h>
+#include <sys/socket.h>
+#include <semaphore.h>
 #endif
 
 #include "./socketFunctions.h"
@@ -19,7 +24,13 @@
 extern struct product *serverProductList;
 extern int PRODUCT_NUMBER;
 extern int nConnectedClient;
-extern int updateAllClients;
+#ifdef WIN32
+//TODO
+#elif __APPLE__
+extern dispatch_semaphore_t semaphore;
+#else
+extern sem_t semUpdateAllClients;
+#endif
 extern int connectedSockets[MAX_CLIENT];
 
 
@@ -45,8 +56,14 @@ int tryToRemoveProduct(int productId, int nToRemove, int *clientOrderedProducts)
         serverProductList[index].quantity -= nToRemove;
         clientOrderedProducts[index] += nToRemove;
 
-        updateAllClients = 1;
-    }else{
+        #ifdef WIN32
+        //TODO
+        #elif __APPLE__
+        dispatch_semaphore_signal(semaphore);
+        #else
+        sem_post(semUpdateAllClients);
+        #endif
+     }else{
         customLeaveCriticalSection();
         return -1;
     }
@@ -63,7 +80,13 @@ int tryToAddProduct(int productId, int nToAdd, int *clientOrderedProducts){
     if(clientOrderedProducts[index] >= nToAdd){//if the client is trying to add product that he previusly removed
         serverProductList[index].quantity += nToAdd;
         clientOrderedProducts[index] -= nToAdd;
-        updateAllClients = 1;
+        #ifdef WIN32
+        //TODO
+        #elif __APPLE__
+        dispatch_semaphore_signal(semaphore);
+        #else
+        sem_post(semUpdateAllClients);
+        #endif
     }else{
         customLeaveCriticalSection();
         return -1;

@@ -4,6 +4,10 @@
 #include <stdio.h>
 #ifdef WIN32
 #include <windows.h>
+#elif __APPLE__
+#include <dispatch/dispatch.h>
+#else
+#include <semaphore.h>
 #endif
 
 #include "./socketFunctions.h"
@@ -13,9 +17,15 @@
 #include "../utils/timeStamp.h"
 #include "../utils/customCriticalSection.h"
 
-extern int updateAllClients;
 extern int connectedSockets[MAX_CLIENT];
 extern int nConnectedClient;
+#ifdef WIN32
+//TODO
+#elif __APPLE__
+extern dispatch_semaphore_t semaphore;
+#else
+extern sem_t semUpdateAllClients;
+#endif
 
 #ifdef WIN32
 DWORD WINAPI handleUpdateClients(void *params) {
@@ -23,14 +33,16 @@ DWORD WINAPI handleUpdateClients(void *params) {
 void *handleUpdateClients(void *params){
 #endif
     while(1){
+        #ifdef WIN32
+        //TODO
+        #elif __APPLE__
+        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+        #else
+        sem_wait(semUpdateAllClients);
+        #endif
         customEnterCriticalSection();
-        if (updateAllClients == 1){
-            //timestamp();
-            //printf("-> Sending updated list to all client");
-            for (int i = 0; i < nConnectedClient; ++i){
-                sendProductListToClient(connectedSockets[i]);
-            }
-            updateAllClients = 0;
+        for (int i = 0; i < nConnectedClient; ++i){
+            sendProductListToClient(connectedSockets[i]);
         }
         customLeaveCriticalSection();
     }

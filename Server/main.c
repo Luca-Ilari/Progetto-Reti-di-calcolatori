@@ -3,11 +3,20 @@
 #ifdef WIN32
 #include <winsock2.h>
 #include <windows.h>
+#elif __APPLE__
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <dispatch/dispatch.h>
+#include <string.h>
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <semaphore.h>
 #include <pthread.h>
 #include <string.h>
 #endif
@@ -28,7 +37,13 @@ CRITICAL_SECTION CriticalSection;
 pthread_mutex_t CriticalSection;
 #endif
 
-int updateAllClients = 0;
+#ifdef __APPLE__
+dispatch_semaphore_t semaphore;
+#elif WIN32
+
+#else
+sem_t semUpdateAllClients;
+#endif
 int nConnectedClient = 0;
 int connectedSockets[MAX_CLIENT];
 
@@ -58,7 +73,13 @@ int main(int argc, char* argv[]){
 
     #ifdef WIN32
     InitializeCriticalSection(&CriticalSection);
+    //TODO init semaphore
+    #elif __APPLE__
+    semaphore = dispatch_semaphore_create(0);
+    #else
+    sem_init(&semUpdateAllClients, 0, 0);
     #endif
+    
     
     if (bind(sockfd, (struct sockaddr*)&serv_addr,sizeof(serv_addr)) < 0){
         perror("\nERROR on binding");
