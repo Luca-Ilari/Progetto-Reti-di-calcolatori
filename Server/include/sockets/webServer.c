@@ -113,6 +113,8 @@ int findChar(char *arr, char charToFind){
 char *decodeRequest(char *buffer){
     int lineLen = getLineLen(buffer);
     char *line = calloc(lineLen+1, sizeof(char));
+    if (line == NULL)
+        return NULL;
 
     copyString(line, lineLen, buffer);
 
@@ -123,6 +125,8 @@ char *decodeRequest(char *buffer){
     int pathLen = findChar(res, ' ');
 
     char *pathRequested = calloc(pathLen+1, sizeof(char)); //path len +1 to end the string with \0
+    if (pathRequested == NULL)
+        return NULL;
     copyString(pathRequested, pathLen, res);
     free(line);
     line = NULL;
@@ -176,7 +180,7 @@ int respond(char *pageRequested,int newsockfd){
 }
 
 #ifdef WIN32
-DWORD WINAPI webServer(){
+DWORD WINAPI webServer(void *param){
 #else
 void *webServer(void *param){
 #endif
@@ -189,7 +193,11 @@ void *webServer(void *param){
     if(status < 0){
         timestamp();
         printf("ERROR: Can't start webserver\n");
+        #ifdef WIN32
+        return -1;
+        #else
         return NULL;
+        #endif
     }
     if (bind(sockfd, (struct sockaddr*)&serv_addr,sizeof(serv_addr)) < 0){
         timestamp();
@@ -197,11 +205,19 @@ void *webServer(void *param){
         timestamp();
         printf("ERROR: Probably the port is already in use or . Try with a different port\n");
         fflush(stdout);
+        #ifdef WIN32
+        return -1;
+        #else
         return NULL;
+        #endif
     }
 
     if(tryToReadFile("./html/index.html") == -1) {
+        #ifdef WIN32
+        return -1;
+        #else
         return NULL;
+        #endif
     }
 
     timestamp();
@@ -213,12 +229,15 @@ void *webServer(void *param){
         //receive request
         int newsockfd = acceptNewConnection(sockfd,0);
         memset(buffer, '\0', sizeof(buffer));
-        recv(newsockfd,buffer,BUFFER_SIZE-1,0);
- 
-        char *pageRequested = decodeRequest(buffer);
-        respond(pageRequested, newsockfd);
-        free(pageRequested);
-        pageRequested = NULL;
+        int res = recv(newsockfd,buffer,BUFFER_SIZE-1,0);
+        if (res > 0){
+            char *pageRequested = decodeRequest(buffer);
+            if (pageRequested != NULL){
+                respond(pageRequested, newsockfd);
+                free(pageRequested);
+                pageRequested = NULL;
+            }
+        }
 
         #ifdef WIN32
         closesocket(newsockfd);
