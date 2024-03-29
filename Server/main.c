@@ -49,18 +49,19 @@ struct product *serverProductList;
 int PRODUCT_NUMBER = 0;
 
 int main(int argc, char* argv[]){
-    if (argc < 2){
-        timestamp();
-        printf("Can't start server. Please specify port number\n");
+    if (argc < 3){
+        //timestamp();
+        printf("Can't start server. Please specify port number of the server and the webserver\n./Server [server-port] [webserver port]\n");
         return -1;
     }
 
     readProductsFromFile("./products.csv");
-    
+
     timestamp();
     printf("Starting server on port %s", argv[1]);
-    
+
     int sockfd, portno;
+    int webserverPort= atoi(argv[2]);
     struct sockaddr_in serv_addr;
     portno = atoi(argv[1]);
 
@@ -87,11 +88,11 @@ int main(int argc, char* argv[]){
     printf("Server started\n");
 
     #ifdef WIN32
-    CreateThread(NULL, 0, webServer, NULL, 0, NULL);
+    CreateThread(NULL, 0, webServer, &webserverPort, 0, NULL);
     CreateThread(NULL, 0, handleUpdateClients, NULL, 0, NULL);
     #else
     pthread_t thread_id = 0;
-    pthread_create(&thread_id, NULL, webServer, NULL);
+    pthread_create(&thread_id, NULL, webServer, &webserverPort);
     pthread_create(&thread_id, NULL, handleUpdateClients, NULL);
     #endif
 

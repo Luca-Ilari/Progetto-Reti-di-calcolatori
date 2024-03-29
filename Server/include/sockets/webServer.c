@@ -75,7 +75,8 @@ int tryToReadFile(char *file){
     htmlFile = fopen(file, "r");
     if(htmlFile == NULL){
         timestamp();
-        printf("Can't find \"%s\" webserver not started", file);
+        printf("ERROR: Can't find \"%s\" webserver not started\n", file);
+        fflush(stdout);
         return -1;
     }
     fclose(htmlFile);
@@ -177,31 +178,36 @@ int respond(char *pageRequested,int newsockfd){
 #ifdef WIN32
 DWORD WINAPI webServer(){
 #else
-void *webServer(){
+void *webServer(void *param){
 #endif
-    int sockfd, portno = 8080;
+    int sockfd;
+    int portno = *(int*)param;
     char buffer[BUFFER_SIZE];
     struct sockaddr_in serv_addr;
 
     int status = startWebServer(&portno, &sockfd, &serv_addr);
     if(status < 0){
         timestamp();
-        printf("Can't start webserver");
-        return -1;
+        printf("ERROR: Can't start webserver\n");
+        return NULL;
     }
     if (bind(sockfd, (struct sockaddr*)&serv_addr,sizeof(serv_addr)) < 0){
-        perror("\nCan't start webserver");
-        return -1;
+        timestamp();
+        printf("ERROR: Can't start webserver: Error on binding.");
+        timestamp();
+        printf("ERROR: Probably the port is already in use or . Try with a different port\n");
+        fflush(stdout);
+        return NULL;
     }
 
-    if(tryToReadFile("./html/index.html") == -1){
-        timestamp();
-        printf("Can't start webserver");
-        return -1;
+    if(tryToReadFile("./html/index.html") == -1) {
+        return NULL;
     }
 
     timestamp();
     printf("Web server started http://localhost:%d", portno);
+
+    fflush(stdout);
 
     while(1){
         //receive request
