@@ -55,6 +55,7 @@ public class ClientConnessione {
     }
 
     public void startConnessione() {
+        isStopThreadConnessione = false;
         Thread threadConnessione = new Thread(() -> {
             while (!isStopThreadConnessione) {
                 System.out.println("Thread di tentativo di connessione avviato.");
@@ -63,7 +64,6 @@ public class ClientConnessione {
                     aggiornaStato(true);
                     readLoop();
                     terminaConnessioneConErroreServer();
-
                 } catch (Exception e) {
                     System.err.println("Errore durante la connessione: " + e.getMessage());
                 }
@@ -77,7 +77,7 @@ public class ClientConnessione {
 
         ClientNegozioInterfaccia clientNegozioInterfaccia = controllerClientNegozio.getClientNegozioInterfaccia();
         clientNegozioInterfaccia.aggiornaStatoTransazioneServerError();
-        controllerClientNegozio.azzeraDati();
+       // controllerClientNegozio.azzeraDati();
     }
 
 

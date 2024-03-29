@@ -59,6 +59,7 @@ public class ChangeIP extends JFrame {
         });
 
     }
+
     private void setProprietaTextField(JTextField textField) {
         textField.setPreferredSize(new Dimension(200, 30)); // Dimensioni del JTextField
         textField.setFont(new Font("Arial", Font.PLAIN, 14)); // Impostazione del font e dello stile del testo
@@ -70,15 +71,18 @@ public class ChangeIP extends JFrame {
         // Aggiungiamo un effetto di ombreggiatura al JTextField
         textField.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
-                textField.setBorder(BorderFactory.createLineBorder(new Color(51, 153, 255))); // Cambia il colore del bordo quando il JTextField ottiene il focus
+                textField.setBorder(BorderFactory.createLineBorder(new Color(51, 153, 255))); // Cambia il colore del
+                // bordo quando il JTextField ottiene il focus
             }
 
             public void focusLost(java.awt.event.FocusEvent evt) {
-                textField.setBorder(BorderFactory.createLineBorder(Color.GRAY)); // Ripristina il colore del bordo quando il JTextField perde il focus
+                textField.setBorder(BorderFactory.createLineBorder(Color.GRAY)); // Ripristina il colore del bordo
+                // quando il JTextField perde il focus
             }
         });
 
     }
+
     public void setConnectionDetails() {
         inputPorta.setText(String.valueOf(clientConnessione.getServerPort()));
         inputIp.setText(clientConnessione.getServerAddress());
@@ -156,7 +160,8 @@ public class ChangeIP extends JFrame {
 
         // Aggiornamento dell'indirizzo IP nel client di connessione
         clientConnessione.aggiornaIP(newIP, Integer.parseInt(newPorta));
-
+        clientConnessione.chiusuraConnessione();
+        clientConnessione.startConnessione();
 
         // Elimina la finestra
         this.mainPanel.setEnabled(true);
