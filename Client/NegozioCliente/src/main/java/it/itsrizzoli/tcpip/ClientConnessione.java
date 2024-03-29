@@ -27,6 +27,7 @@ public class ClientConnessione {
     private int serverPort = 5555;
     public boolean onConnessione = false;
     private final static Logger logger = Logger.getLogger("Avvisi");
+    private boolean isStopThreadConnessione;
 
     private ControllerClientNegozio controllerClientNegozio;
 
@@ -55,16 +56,14 @@ public class ClientConnessione {
 
     public void startConnessione() {
         Thread threadConnessione = new Thread(() -> {
-            while (true) {
+            while (!isStopThreadConnessione) {
                 System.out.println("Thread di tentativo di connessione avviato.");
                 try {
                     tentaConnessione();
-
                     aggiornaStato(true);
-
                     readLoop();
-
                     terminaConnessioneConErroreServer();
+
                 } catch (Exception e) {
                     System.err.println("Errore durante la connessione: " + e.getMessage());
                 }
@@ -75,10 +74,9 @@ public class ClientConnessione {
 
     private void terminaConnessioneConErroreServer() {
         aggiornaStato(false);
+
         ClientNegozioInterfaccia clientNegozioInterfaccia = controllerClientNegozio.getClientNegozioInterfaccia();
-
         clientNegozioInterfaccia.aggiornaStatoTransazioneServerError();
-
         controllerClientNegozio.azzeraDati();
     }
 
@@ -86,15 +84,7 @@ public class ClientConnessione {
     public void aggiornaIP(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
-
-        logger.warning(" --- CHIUSURA SOCKET ---");
-
-        chiusuraConnessione();
-
-        logger.info("Nuovo credenziali SERVER: \n IP --> " + serverAddress + " | PORTA --> " + serverPort);
-
-        startConnessione();
-
+        logger.info("Nuovi dettagli del server:\nIP --> " + serverAddress + "\nPORTA --> " + serverPort);
     }
 
     public void aggiornaStato(boolean stato) {
@@ -109,8 +99,8 @@ public class ClientConnessione {
         logger.warning(message);
 
         logger.info(" Thread connessione diveenta di lettura loop.");
-        String risposta;
         try {
+            String risposta;
             while ((risposta = in.readLine()) != null) {
                 logger.info(" - Server: " + risposta);
                 gestioneJsonCodiceStato(risposta);
@@ -251,7 +241,7 @@ public class ClientConnessione {
 
     public void chiusuraConnessione() {
         onConnessione = false;
-
+        isStopThreadConnessione = true;
         try {
             if (out != null) {
                 out.close();
@@ -274,6 +264,7 @@ public class ClientConnessione {
             try {
                 connessioneAlServer();
                 connected = true;
+                logger.severe("Tentativo");
             } catch (IOException e) {
                 logger.severe("Connessione rifiutata!!\n\n");
                 logger.info("Tentativo di riconnessione...");
