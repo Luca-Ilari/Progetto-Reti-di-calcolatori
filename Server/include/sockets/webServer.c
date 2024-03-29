@@ -61,7 +61,8 @@ char *buildHtmlResponse(char *filePath){
     fseek(htmlFile, 0, SEEK_SET); //reset file pointer to the start of the file
 
     char *html = calloc((htmlLen+1), sizeof(char));
-
+    if (html == NULL)
+        return NULL;
     for (int i = 0; i < htmlLen; ++i) {
         html[i] = (char)fgetc(htmlFile);
     }
