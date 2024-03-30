@@ -42,7 +42,6 @@ public class ControllerClientNegozio {
 
     }
 
-
     public ClientNegozioInterfaccia getClientNegozioInterfaccia() {
         return clientNegozioInterfaccia;
     }
@@ -136,11 +135,18 @@ public class ControllerClientNegozio {
         clientNegozioInterfaccia.addSingleTransazioneVenditaAwait(transazione, getProdottiCarrello());
     }
 
-
     public void azzeraDati() {
         modelloClientNegozio.azzeraDati();
         clientNegozioInterfaccia.svuotaTabelleDati();
     }
 
+    public void azzeraDatiNegozio() {
+        modelloClientNegozio.azzeraDatiNegozio();
+        clientNegozioInterfaccia.svuotaTabelleDatiNegozio();
+    }
+
+    public void aggiornaStatoTransazioneServerError() {
+        clientNegozioInterfaccia.aggiornaStatoTransazioneServerError();
+    }
 
 }

@@ -354,7 +354,7 @@
                               <text value="N° transazioni"/>
                             </properties>
                           </component>
-                          <component id="a8728" class="javax.swing.JTextField" binding="inputViaggi">
+                          <component id="a8728" class="javax.swing.JTextField" binding="inputNumeroTransazioni">
                             <constraints>
                               <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false">
                                 <minimum-size width="200" height="-1"/>
@@ -382,7 +382,7 @@
                               <horizontalAlignment value="0"/>
                             </properties>
                           </component>
-                          <component id="ac83f" class="javax.swing.JLabel">
+                          <component id="ac83f" class="javax.swing.JLabel" binding="labelIDProdotto">
                             <constraints>
                               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>

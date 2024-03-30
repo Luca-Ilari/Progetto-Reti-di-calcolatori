@@ -4,20 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ModelloClientNegozio {
-    private boolean statoNegozioOnline = false;
     private List<Prodotto> prodottiCarrello = new ArrayList<>();
     private List<Prodotto> prodottiNegozio = new ArrayList<>();
     private List<Transazione> listaTransazioneAcquisto = new ArrayList<>();
     private List<Transazione> listaTransazioneVendita = new ArrayList<>();
-
-
-    public boolean isStatoNegozioOnline() {
-        return statoNegozioOnline;
-    }
-
-    public void setStatoNegozioOnline(boolean statoNegozioOnline) {
-        this.statoNegozioOnline = statoNegozioOnline;
-    }
 
     public List<Prodotto> getProdottiCarrello() {
         return prodottiCarrello;
@@ -77,15 +67,6 @@ public class ModelloClientNegozio {
         prodottiCarrello.remove(prodotto);
     }
 
-    private Prodotto trovaProdotto(int idProdotto, List<Prodotto> prodotti) {
-        for (Prodotto prodotto : prodotti) {
-            if (prodotto.getIdProdotto() == idProdotto) {
-                return prodotto;
-            }
-        }
-        return null;
-    }
-
     public Transazione trovaTransazione(int idTransazione) {
         for (Transazione transazione : listaTransazioneAcquisto) {
             if (transazione.getIdTransazione() == idTransazione) {
@@ -109,21 +90,31 @@ public class ModelloClientNegozio {
         return null;
     }
 
-    public int sommaQuantitaCarrello() {
-        int somma = 0;
-
-        for (Prodotto prodotto : prodottiCarrello) {
-            somma += prodotto.getQuantitaDisponibile();
-        }
-
-        return somma;
+    public void azzeraDati() {
+        svuotaProdottiCarrello();
+        svuotaProdottiNegozio();
+        svuotaListaTransazioneVendita();
+        svuotaListaTransazioneAcquisto();
     }
 
+    public void azzeraDatiNegozio() {
+        svuotaProdottiNegozio();
+    }
 
-    public void azzeraDati() {
+    private void svuotaProdottiCarrello() {
         prodottiCarrello.clear();
+    }
+
+    private void svuotaProdottiNegozio() {
         prodottiNegozio.clear();
+    }
+
+    private void svuotaListaTransazioneVendita() {
         listaTransazioneVendita.clear();
+    }
+
+    private void svuotaListaTransazioneAcquisto() {
         listaTransazioneAcquisto.clear();
     }
+
 }

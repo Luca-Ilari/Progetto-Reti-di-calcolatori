@@ -15,7 +15,7 @@ public class ChangeIP extends JFrame {
     private JPanel panelMainForm;
     private JTextField inputPorta;
     private final JFrame mainPanel;
-    private ClientConnessione clientConnessione;
+    private final ClientConnessione clientConnessione;
 
     public ChangeIP(ClientConnessione clientConnessione, JFrame jFrame) {
 
@@ -160,8 +160,6 @@ public class ChangeIP extends JFrame {
 
         // Aggiornamento dell'indirizzo IP nel client di connessione
         clientConnessione.aggiornaIP(newIP, Integer.parseInt(newPorta));
-        clientConnessione.chiusuraConnessione();
-        clientConnessione.startConnessione();
 
         // Elimina la finestra
         this.mainPanel.setEnabled(true);

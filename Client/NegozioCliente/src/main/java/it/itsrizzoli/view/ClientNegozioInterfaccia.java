@@ -14,8 +14,6 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -36,7 +34,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     private JButton btnCreaTransazioni;
     private JTextField inputIdProdotto;
     private JTextField inputQuantita;
-    private JTextField inputViaggi;
+    private JTextField inputNumeroTransazioni;
     private JTextField inputNome;
     private JButton btnInviaTransazione;
     private JRadioButton radioBtnCompra;
@@ -47,6 +45,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     private JButton btnStopTransazioni;
     private JPanel panelMaxQuantita;
     private JLabel labelQuantitaTot;
+    private JLabel labelIDProdotto;
 
     private boolean isConnessoAlServer = false;
     private ControllerClientNegozio controllerClientNegozio;
@@ -67,50 +66,35 @@ public class ClientNegozioInterfaccia extends JFrame {
 
     }
 
-    private void impostaListerTextField(JTextField jTextField) {
-        jTextField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                // Metodo chiamato quando viene inserito del testo nel JTextField
-                aggiornaQuantitaRichiestaLabel();
-
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                // Metodo chiamato quando viene rimosso del testo dal JTextField
-                aggiornaQuantitaRichiestaLabel();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                aggiornaQuantitaRichiestaLabel();
-
-            }
-        });
-    }
 
     private void aggiornaQuantitaRichiestaLabel() {
         boolean isVendita = radioBtnVendi.isSelected();
-        String numberFormat = creaNumberFormatter(MAX_QUANTITA);
-        String quantitaStr = inputQuantita.getText().trim();
-        String viaggiStr = inputViaggi.getText().trim();
+        String numeroMassimoFormat = creaNumberFormatter(MAX_QUANTITA);
+        String quantitaStringa = inputQuantita.getText().trim();
+        String numeroTransazioniStringa = inputNumeroTransazioni.getText().trim();
 
-        if (quantitaStr.isEmpty() || viaggiStr.isEmpty() || !quantitaStr.matches("\\d+") || !viaggiStr.matches("\\d+")) {
-            labelQuantitaTot.setText("0 / " + numberFormat + " prodotti");
+        if (quantitaStringa.isEmpty() || numeroTransazioniStringa.isEmpty() || !quantitaStringa.matches("\\d+") || !numeroTransazioniStringa.matches("\\d+")) {
+            labelQuantitaTot.setText("0 / " + numeroMassimoFormat + " prodotti");
             return;
         }
 
-        int quantita = Integer.parseInt(quantitaStr);
-        int nTransazioni = Integer.parseInt(viaggiStr);
-        int quantitaTotale = getQuantita() + (isVendita ? -quantita : quantita) * nTransazioni;
-        String quantitaTotaleFormat = creaNumberFormatter(quantitaTotale);
-        labelQuantitaTot.setText(quantitaTotaleFormat + " / " + numberFormat + " prodotti");
+        int quantita = Integer.parseInt(quantitaStringa);
+        int numeroTransazioni = Integer.parseInt(numeroTransazioniStringa);
 
-        // Imposta il colore del testo in base alla quantità totale
+        int variazioneQuantita = (isVendita ? -quantita : quantita);
+        int quantitaNuova = numeroTransazioni * variazioneQuantita;
+        int quantitaTotale = getQuantita() + quantitaNuova;
+
+        String operatore = isVendita ? "-" : "+";
+
+        String output = String.format("(%s%s) %d / %s prodotti", operatore,
+                creaNumberFormatter(Math.abs(quantitaNuova)), getQuantita(), numeroMassimoFormat);
+
+        labelQuantitaTot.setText(output);
+
         labelQuantitaTot.setForeground(quantitaTotale < 0 || quantitaTotale > MAX_QUANTITA ? Color.RED : Color.GRAY);
-
     }
+
 
     public void setControllerClientNegozio(ControllerClientNegozio controllerClientNegozio) {
         this.controllerClientNegozio = controllerClientNegozio;
@@ -143,7 +127,8 @@ public class ClientNegozioInterfaccia extends JFrame {
         creaTabellaPanello(tblTransazioniAcquisto, transazioniColonne, scrollPanelTransazioniAcquisto);
         creaTabellaPanello(tblTransazioniVendita, transazioniColonne, scrollPanelTransazioniVendita);
 
-        impostaGestoreSelezioneRiga(tblNegozio);
+        impostaGestoreSelezioneRigaNegozio();
+
 
         disattivaRigaTabelle(tblCarrello);
         disattivaRigaTabelle(tblTransazioniAcquisto);
@@ -163,10 +148,9 @@ public class ClientNegozioInterfaccia extends JFrame {
         setProprietaRadioButton(radioBtnVendi);
         attivaListenerRadioButton();
 
-        impostaListerTextField(inputViaggi);
+        impostaListerTextField(inputNumeroTransazioni);
         impostaListerTextField(inputQuantita);
         labelQuantitaTot.setText(0 + " / " + MAX_QUANTITA_FORMATTER + " prodotti");
-
 
         pack();
         setLocationRelativeTo(null);
@@ -181,6 +165,8 @@ public class ClientNegozioInterfaccia extends JFrame {
                 radioBtnVendi.setSelected(false); // Disattiva il radio button per la vendita
             }
             aggiornaQuantitaRichiestaLabel();
+            inputIdProdotto.setVisible(true);
+            labelIDProdotto.setVisible(true);
         });
 
 // Aggiungi un ActionListener al radio button per la vendita
@@ -189,23 +175,49 @@ public class ClientNegozioInterfaccia extends JFrame {
                 radioBtnCompra.setSelected(false); // Disattiva il radio button per l'acquisto
             }
             aggiornaQuantitaRichiestaLabel();
+            inputIdProdotto.setVisible(false);
+            labelIDProdotto.setVisible(false);
+
         });
     }
 
-    private void impostaGestoreSelezioneRiga(JTable table) {
-        table.getSelectionModel().addListSelectionListener(event -> {
+    private void impostaGestoreSelezioneRigaNegozio() {
+        this.tblNegozio.getSelectionModel().addListSelectionListener(event -> {
             if (!event.getValueIsAdjusting()) {
-                int selectedRow = table.getSelectedRow();
+                int selectedRow = tblNegozio.getSelectedRow();
                 if (selectedRow != -1) {
                     System.out.println("Hai cliccato sulla riga: " + selectedRow);
-                    int idProdotto = (int) table.getValueAt(selectedRow, 0);
-                    String nome = (String) table.getValueAt(selectedRow, 1);
+                    int idProdotto = Integer.parseInt(tblNegozio.getValueAt(selectedRow, 0).toString());
+                    String nome = (String) tblNegozio.getValueAt(selectedRow, 1);
                     inputIdProdotto.setText(String.valueOf(idProdotto));
                     inputNome.setText(nome);
                 }
             }
         });
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        this.tblNegozio.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    }
+
+    private void impostaListerTextField(JTextField jTextField) {
+        jTextField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                // Metodo chiamato quando viene inserito del testo nel JTextField
+                aggiornaQuantitaRichiestaLabel();
+
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                // Metodo chiamato quando viene rimosso del testo dal JTextField
+                aggiornaQuantitaRichiestaLabel();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                aggiornaQuantitaRichiestaLabel();
+
+            }
+        });
     }
 
     private void disattivaRigaTabelle(JTable table) {
@@ -232,7 +244,7 @@ public class ClientNegozioInterfaccia extends JFrame {
         radioButton.setOpaque(false);
     }
 
-    public synchronized int updateProgressBar(int quantita) {
+    public synchronized int aggiornaProgressBar(int quantita) {
         int currentValue = progressBarQuantita.getValue();
         int newValue = currentValue + quantita;
 
@@ -255,7 +267,6 @@ public class ClientNegozioInterfaccia extends JFrame {
 
 
     public synchronized int getQuantita() {
-        System.out.println("progressBar.getValue() = " + progressBarQuantita.getValue());
         return progressBarQuantita.getValue();
     }
 
@@ -311,6 +322,7 @@ public class ClientNegozioInterfaccia extends JFrame {
 
 
         btnInviaTransazione.addActionListener(e -> {
+            progressBarTransazioni.setForeground(Color.BLUE);
 
             if (!controllerClientNegozio.getClientConnessione().onConnessione) {
                 JOptionPane.showMessageDialog(null, "Non sei connesso a un server!", "Errore",
@@ -324,16 +336,17 @@ public class ClientNegozioInterfaccia extends JFrame {
             progressBarTransazioni.setValue(0);
             progressBarTransazioni.setString("pronti!");
             String idProdottoStr = inputIdProdotto.getText().trim();
-            String nome = inputNome.getText().trim();
+            String nomeProdotto = inputNome.getText().trim();
             String quantitaStr = inputQuantita.getText().trim();
-            String viaggiStr = inputViaggi.getText().trim();
+            String viaggiStr = inputNumeroTransazioni.getText().trim();
 
-            if (idProdottoStr.isEmpty() || nome.isEmpty() || quantitaStr.isEmpty() || viaggiStr.isEmpty()) {
+            if (idProdottoStr.isEmpty() || nomeProdotto.isEmpty() || quantitaStr.isEmpty() || viaggiStr.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Per favore, inserisci tutti i campi.", "Avviso",
                         JOptionPane.WARNING_MESSAGE);
                 btnInviaTransazione.setEnabled(true);
                 return;
             }
+
 
             int idProdotto;
             int quantita;
@@ -358,22 +371,33 @@ public class ClientNegozioInterfaccia extends JFrame {
                 return;
             }
 
-            boolean trovatoProdotto = false;
-            for (Prodotto prodotto : controllerClientNegozio.getProdottiNegozio()) {
-                if (prodotto.getIdProdotto() == idProdotto) {
-                    trovatoProdotto = true;
-                    break;
+            boolean isVendita = radioBtnVendi.isSelected();
 
+            boolean trovatoProdotto = false;
+
+            List<Prodotto> prodotti = isVendita ? controllerClientNegozio.getProdottiCarrello() :
+                    controllerClientNegozio.getProdottiNegozio();
+            for (Prodotto prodotto : prodotti) {
+                if ((isVendita && prodotto.getNome().equals(nomeProdotto)) || (prodotto.getIdProdotto() == idProdotto && prodotto.getNome().equals(nomeProdotto))) {
+                    trovatoProdotto = true;
+                    idProdotto = prodotto.getIdProdotto();
+                    break;
                 }
             }
+
             if (!trovatoProdotto) {
-                JOptionPane.showMessageDialog(null, "Il prodotto selezionato non è disponibile nel negozio.",
-                        "Prodotto non trovato", JOptionPane.WARNING_MESSAGE);
+                String errorMessage;
+                if (isVendita) {
+                    errorMessage = "Il prodotto selezionato non è presente nel carrello oppure \n assicurati di aver " +
+                            "inserito il nome corretto.";
+                } else {
+                    errorMessage = "Il prodotto selezionato non è presente nel negozio oppure \n assicurati di aver " +
+                            "inserito il nome e l'ID corretti.";
+                }
+                JOptionPane.showMessageDialog(null, errorMessage, "Prodotto non trovato", JOptionPane.WARNING_MESSAGE);
                 btnInviaTransazione.setEnabled(true);
                 return;
             }
-
-            boolean isVendita = radioBtnVendi.isSelected();
 
             String message = isVendita ? "Quantità totale richiesta non disponibile." : "Stai chiedendo una " +
                     "quantità oltre il limite massimo.";
@@ -402,7 +426,8 @@ public class ClientNegozioInterfaccia extends JFrame {
 
         btnStopTransazioni.addActionListener(e -> {
             isFermoThreadTransazioni = true;
-            progressBarTransazioni.setString(progressBarTransazioni.getString() + " conclusi ");
+            progressBarTransazioni.setString(progressBarTransazioni.getString() + " concluse ");
+            progressBarTransazioni.setForeground(Color.red);
         });
     }
 
@@ -455,7 +480,7 @@ public class ClientNegozioInterfaccia extends JFrame {
                 int codiceStato = isVendita ? CodiciStatoServer.AGGIUNGI_PRODOTTO : CodiciStatoServer.RIMUOVI_PRODOTTO;
 
                 ClientConnessione clientConnessione = controllerClientNegozio.getClientConnessione();
-                clientConnessione.inviaSingolaTransazione(transazione, codiceStato);
+                clientConnessione.inviaTransazioneSingola(transazione, codiceStato);
 
                 // Aggiorna la barra di avanzamento all'interno dell'EDT
                 if (isVendita) {
@@ -522,36 +547,6 @@ public class ClientNegozioInterfaccia extends JFrame {
 
     }
 
-    public void addAllTransazioneCompraAwait(List<Transazione> transazioneList, List<Prodotto> prodottiNegozio) {
-        SwingUtilities.invokeLater(() -> {
-            DefaultTableModel model = (DefaultTableModel) tblTransazioniAcquisto.getModel();
-
-            boolean trovatoNelCarrello = false;
-            for (Transazione transazione : transazioneList) {
-                for (Prodotto prodotto : prodottiNegozio) {
-                    if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
-                        Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(),
-                                prodotto.getPrezzo() + "€", transazione.getQuantita(),
-                                EStato.IN_ATTESA_DI_CONFERMA.getValue()};
-                        model.addRow(rowData);
-                        trovatoNelCarrello = true;
-                    }
-                }
-
-            }
-            model.fireTableDataChanged();
-
-            System.out.println(" --> UI: Lista transazione aggiunta!!");
-
-            if (!trovatoNelCarrello) {
-                JOptionPane.showMessageDialog(null, "Nessun Prodotto della transazione è presente nel Carrello",
-                        "Attenzione", JOptionPane.WARNING_MESSAGE);
-            }
-        });
-
-    }
-
-
     public void addSingleTransazioneVenditaAwait(Transazione transazione, List<Prodotto> prodottiCarrello) {
         SwingUtilities.invokeLater(() -> {
             DefaultTableModel model = (DefaultTableModel) tblTransazioniVendita.getModel();
@@ -585,6 +580,9 @@ public class ClientNegozioInterfaccia extends JFrame {
                 if (statoTransazione.equals(EStato.IN_ATTESA_DI_CONFERMA.getValue())) {
                     boolean isFull = incrementaQuantitaCarrello(transazione.getIdProdotto(),
                             transazione.getQuantita(), prodottiNegozio, prodottiCarrello);
+
+                    aggiornaQuantitaRichiestaLabel();
+
                     if (isFull) {
                         transazioniTableModel.setValueAt(EStato.QUANTITA_MASSIMA_RAGGIUNTA.getValue(), riga,
                                 COLONNA_STATO); // Imposta il
@@ -623,6 +621,8 @@ public class ClientNegozioInterfaccia extends JFrame {
                 if (statoTransazione.equals(EStato.IN_ATTESA_DI_CONFERMA.getValue())) {
                     boolean isFull = decrementaQuantitaCarrello(transazione.getIdProdotto(),
                             transazione.getQuantita(), prodottiCarrello);
+                    aggiornaQuantitaRichiestaLabel();
+
                     if (isFull) {
                         transazioniTableModel.setValueAt(EStato.QUANTITA_MINIMA_RAGGIUNTA.getValue(), riga,
                                 COLONNA_STATO); // Imposta il
@@ -719,6 +719,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     public synchronized boolean incrementaQuantitaCarrello(int idProdotto, int quantitaAggiunta,
                                                            List<Prodotto> prodottiNegozio,
                                                            List<Prodotto> prodottiCarrello) {
+
         if (getQuantita() >= MAX_QUANTITA) {
             System.out.println(" Attenzione: QUANTITA MAX RAGGIUNTA");
             return true;
@@ -741,7 +742,7 @@ public class ClientNegozioInterfaccia extends JFrame {
             modelloCarrello.addRow(new String[]{nuovoProdotto.getNome(), String.valueOf(quantitaAggiunta)});
 
             modelloCarrello.fireTableDataChanged();
-            updateProgressBar(quantitaAggiunta);
+            aggiornaProgressBar(quantitaAggiunta);
             return false;
         }
 
@@ -758,7 +759,9 @@ public class ClientNegozioInterfaccia extends JFrame {
                 }
                 modelloCarrello.setValueAt(String.valueOf(nuovaQuantita), riga, 1); // Aggiorna la quantità
                 modelloCarrello.fireTableDataChanged();
-                updateProgressBar(quantitaAggiunta);
+                aggiornaProgressBar(quantitaAggiunta);
+
+                prodotto.setQuantitaDisponibile(nuovaQuantita);
                 return false;
             }
         }
@@ -781,6 +784,7 @@ public class ClientNegozioInterfaccia extends JFrame {
             System.out.println(" Attenzione: Prodotto non trovato nel carrello");
             return false;
         }
+
         // Aggiornamento della quantità del prodotto nel carrello
         for (int riga = 0; riga < modelloCarrello.getRowCount(); riga++) {
             String nomeProdotto = (String) tblCarrello.getValueAt(riga, 0);
@@ -791,20 +795,21 @@ public class ClientNegozioInterfaccia extends JFrame {
 
             int quantitaDisponibile = Integer.parseInt((String) tblCarrello.getValueAt(riga, 1));
             int nuovaQuantita = quantitaDisponibile - quantitaTogliere;
-
             if (getQuantita() - quantitaTogliere < 0) {
                 System.out.println(" Attenzione: la quantità richieste non è disponibile ");
                 return true;
             }
-
             modelloCarrello.setValueAt(String.valueOf(nuovaQuantita), riga, 1); // Aggiorna la quantità
 
-            int stato = updateProgressBar(-quantitaTogliere);
-            if (stato == -1) {
+            prodotto.setQuantitaDisponibile(nuovaQuantita);
+
+            aggiornaProgressBar(-quantitaTogliere);
+
+            if (prodotto.getQuantitaDisponibile() == 0) {
+                System.out.println(" Attenzione: Prodotto esaurito nel carrello");
                 modelloCarrello.removeRow(riga);
                 controllerClientNegozio.removeProdottoCarrello(nomeProdotto);
             }
-
             modelloCarrello.fireTableDataChanged();
             return false;
         }
@@ -864,6 +869,13 @@ public class ClientNegozioInterfaccia extends JFrame {
 
         labelQuantitaTot.setText(0 + "/" + creaNumberFormatter(MAX_QUANTITA) + " prodotti");
 
+    }
+
+    public void svuotaTabelleDatiNegozio() {
+        svuotaTabella(tblNegozio);
+        progressBarTransazioni.setValue(0);
+        progressBarTransazioni.setString(null);
+        labelQuantitaTot.setText(0 + "/" + creaNumberFormatter(MAX_QUANTITA) + " prodotti");
     }
 
     private void svuotaTabella(JTable table) {
