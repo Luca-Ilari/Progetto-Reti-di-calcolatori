@@ -2,7 +2,6 @@ package it.itsrizzoli.tcpip;
 
 import it.itsrizzoli.controller.ControllerClientNegozio;
 import it.itsrizzoli.model.Transazione;
-import it.itsrizzoli.tools.GestioneComunicazioneServer;
 
 import java.io.*;
 import java.net.*;

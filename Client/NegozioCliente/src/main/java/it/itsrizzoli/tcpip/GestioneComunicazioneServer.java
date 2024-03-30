@@ -1,4 +1,4 @@
-package it.itsrizzoli.tools;
+package it.itsrizzoli.tcpip;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import it.itsrizzoli.controller.ControllerClientNegozio;
 import it.itsrizzoli.model.Prodotto;
 import it.itsrizzoli.model.Transazione;
+import it.itsrizzoli.tools.CodiciStatoServer;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
