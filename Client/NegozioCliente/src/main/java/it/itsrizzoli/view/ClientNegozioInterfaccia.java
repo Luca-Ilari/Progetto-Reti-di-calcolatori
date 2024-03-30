@@ -118,7 +118,7 @@ public class ClientNegozioInterfaccia extends JFrame {
 
         panelCreaTransazione.setVisible(false);
 
-        setProperietaProgressBar(progressBarQuantita, MAX_QUANTITA, Color.BLUE); // Giallo scuro
+        setProperietaProgressBar(progressBarQuantita, MAX_QUANTITA, new Color(34, 120, 34)); // Giallo scuro
         setProperietaProgressBar(progressBarTransazioni, 100, new Color(34, 139, 34)); // Verde scuro
 
         TitledBorder border = (TitledBorder) panelMaxQuantita.getBorder();

@@ -182,7 +182,7 @@
                             </constraints>
                             <properties/>
                             <border type="empty" title="Max Quntità: ~" title-justification="2">
-                              <font name="JetBrains Mono" size="10" style="0"/>
+                              <font name="JetBrains Mono" size="12" style="0"/>
                             </border>
                             <children>
                               <component id="63ce7" class="javax.swing.JProgressBar" binding="progressBarQuantita">
