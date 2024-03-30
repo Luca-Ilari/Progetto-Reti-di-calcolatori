@@ -34,6 +34,7 @@ Qui di seguito, una rappresentazione grafica dei thread che il server utilizza p
 stateDiagram-v2
     ThreadAttivi
     state ThreadAttivi{
+        main --> webServer()
         main --> handleUpdateClients()
         main --> handleNewClient()
         state handleNewClient(){
