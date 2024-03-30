@@ -44,13 +44,49 @@ stateDiagram-v2
     }
 ```
 
-## Caratteristiche Client
-I client sono scritti in java e sono due:
-### Producer
-Il client producer, una volta connesso al server, aggiunge dei prodotti alla lista del server tramite una richiesta.
-I prodotti che il client può aggiungere possono essere creati dall'utente, specificando nome e prezzo, oppure utilizzando uno dei prodotti nella lista del server.
-### Consumer
-Il client consumer rimuove randomicamente dei prodotti dalla lista del server. Questa operazione può anche essere rifiutata dal server in caso non ci siano abbastanza prodotti.
+# Caratteristiche del Client
+Il client è stato sviluppato in Java, facendo ampio uso della libreria Swing per l'interfaccia utente e aderendo al pattern architetturale MVC (Model-View-Controller).
+
+Nota: *Assicurati di essere connesso al server prima di utilizzare queste funzionalità*
+#### Visualizzazione dei Prodotti
+Una volta connesso al server, sia il client Consumer che il client Producer consentono agli utenti di visualizzare i prodotti del negozio forniti dal server nella tabella "Prodotti Negozio". 
+Entrambi i client dispongono di un pulsante "switch user" per passare tra le interfacce utente Consumer e Producer.
+
+
+## Interfaccia Utente - Consumer
+Il Consumer ha la possibilità di:
+
+### Acquisto di Prodotti:
+
+1. **Premi il pulsante "compra"** per avviare il processo di acquisto.
+2. Il sistema genera automaticamente transazioni con ID prodotto e quantità casuali.
+3. Le transazioni vengono inviate al server per l'acquisto.
+4. Le transazioni effettuate sono visualizzate nella tabella "Transazioni Acquisite".
+5. Il server potrebbe respingere l'operazione se non ci sono abbastanza prodotti disponibili.
+6. Una barra di progresso monitora la quantità massima di prodotti che possono essere acquistati.
+
+### Richiesta di Rimborso dei Prodotti:
+
+1. **Premi il pulsante "rimborso"** per avviare il processo di rimborso.
+2. Il sistema genera automaticamente transazioni per i prodotti precedentemente acquistati, utilizzando ID e quantità casuali.
+3. Le transazioni di rimborso sono inviate al server.
+4. Le transazioni di rimborso sono visualizzate nella tabella "Transazioni Rimborsi".
+5. Il server potrebbe respingere l'operazione se non ci sono abbastanza prodotti disponibili per il rimborso.
+6. Una barra di progresso monitora la quantità massima di prodotti che possono essere restituiti.
+
+## Interfaccia Utente - Producer
+
+### Invio Prodotto:
+
+1. **Compila il modulo** disponibile nell'interfaccia Producer.
+2. Specifica l'ID del prodotto, il nome del prodotto oppure seleziona direttamente dalla tabella "Prodotti Negozio" la riga corrispondente al prodotto desiderato.
+3. Inserisci la quantità desiderata per ogni transazione e specifica il numero totale di transazioni da effettuare.
+4. **Premi il pulsante "invio"** per avviare il processo di invio delle transazioni al server.
+5. Una barra di progresso indica la progressione delle transazioni inviate al server.
+6. Assicurati di essere connesso al server prima di inviare le transazioni.
+
+**Nota:** Controlla attentamente i dettagli inseriti nel modulo prima di premere il pulsante "invio".
+
 
 # Esempi di come il client e il server comunicano
 Connessione di un client al server sulla porta 5555
