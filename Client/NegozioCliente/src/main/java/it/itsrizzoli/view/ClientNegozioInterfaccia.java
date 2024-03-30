@@ -113,8 +113,8 @@ public class ClientNegozioInterfaccia extends JFrame {
 
         panelCreaTransazione.setVisible(false);
 
-        setProperietaProgressBar(progressBarQuantita, MAX_QUANTITA, Color.ORANGE);
-        setProperietaProgressBar(progressBarTransazioni, 100, Color.BLUE);
+        setProperietaProgressBar(progressBarQuantita, MAX_QUANTITA, Color.BLUE); // Giallo scuro
+        setProperietaProgressBar(progressBarTransazioni, 100, new Color(34, 139, 34)); // Verde scuro
 
         TitledBorder border = (TitledBorder) panelMaxQuantita.getBorder();
         String MAX_QUANTITA_FORMATTER = creaNumberFormatter(MAX_QUANTITA);
@@ -322,7 +322,8 @@ public class ClientNegozioInterfaccia extends JFrame {
 
 
         btnInviaTransazione.addActionListener(e -> {
-            progressBarTransazioni.setForeground(Color.BLUE);
+            progressBarTransazioni.setForeground(new Color(34, 139, 34)); // Verde scuro
+
 
             if (!controllerClientNegozio.getClientConnessione().onConnessione) {
                 JOptionPane.showMessageDialog(null, "Non sei connesso a un server!", "Errore",
@@ -388,11 +389,12 @@ public class ClientNegozioInterfaccia extends JFrame {
             if (!trovatoProdotto) {
                 String errorMessage;
                 if (isVendita) {
-                    errorMessage = "Il prodotto selezionato non è presente nel carrello oppure \n assicurati di aver " +
-                            "inserito il nome corretto.";
+                    errorMessage = "Il prodotto selezionato non è presente nel carrello oppure \n assicurati di aver "
+                            + "inserito il nome corretto.";
                 } else {
-                    errorMessage = "Il prodotto selezionato non è presente nel negozio oppure \n assicurati di aver " +
-                            "inserito il nome e l'ID corretti.";
+                    errorMessage =
+                            "Il prodotto selezionato non è presente nel negozio oppure \n assicurati di aver " +
+                                    "inserito il nome e l'ID corretti.";
                 }
                 JOptionPane.showMessageDialog(null, errorMessage, "Prodotto non trovato", JOptionPane.WARNING_MESSAGE);
                 btnInviaTransazione.setEnabled(true);
