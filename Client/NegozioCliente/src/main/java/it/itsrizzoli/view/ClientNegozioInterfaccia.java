@@ -68,6 +68,7 @@ public class ClientNegozioInterfaccia extends JFrame {
 
 
     private void aggiornaQuantitaRichiestaLabel() {
+
         boolean isVendita = radioBtnVendi.isSelected();
         String numeroMassimoFormat = creaNumberFormatter(MAX_QUANTITA);
         String quantitaStringa = inputQuantita.getText().trim();
@@ -85,14 +86,18 @@ public class ClientNegozioInterfaccia extends JFrame {
         int quantitaNuova = numeroTransazioni * variazioneQuantita;
         int quantitaTotale = getQuantita() + quantitaNuova;
 
-        String operatore = isVendita ? "-" : "+";
+        SwingUtilities.invokeLater(() -> {
+            String operatore = isVendita ? "-" : "+";
 
-        String output = String.format("(%s%s) %d / %s prodotti", operatore,
-                creaNumberFormatter(Math.abs(quantitaNuova)), getQuantita(), numeroMassimoFormat);
+            String output = String.format("(%s%s) %s / %s prodotti", operatore,
+                    creaNumberFormatter(Math.abs(quantitaNuova)), creaNumberFormatter(getQuantita()),
+                    numeroMassimoFormat);
 
-        labelQuantitaTot.setText(output);
+            labelQuantitaTot.setText(output);
 
-        labelQuantitaTot.setForeground(quantitaTotale < 0 || quantitaTotale > MAX_QUANTITA ? Color.RED : Color.GRAY);
+            labelQuantitaTot.setForeground(quantitaTotale < 0 || quantitaTotale > MAX_QUANTITA ? Color.RED :
+                    Color.GRAY);
+        });
     }
 
 
