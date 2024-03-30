@@ -1,7 +1,7 @@
 package it.itsrizzoli.tools;
 public enum EStato {
     IN_ATTESA_DI_CONFERMA("In attesa"),
-    COMPLETATO("Completato"),
+    COMPLETATO("Completata"),
     ERRORE_DEL_SERVER("Errore Server"),
     PRODOTTO_ESAURITO_NEGOZIO("Esaurito Neg."),
     PRODOTTO_ESAURITO_CLIENTE("Esaurito Cl."),
