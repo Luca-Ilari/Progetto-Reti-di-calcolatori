@@ -2,34 +2,33 @@
 Creato da:
 - [Teshale Cella](https://github.com/TTTT-san)
 - [Luca Ilari](https://github.com/Luca-Ilari)
-  
-> [!NOTE]
-> Il progetto non è ancora finito quindi alcune funzionalità descritte nel seguito non sono ancora presenti.
-# Descrizione
-Il progetto consiste in un server multi-threaded che gestisce parallelamente le connessioni e le richieste dei client.
+# Introduzione
+Il progetto consiste in un server che gestisce parallamente le connessioni e le richieste dei client. Il server ha una lista di prodotti caricati da un file .csv nella cartella del server che possono essere "acquistati" e "rimborsati" dai client connessi.
+# Utilizzare il server e il client
+### Server
+Scaricare l'ultima versione del server per il proprio sistema operativo da questa pagina [release](https://github.com/Luca-Ilari/Progetto-Reti-di-calcolatori/releases)
 
-Tutti i messaggi che il server e il client si scambiano sono in formato json con dentro un codice che identifica il tipo di messaggio che si sta mandando. Per dettagli ulteriori andare alla sezione [Json](#json-e-codici-di-stato).
+Una volta scaricato decomprimere l'archivio e utilizzando il terminale avviare il server.
 
-Il server ha una lista di prodotti con le loro proprietà (nome, prezzo, quantità) che manda a tutti i client che si connettono.
+Esempio con linux: `./Server-Linux 5555 8080`
+### Client
+Scaricare l'ultima versione del `Client.jar` da questa pagina [release](https://github.com/Luca-Ilari/Progetto-Reti-di-calcolatori/releases) e avviarlo utilizando java.
 
-I client una volta che sono connessi e hanno ricevuto la lista dei prodotti, possono iniziare ad inviare delle richieste  di "acquisto" al server; ovvero possono mandare una richiesta al server di decrementare un elemento specifico come se lo avessero acquistato.
+Se su mac il client non parte, utilizzare il comando `java -jar Client.jar` da terminale.
 
-Il server una volta ricevuta la richiesta verifica la sua validità e quindi decrementa il prodotto specificato dal client.
+# Caratteristiche Server
+Il server è un'applicazione da linea di comando scritta interamente in C. Utilizza thread, semafori e critical section per funzionare e gestire contemporaneamente tutti i client.
 
-Ogni volta che un client connesso al server modifica la lista dei prodotti, il server manda la lista aggiornata a tutti i client connessi in modo da avere sempre i client aggiornati.
+Quando viene eseguito da linea di comando bisogna specificare la porta su cui il server ascolta nuove connessioni dai client e una porta per il webserver.
 
-Se la richiesta non è valida, quindi per esempio il client chiede di rimuovere troppi prodotti rispetto a quelli che ci sono nella lista, il server risponde al client con un json con codiceStato -2.
+Se il primo parametro non è specificato il server non si avvia, invece non specificando il secondo parametro il server non lancerà il webserver.
+Lanciando il server così `./Server-Linux 5555 8080` i client potranno connettersi alla porta 5555. Invece utilizzando un browser all'indirizzo [localhost:8080](http://localhost:8080) si potrà visuallizzare la pagina con lo stato del server.
 
-## Caratteristiche Server
-Il server è un'applicazione da linea di comando. Quando viene avviata bisogna specificare la porta su cui il server ascolta nuove connessioni.
-Se la porta non è specificata il server non si avvia.
+Il server carica i prodotti dal file "products.csv" presente nella cartella compressa. In caso di eliminazione di questo file il server caricherà dei prodotti di default. Questo file contiene il nome, prezzo e quantità dei prodotti che il server gestisce.
 
-Il server può essere compilato sia per windows che per linux; infatti negli esempi che dopo verranno illustrati, il server è fatto girare su una vps Ubuntu.
+Oltre a gestire i client il server, gestisce anche un semplice webserver http sulla porta specificata all'avvio. Questo web server carica una pagina html presente nella cartella compressa che attraverso un semplice script js aggiorna ogni secondo il numero di client e prodotti che il server ha disponibile.
 
-Per caricare la lista dei prodotti il server legge un file di testo nella stessa cartella del server.
-Inoltre il server ha un limite di client connessi contemporaneamente. Questa variabile è impostata a 20.  
-
-Qui di seguito, una rappresentazione grafica dei thread che il server utilizza per gestire i client e aggiornare la lista dei prodotti quando viene modificata da un client
+Qui di seguito, una rappresentazione grafica dei thread che il server utilizza per gestire i client, il webserver e aggiornare la lista dei prodotti quando viene modificata da un client
 ```mermaid
 stateDiagram-v2
     ThreadAttivi
@@ -122,8 +121,18 @@ Questa sezione fornisce una panoramica degli stati possibili per le transazioni 
 
 
 --- 
+# Descrizione di come il client e il server comunicano
+Tutti i messaggi che il server e il client si scambiano sono in formato json con dentro un codice che identifica il tipo di messaggio che si sta mandando. Per dettagli ulteriori andare alla sezione [Json](#json-e-codici-di-stato).
 
-# Esempi di come il client e il server comunicano
+I client una volta che sono connessi e hanno ricevuto la lista dei prodotti, possono iniziare ad inviare delle richieste  di "acquisto" al server; ovvero possono mandare una richiesta al server di decrementare un elemento specifico come se lo avessero acquistato.
+
+Il server una volta ricevuta la richiesta verifica la sua validità e quindi decrementa il prodotto specificato dal client.
+
+Ogni volta che un client connesso al server modifica la lista dei prodotti, il server manda la lista aggiornata a tutti i client connessi in modo da avere sempre i client aggiornati.
+
+Se la richiesta non è valida, quindi per esempio il client chiede di rimuovere troppi prodotti rispetto a quelli che ci sono nella lista, il server risponde al client con un json con codiceStato -2.
+
+## Esempi di come il client e il server comunicano
 Connessione di un client al server sulla porta 5555
 ```mermaid
 sequenceDiagram
@@ -154,6 +163,7 @@ Server->>+ Tutti i Client Connessi: Lista prodotti aggiornata
 | -3 | FAIL_AGGIUNGI_PRODOTTO |
 
 ## Esempi di json
+Di seguito qualche esempio di json che il client e il server si scambiano.
 ### Json base
 ```json
 {
