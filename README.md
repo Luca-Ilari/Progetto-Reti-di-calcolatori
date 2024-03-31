@@ -10,11 +10,17 @@ Scaricare l'ultima versione del server per il proprio sistema operativo da quest
 
 Una volta scaricato decomprimere l'archivio e utilizzando il terminale avviare il server.
 
-Esempio con linux: `./Server-Linux 5555 8080`
+Esempio con linux: 
+```
+./Server-Linux 5555 8080
+```
 ### Client
 Scaricare l'ultima versione del `Client.jar` da questa pagina [release](https://github.com/Luca-Ilari/Progetto-Reti-di-calcolatori/releases) e avviarlo utilizando java.
 
-Se su mac il client non parte, utilizzare il comando `java -jar Client.jar` da terminale.
+Se su mac il client non parte, utilizzare da terminale il comando 
+```
+java -jar Client.jar
+```
 
 # Caratteristiche Server
 Il server è un'applicazione da linea di comando scritta interamente in C. Utilizza thread, semafori e critical section per funzionare e gestire contemporaneamente tutti i client.
@@ -26,7 +32,18 @@ Lanciando il server così `./Server-Linux 5555 8080` i client potranno connetter
 
 Il server carica i prodotti dal file "products.csv" presente nella cartella compressa. In caso di eliminazione di questo file il server caricherà dei prodotti di default. Questo file contiene il nome, prezzo e quantità dei prodotti che il server gestisce.
 
+File products.csv 
+```csv
+Pane,100000,2.99
+Acqua,50000,1
+Vino,50000,20
+Birra,900,2
+Patatine,7000,2
+Pizza,90000,9.99
+```
+
 Oltre a gestire i client il server, gestisce anche un semplice webserver http sulla porta specificata all'avvio. Questo web server carica una pagina html presente nella cartella compressa che attraverso un semplice script js aggiorna ogni secondo il numero di client e prodotti che il server ha disponibile.
+
 
 Qui di seguito, una rappresentazione grafica dei thread che il server utilizza per gestire i client, il webserver e aggiornare la lista dei prodotti quando viene modificata da un client
 ```mermaid
