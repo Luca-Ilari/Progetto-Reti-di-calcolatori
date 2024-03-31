@@ -58,8 +58,11 @@ public class ModelloClientNegozio {
         this.listaTransazioneVendita.add(transazione);
     }
 
-    public void rimuoviTransazione(Transazione transazione) {
+    public void rimuoviTransazioneAcquisto(Transazione transazione) {
         listaTransazioneAcquisto.remove(transazione);
+    }
+    public void rimuoviTransazioneVendita(Transazione transazione) {
+        listaTransazioneVendita.remove(transazione);
     }
 
     public void rimuoviProdottoCarrello(String nomeProdotto) {
