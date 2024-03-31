@@ -20,8 +20,6 @@ import java.util.logging.Logger;
 public class GestioneComunicazioneServer {
     private final static Logger logger = Logger.getLogger("AvvisiGestioneServer");
     private static ControllerClientNegozio controllerClientNegozio;
-
-
     public static void setControllerClientNegozio(ControllerClientNegozio controllerClientNegozio) {
         GestioneComunicazioneServer.controllerClientNegozio = controllerClientNegozio;
         attivaColoreLogger();

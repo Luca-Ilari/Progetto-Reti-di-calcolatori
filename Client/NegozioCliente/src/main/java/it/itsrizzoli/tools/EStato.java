@@ -3,8 +3,8 @@ public enum EStato {
     IN_ATTESA_DI_CONFERMA("In attesa"),
     COMPLETATO("Completata"),
     ERRORE_DEL_SERVER("Errore Server"),
-    PRODOTTO_ESAURITO_NEGOZIO("Esaurito Neg."),
-    PRODOTTO_ESAURITO_CLIENTE("Esaurito Cl."),
+    PRODOTTO_ESAURITO_NEGOZIO("Non disponibile"),
+    PRODOTTO_ESAURITO_CLIENTE("Quantità insuff."),
     QUANTITA_MASSIMA_RAGGIUNTA("Max raggiunta"),
     QUANTITA_MINIMA_RAGGIUNTA("Min raggiunta");
 
