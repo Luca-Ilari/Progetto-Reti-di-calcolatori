@@ -4,7 +4,7 @@ Creato da:
 - [Luca Ilari](https://github.com/Luca-Ilari)
 # Introduzione
 Il progetto consiste in un server che gestisce parallamente le connessioni e le richieste dei client. Il server ha una lista di prodotti caricati da un file .csv nella cartella del server che possono essere "acquistati" e "rimborsati" dai client connessi.
-# Utilizzare il server e il client
+# Installazione e utilizzo
 ### Server
 Scaricare l'ultima versione del server per il proprio sistema operativo da questa pagina [release](https://github.com/Luca-Ilari/Progetto-Reti-di-calcolatori/releases)
 
