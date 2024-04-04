@@ -128,14 +128,13 @@ Questa sezione fornisce una panoramica degli stati possibili per le transazioni 
 
 | Stato                  | Descrizione                                                            |
 |------------------------|------------------------------------------------------------------------|
-| In attesa              | Il server sta ancora elaborando la transazione                          |
-| Completata             | Transazione completata con successo                                     |
-| Errore Server          | Errore durante l'elaborazione della transazione lato server             |
-| Non disponibile        | Quantità richiesta non disponibile nel negozio                          |
-| Quantità insufficiente | La quantità richiesta supera la disponibilità del cliente               |
-| Max raggiunta          | Quantità massima prevista raggiunta                                    |
-| Min raggiunta          | Quantità minima prevista raggiunta                                      |
-
+| In attesa              | Il server sta ancora elaborando la transazione.                         |
+| Completata             | Transazione completata con successo.                                    |
+| Errore Server          | Errore durante l'elaborazione della transazione lato server.            |
+| Non disponibile        | Quantità richiesta non disponibile nel negozio.                         |
+| Quantità insufficiente | La quantità richiesta supera la disponibilità del cliente.              |
+| Max raggiunta          | Quantità massima prevista raggiunta.                                   |
+| Min raggiunta          | Quantità minima prevista raggiunta.                                     |
 
 --- 
 # Descrizione di come il client e il server comunicano
