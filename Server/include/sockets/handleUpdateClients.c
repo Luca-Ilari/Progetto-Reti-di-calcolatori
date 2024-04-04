@@ -1,7 +1,6 @@
 //
 // Created by LucaIlari on 3/4/2024.
 //
-#include <stdio.h>
 #ifdef WIN32
 #include <windows.h>
 #elif __APPLE__
@@ -12,9 +11,7 @@
 
 #include "./socketFunctions.h"
 #include "./handleUpdateClients.h"
-#include "./socketFunctions.h"
 #include "../define.h"
-#include "../utils/timeStamp.h"
 #include "../utils/customCriticalSection.h"
 
 extern int connectedSockets[MAX_CLIENT];
