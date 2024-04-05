@@ -4,8 +4,6 @@ import it.itsrizzoli.tcpip.ClientConnessione;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -49,7 +47,7 @@ public class ChangeIP extends JFrame {
             });
 
             setConnectionDetails();
-            setProperietaButton(Color.GRAY, Color.WHITE, btnAggiroanIp);
+            setProperietaButton(Color.GRAY, Color.BLACK, btnAggiroanIp);
             setProprietaTextField(inputIp);
             setProprietaTextField(inputPorta);
             implementaListenerBtn();
@@ -89,12 +87,7 @@ public class ChangeIP extends JFrame {
     }
 
     public void implementaListenerBtn() {
-        btnAggiroanIp.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                changeIpAddress();
-            }
-        });
+        btnAggiroanIp.addActionListener(e -> changeIpAddress());
     }
 
     private void setProperietaButton(Color backgroundColor, Color textColor, JButton button) {
@@ -110,11 +103,11 @@ public class ChangeIP extends JFrame {
         // Aggiunta di un effetto di ombreggiatura al passaggio del mouse
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setForeground(new Color(0, 102, 204)); // Cambia il colore del testo al passaggio del mouse
+                button.setForeground(Color.BLUE); // Cambia il colore del testo al passaggio del mouse // new Color(0, 102, 204)
             }
 
             public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setForeground(Color.WHITE); // Ripristina il colore del testo al mouse out
+                button.setForeground(Color.BLACK); // Ripristina il colore del testo al mouse out
             }
         });
 

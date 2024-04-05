@@ -5,12 +5,21 @@ import it.itsrizzoli.model.ModelloClientNegozio;
 import it.itsrizzoli.tcpip.ClientConnessione;
 import it.itsrizzoli.view.ClientNegozioInterfaccia;
 
+import javax.swing.*;
 import java.util.Random;
 
 
 public class App {
 
     public static void main(String[] args) {
+
+        try {
+            // Imposta il look and feel di sistema (di default)
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+            System.out.println(e.getMessage());
+        }
+
         try {
             System.out.println("Starting Client...");
 
