@@ -10,7 +10,6 @@ import it.itsrizzoli.model.Prodotto;
 import it.itsrizzoli.model.Transazione;
 import it.itsrizzoli.tools.CodiciStatoServer;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +22,6 @@ class GestioneComunicazioneServerTest {
 
     @Test
     void gestisciJsonCodiceStato() {
-        String jsonResponse = null;
         //Entrambi null
         assertDoesNotThrow(() -> GestioneComunicazioneServer.gestisciJsonCodiceStato(null, null));
 
