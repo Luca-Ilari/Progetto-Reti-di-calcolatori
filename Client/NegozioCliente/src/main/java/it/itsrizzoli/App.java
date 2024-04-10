@@ -25,20 +25,15 @@ public class App {
 
             int idClientRandom = generateRandomId();
 
-            // Inizializza l'interfaccia client
             ClientNegozioInterfaccia clientInterfaccia = initializeClientInterface(idClientRandom);
 
-            // Inizializza il modello client
             ModelloClientNegozio modelloClient = initializeClientModel();
 
-            // Inizializza la connessione client
             ClientConnessione clientConnessione = initializeClientConnection();
 
-            // Inizializza il controller client
             ControllerClientNegozio clientController = initializeClientController(modelloClient, clientConnessione,
                     clientInterfaccia);
         } catch (Exception e) {
-            // Gestione delle eccezioni
             System.err.println("An error occurred during initialization: " + e.getMessage());
             System.out.println(e.getMessage());
         }

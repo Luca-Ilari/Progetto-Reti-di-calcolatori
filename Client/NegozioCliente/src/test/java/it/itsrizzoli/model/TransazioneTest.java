@@ -36,8 +36,8 @@ class TransazioneTest {
     @Test
     void creaListaTransazioniRandom() {
         int q = 3;
-        float prezzo[] = new float[]{2.2f, 24.2f, 5.99f};
-        ArrayList<Prodotto> prodotti = new ArrayList<Prodotto>(3);
+        float[] prezzo = new float[]{2.2f, 24.2f, 5.99f};
+        ArrayList<Prodotto> prodotti = new ArrayList<>(3);
         for (int i = 0; i < q; i++) {
             prodotti.add(new Prodotto(i, "prod" + i, prezzo[i], 10)); // corretto "prod" + 1 a "prod" + i
         }
@@ -45,6 +45,7 @@ class TransazioneTest {
         List<Transazione> transazioni = Transazione.creaListaTransazioniRandom(prodotti, true);
 
         boolean idProdottoPresente = false;
+        assert transazioni != null;
         for (Transazione transazione : transazioni) {
             for (Prodotto prodotto : prodotti) {
                 if (transazione.getIdProdotto() == prodotto.getId()) {

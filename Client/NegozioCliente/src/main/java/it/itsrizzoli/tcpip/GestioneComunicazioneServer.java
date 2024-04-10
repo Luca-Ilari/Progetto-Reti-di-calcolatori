@@ -104,12 +104,6 @@ public class GestioneComunicazioneServer {
             logger.warning("Errore durante la conversione in JSON: " + e.getMessage());
             return;
         }
-
-        if (jsonString == null) {
-            logger.warning("ATTENZIONE: jsonString is null.");
-            return;
-        }
-
         out.println(jsonString);
         logger.info("Transazione inviata correttamente al server.");
     }
