@@ -1,13 +1,13 @@
 package it.itsrizzoli.model;
 
 public class Prodotto {
-    private int idProdotto;
+    private int id;
     private String nome;
     private double prezzo;
     private int quantitaDisponibile;
 
-    public Prodotto(int idProdotto, String nome, double prezzo, int quantitaDisponibile) {
-        this.idProdotto = idProdotto;
+    public Prodotto(int id, String nome, double prezzo, int quantitaDisponibile) {
+        this.id = id;
         this.nome = nome;
         this.prezzo = prezzo;
         this.quantitaDisponibile = quantitaDisponibile;
@@ -19,12 +19,12 @@ public class Prodotto {
         this.quantitaDisponibile = quantitaDisponibile;
     }
 
-    public int getIdProdotto() {
-        return idProdotto;
+    public int getId() {
+        return id;
     }
 
-    public void setIdProdotto(int idProdotto) {
-        this.idProdotto = idProdotto;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getNome() {
@@ -53,7 +53,7 @@ public class Prodotto {
 
     @Override
     public String toString() {
-        return "Prodotto{" + "idProdotto=" + idProdotto + ", nome='" + nome + '\'' + ", prezzo=" + prezzo + ", " +
+        return "Prodotto{" + "idProdotto=" + id + ", nome='" + nome + '\'' + ", prezzo=" + prezzo + ", " +
                 "quantitaDisponibile=" + quantitaDisponibile + '}';
     }
 }

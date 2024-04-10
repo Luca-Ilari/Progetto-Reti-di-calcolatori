@@ -125,7 +125,7 @@ public class SchermoCustomVendita extends JFrame {
 
                 boolean trovatoProdotto = false;
                 for (Prodotto prodotto : controllerClientNegozio.getProdottiNegozio()) {
-                    if (prodotto.getIdProdotto() == idProdotto) {
+                    if (prodotto.getId() == idProdotto) {
                         trovatoProdotto = true;
                         break;
 
@@ -252,7 +252,7 @@ public class SchermoCustomVendita extends JFrame {
         Object[][] data = new Object[listaProdotti.size()][columnNames.length];
         for (int i = 0; i < listaProdotti.size(); i++) {
             Prodotto product = listaProdotti.get(i);
-            data[i][0] = product.getIdProdotto();
+            data[i][0] = product.getId();
             data[i][1] = product.getNome();
             data[i][2] = product.getQuantitaDisponibile();
 
@@ -302,7 +302,7 @@ public class SchermoCustomVendita extends JFrame {
             tableProdottiNegozio.setRowCount(0);
             // Aggiungi righe per ciascun prodotto nella lista
             for (Prodotto product : newProdottiNegozio) {
-                Object[] rowData = {product.getIdProdotto(), product.getNome(), product.getQuantitaDisponibile()};
+                Object[] rowData = {product.getId(), product.getNome(), product.getQuantitaDisponibile()};
                 tableProdottiNegozio.addRow(rowData);
             }
             tableProdottiNegozio.fireTableDataChanged();

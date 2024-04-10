@@ -17,8 +17,9 @@ public class ControllerClientNegozio {
         return clientConnessione;
     }
 
-    public void setClientConnessione(ClientConnessione clientConnessione) {
-        this.clientConnessione = clientConnessione;
+    public ControllerClientNegozio() {
+        modelloClientNegozio = new ModelloClientNegozio();
+        clientConnessione = new ClientConnessione();
     }
 
     public ControllerClientNegozio(ModelloClientNegozio modelloClientNegozio, ClientConnessione clientConnessione,
@@ -30,16 +31,8 @@ public class ControllerClientNegozio {
         initialize();
     }
 
-    private void initialize() {
-        clientConnessione.setControllerClientNegozio(this);
-        clientNegozioInterfaccia.setControllerClientNegozio(this);
-        clientConnessione.startConnessione();
-    }
-
-    public void setClientNegozioInterfaccia(ClientNegozioInterfaccia clientNegozioInterfaccia) {
-        this.clientNegozioInterfaccia = clientNegozioInterfaccia;
-        this.clientNegozioInterfaccia.setControllerClientNegozio(this);
-
+    public void setClientConnessione(ClientConnessione clientConnessione) {
+        this.clientConnessione = clientConnessione;
     }
 
     public ClientNegozioInterfaccia getClientNegozioInterfaccia() {
@@ -148,5 +141,13 @@ public class ControllerClientNegozio {
     public void aggiornaStatoTransazioneServerError() {
         clientNegozioInterfaccia.aggiornaStatoTransazioneServerError();
     }
+
+
+    private void initialize() {
+        clientConnessione.setControllerClientNegozio(this);
+        clientNegozioInterfaccia.setControllerClientNegozio(this);
+        clientConnessione.startConnessione();
+    }
+
 
 }

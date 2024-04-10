@@ -13,9 +13,9 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.List;
 import java.util.Random;
 
@@ -23,7 +23,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     private JTable tblCarrello;
     private JTable tblNegozio;
     private JTable tblTransazioniAcquisto;
-    private JButton btnChangeIP;
+    private JButton btnAggiornaIP;
     private JLabel labelStatoServer;
     private JScrollPane scrolPanelNegozio;
     private JScrollPane scrollPanelCarrello;
@@ -47,6 +47,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     private JLabel labelQuantitaTot;
     private JLabel labelIDProdotto;
 
+
     private boolean isConnessoAlServer = false;
     private ControllerClientNegozio controllerClientNegozio;
     private final String[] articoliNegozioColonne = {"Id", "Prodotto", "Prezzo", "Disponibile"};
@@ -54,7 +55,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     private final String[] transazioniColonne = {"Number", "Prodotto", "Prezzo", "Quantità", "Stato"};
 
     private boolean isFermoThreadTransazioni;
-    public static final int MAX_QUANTITA = 100_000;
+    public static final int MAX_QUANTITA = 10_000;
 
 
     private static final int COLONNA_STATO = 4;
@@ -74,8 +75,13 @@ public class ClientNegozioInterfaccia extends JFrame {
         String quantitaStringa = inputQuantita.getText().trim();
         String numeroTransazioniStringa = inputNumeroTransazioni.getText().trim();
 
-        if (quantitaStringa.isEmpty() || numeroTransazioniStringa.isEmpty() || !quantitaStringa.matches("\\d+") || !numeroTransazioniStringa.matches("\\d+")) {
-            labelQuantitaTot.setText("0 / " + numeroMassimoFormat + " prodotti");
+        if (quantitaStringa.isEmpty() || numeroTransazioniStringa.isEmpty()) {
+            labelQuantitaTot.setText("(+0) 0 / " + numeroMassimoFormat + " Prodotti ");
+            return;
+        }
+
+        if (!quantitaStringa.matches("\\d+") || !numeroTransazioniStringa.matches("\\d+")) {
+            labelQuantitaTot.setText("(+0)" + " " + creaNumberFormatter(getQuantita()) + " / " + numeroMassimoFormat + " " + "Prodotti ");
             return;
         }
 
@@ -89,7 +95,7 @@ public class ClientNegozioInterfaccia extends JFrame {
         SwingUtilities.invokeLater(() -> {
             String operatore = isVendita ? "-" : "+";
 
-            String output = String.format("(%s%s) %s / %s prodotti", operatore,
+            String output = String.format("(%s%s) %s / %s Prodotti ", operatore,
                     creaNumberFormatter(Math.abs(quantitaNuova)), creaNumberFormatter(getQuantita()),
                     numeroMassimoFormat);
 
@@ -123,7 +129,7 @@ public class ClientNegozioInterfaccia extends JFrame {
 
         TitledBorder border = (TitledBorder) panelMaxQuantita.getBorder();
         String MAX_QUANTITA_FORMATTER = creaNumberFormatter(MAX_QUANTITA);
-        border.setTitle(border.getTitle() + MAX_QUANTITA_FORMATTER);
+        border.setTitle(border.getTitle() + MAX_QUANTITA_FORMATTER + " Prodotti ");
         panelMaxQuantita.setBorder(border);
 
         // Creazione dei pannelli delle tabelle
@@ -142,10 +148,10 @@ public class ClientNegozioInterfaccia extends JFrame {
         Dimension labelSize = new Dimension(200, 30);
         Font smallFont = new Font("Arial", Font.BOLD, 14);
         setLabelProperties(labelStatoServer, labelSize, smallFont);
-        setProprietaButton(Color.GRAY, Color.WHITE, btnChangeIP);
-        setProprietaButton(new Color(0, 102, 204), Color.WHITE, btnCreaTransazioni);
-        setProprietaButton(new Color(0, 153, 0), Color.WHITE, btnInviaTransazione);
-        setProprietaButton(Color.red, Color.WHITE, btnStopTransazioni);
+        setProprietaButton(Color.WHITE, Color.BLACK, btnAggiornaIP);
+        setProprietaButton(Color.WHITE, Color.BLACK, btnCreaTransazioni); // new Color(0, 102, 204)
+        setProprietaButton(Color.WHITE, Color.BLACK, btnInviaTransazione);//new Color(0, 153, 0)
+        setProprietaButton(Color.WHITE, Color.BLACK, btnStopTransazioni);
 
         btnStopTransazioni.setVisible(false);
 
@@ -155,13 +161,85 @@ public class ClientNegozioInterfaccia extends JFrame {
 
         impostaListerTextField(inputNumeroTransazioni);
         impostaListerTextField(inputQuantita);
-        labelQuantitaTot.setText(0 + " / " + MAX_QUANTITA_FORMATTER + " prodotti");
+        addNumericFilter(inputIdProdotto);
+        addNumericFilter(inputQuantita);
+        addNumericFilter(inputNumeroTransazioni);
+
+        labelQuantitaTot.setText("(+0) " + 0 + " / " + MAX_QUANTITA_FORMATTER + " Prodotti ");
+        labelQuantitaTot.setForeground(Color.GRAY);
+
+        attivaListenereTextField(inputIdProdotto, "ID Prodotto");
+        attivaListenereTextField(inputNome, "Nome Prodotto");
+        attivaListenereTextField(inputQuantita, "Quantità");
+        attivaListenereTextField(inputNumeroTransazioni, "Numero Transazioni");
+
 
         pack();
         setLocationRelativeTo(null);
 
         setVisible(true);
         System.out.println(" --- FINE THREAD_SWING_EDT ---");
+    }
+
+    private void addNumericFilter(JTextField textField) {
+        textField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                super.keyReleased(e);
+                String input = textField.getText().trim();
+                if (!input.isBlank()) {
+                    textField.setForeground(Color.BLACK);
+                    // Rimuovi tutti i caratteri non numerici
+                    String cleanedInput = input.replaceAll("[^0-9]", "");
+                    // Limita la lunghezza massima a 10 caratteri
+                    if (cleanedInput.length() > 6) {
+                        cleanedInput = cleanedInput.substring(0, 6);
+                    }
+                    textField.setText(cleanedInput);
+                } else {
+                    // Se il campo è vuoto, mantieni il testo originale
+                    textField.setForeground(Color.GRAY);
+                }
+
+
+            }
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+                super.keyTyped(e);
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                super.keyPressed(e);
+
+            }
+        });
+
+    }
+
+    public void attivaListenereTextField(JTextField textField, String placeholder) {
+        textField.setForeground(Color.GRAY);
+        textField.setText(placeholder);
+        textField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (textField.getText().equals(placeholder)) {
+                    textField.setText("");
+                    textField.setForeground(Color.BLACK);
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (textField.getText().isBlank()) {
+                    textField.setText(placeholder);
+                    textField.setForeground(Color.GRAY);
+                }
+            }
+
+
+        });
     }
 
     private void attivaListenerRadioButton() {
@@ -194,8 +272,13 @@ public class ClientNegozioInterfaccia extends JFrame {
                     System.out.println("Hai cliccato sulla riga: " + selectedRow);
                     int idProdotto = Integer.parseInt(tblNegozio.getValueAt(selectedRow, 0).toString());
                     String nome = (String) tblNegozio.getValueAt(selectedRow, 1);
+                    inputIdProdotto.setForeground(Color.BLACK);
+                    inputNome.setForeground(Color.BLACK);
+
+
                     inputIdProdotto.setText(String.valueOf(idProdotto));
                     inputNome.setText(nome);
+
                 }
             }
         });
@@ -241,15 +324,25 @@ public class ClientNegozioInterfaccia extends JFrame {
 
     private void setProprietaRadioButton(JRadioButton radioButton) {
         radioButton.setFocusPainted(false);
-        radioButton.setFont(new Font("Arial", Font.PLAIN, 14));
+        radioButton.setFont(new Font("Arial", Font.BOLD, 14));
         radioButton.setForeground(Color.BLACK);
         radioButton.setBackground(Color.WHITE);
         radioButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         radioButton.setBorderPainted(true);
         radioButton.setOpaque(false);
+
+        radioButton.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent evt) {
+                radioButton.setForeground(Color.BLUE); // Cambia il colore di sfondo al passaggio del mouse
+            }
+
+            public void mouseExited(MouseEvent evt) {
+                radioButton.setForeground(Color.BLACK); // Ripristina il colore di sfondo al mouse out
+            }
+        });
     }
 
-    public synchronized int aggiornaProgressBar(int quantita) {
+    public synchronized void aggiornaProgressBar(int quantita) {
         int currentValue = progressBarQuantita.getValue();
         int newValue = currentValue + quantita;
 
@@ -260,13 +353,6 @@ public class ClientNegozioInterfaccia extends JFrame {
         progressBarQuantita.setString(newValue + " / " + MAX_QUANTITA_FORMATTER + " Prodotti");
 
         progressBarQuantita.setValue(newValue);
-
-        if (newValue == 0) {
-            return -1;
-        } else if (newValue == MAX_QUANTITA) {
-            return +1;
-        }
-        return 0;
 
     }
 
@@ -311,7 +397,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     }
 
     private void attivaListenerBtn() {
-        btnChangeIP.addActionListener(e -> {
+        btnAggiornaIP.addActionListener(e -> {
             setEnabled(false);
             new ChangeIP(controllerClientNegozio.getClientConnessione(), this);
             System.out.println(" CLICK: CHANGE btn IP");
@@ -384,9 +470,9 @@ public class ClientNegozioInterfaccia extends JFrame {
             List<Prodotto> prodotti = isVendita ? controllerClientNegozio.getProdottiCarrello() :
                     controllerClientNegozio.getProdottiNegozio();
             for (Prodotto prodotto : prodotti) {
-                if ((isVendita && prodotto.getNome().equals(nomeProdotto)) || (prodotto.getIdProdotto() == idProdotto && prodotto.getNome().equals(nomeProdotto))) {
+                if ((isVendita && prodotto.getNome().equals(nomeProdotto)) || (prodotto.getId() == idProdotto && prodotto.getNome().equals(nomeProdotto))) {
                     trovatoProdotto = true;
-                    idProdotto = prodotto.getIdProdotto();
+                    idProdotto = prodotto.getId();
                     break;
                 }
             }
@@ -394,12 +480,11 @@ public class ClientNegozioInterfaccia extends JFrame {
             if (!trovatoProdotto) {
                 String errorMessage;
                 if (isVendita) {
-                    errorMessage = "Il prodotto selezionato non è presente nel carrello oppure \n assicurati di aver "
-                            + "inserito il nome corretto.";
+                    errorMessage = "<html><b>Il prodotto selezionato non è presente nel carrello oppure <br> " +
+                            "assicurati di aver " + "inserito il nome corretto.</b></html>";
                 } else {
-                    errorMessage =
-                            "Il prodotto selezionato non è presente nel negozio oppure \n assicurati di aver " +
-                                    "inserito il nome e l'ID corretti.";
+                    errorMessage = "<html><b>Il prodotto selezionato non è presente nel negozio oppure <br> " +
+                            "assicurati di aver " + "inserito il nome e l'ID corretti.</b></html>";
                 }
                 JOptionPane.showMessageDialog(null, errorMessage, "Prodotto non trovato", JOptionPane.WARNING_MESSAGE);
                 btnInviaTransazione.setEnabled(true);
@@ -410,19 +495,18 @@ public class ClientNegozioInterfaccia extends JFrame {
                     "quantità oltre il limite massimo.";
             String messageTitle = isVendita ? "Attenzione: Quantità Minima" : "Attenzione: Quantità Massima";
             String MAX_QUANTITA_FORMATTER = creaNumberFormatter(MAX_QUANTITA);
+
             for (int i = 1; i <= viaggi; i++) {
                 int quantitaTotale = getQuantita() + (i * (isVendita ? -quantita : quantita));
 
                 if ((isVendita && quantitaTotale < 0) || (!isVendita && quantitaTotale > MAX_QUANTITA)) {
                     int finalQuantita = getQuantita() + viaggi * (isVendita ? -quantita : quantita);
-                    JOptionPane.showMessageDialog(null,
-                            message + "\n" + finalQuantita + "/" + MAX_QUANTITA_FORMATTER + " " + "prodotti",
-                            messageTitle, JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "<html><font color='red'>" + message + "</font><br/>Quantità "
+                            + "finale prevista: " + creaNumberFormatter(finalQuantita) + "/" + MAX_QUANTITA_FORMATTER + " Prodotti</html>", messageTitle, JOptionPane.WARNING_MESSAGE);
                     btnInviaTransazione.setEnabled(true);
                     return;
                 }
             }
-
 
             btnStopTransazioni.setVisible(true);
             btnInviaTransazione.setVisible(false);
@@ -441,26 +525,26 @@ public class ClientNegozioInterfaccia extends JFrame {
     private void setProprietaButton(Color backgroundColor, Color textColor, JButton button) {
         button.setForeground(textColor);
         button.setFocusPainted(false);
-        button.setFont(new Font("Arial", Font.BOLD, 12));
+        button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setPreferredSize(new Dimension(80, 20));
         button.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         button.setBackground(backgroundColor);
+        button.putClientProperty("JButton.buttonType", "well");
 
         // Aggiunta di un effetto di ombreggiatura al passaggio del mouse
         button.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent evt) {
-                button.setBackground(new Color(0, 128, 255)); // Cambia il colore di sfondo al passaggio del mouse
+                button.setForeground(Color.BLUE); // Cambia il colore di sfondo al passaggio del mouse
             }
 
             public void mouseExited(MouseEvent evt) {
-                button.setBackground(backgroundColor); // Ripristina il colore di sfondo al mouse out
+                button.setForeground(Color.BLACK); // Ripristina il colore di sfondo al mouse out
             }
         });
 
     }
-
 
     private String creaNumberFormatter(int n) {
         return String.format("%,d", n).replace(",", ".");
@@ -512,8 +596,16 @@ public class ClientNegozioInterfaccia extends JFrame {
                     System.out.println(e.getMessage());
                 }
             }
+
+            inputQuantita.setText("Quantità");
+            inputNumeroTransazioni.setText("Numero Transazioni");
+
+            inputQuantita.setForeground(Color.GRAY);
+            inputNumeroTransazioni.setForeground(Color.GRAY);
             btnInviaTransazione.setVisible(true);
             btnStopTransazioni.setVisible(false);
+
+            labelQuantitaTot.setForeground(Color.GRAY);
         });
         thread.start();
     }
@@ -533,7 +625,15 @@ public class ClientNegozioInterfaccia extends JFrame {
         // Imposta la tabella come non editabile
         table.setDefaultEditor(Object.class, null);
 
+
+        JTableHeader header = table.getTableHeader();
+        DefaultTableCellRenderer renderer = (DefaultTableCellRenderer) header.getDefaultRenderer();
+        renderer.setHorizontalAlignment(SwingConstants.CENTER);
+
+
         jScrollPane.setViewportView(table);
+
+
     }
 
     public void addSingleTransazioneCompraAwait(Transazione transazione, List<Prodotto> prodottiNegozio) {
@@ -541,7 +641,7 @@ public class ClientNegozioInterfaccia extends JFrame {
             DefaultTableModel model = (DefaultTableModel) tblTransazioniAcquisto.getModel();
 
             for (Prodotto prodotto : prodottiNegozio) {
-                if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
+                if (prodotto.getId() == transazione.getIdProdotto()) {
                     Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(), prodotto.getPrezzo() +
                             "€", transazione.getQuantita(), EStato.IN_ATTESA_DI_CONFERMA.getValue()};
                     model.addRow(rowData);
@@ -559,7 +659,7 @@ public class ClientNegozioInterfaccia extends JFrame {
             DefaultTableModel model = (DefaultTableModel) tblTransazioniVendita.getModel();
 
             for (Prodotto prodotto : prodottiCarrello) {
-                if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
+                if (prodotto.getId() == transazione.getIdProdotto()) {
                     Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(), prodotto.getPrezzo() +
                             "€", transazione.getQuantita(), EStato.IN_ATTESA_DI_CONFERMA.getValue()};
                     model.addRow(rowData);
@@ -831,7 +931,7 @@ public class ClientNegozioInterfaccia extends JFrame {
             model.setRowCount(0);
             // Aggiungi righe per ciascun prodotto nella lista
             for (Prodotto product : newProdottiNegozio) {
-                Object[] rowData = {product.getIdProdotto(), product.getNome(), product.getPrezzo() + "€",
+                Object[] rowData = {product.getId(), product.getNome(), product.getPrezzo() + "€",
                         product.getQuantitaDisponibile()};
                 model.addRow(rowData);
             }
@@ -848,7 +948,7 @@ public class ClientNegozioInterfaccia extends JFrame {
 
     private Prodotto trovaProdottoLista(int idProdotto, List<Prodotto> prodotti) {
         for (Prodotto prodotto : prodotti) {
-            if (prodotto.getIdProdotto() == idProdotto) {
+            if (prodotto.getId() == idProdotto) {
                 return prodotto;
             }
         }
@@ -874,7 +974,7 @@ public class ClientNegozioInterfaccia extends JFrame {
         progressBarTransazioni.setString(null);
 
 
-        labelQuantitaTot.setText(0 + "/" + creaNumberFormatter(MAX_QUANTITA) + " prodotti");
+        labelQuantitaTot.setText("(+0) " + 0 + "/" + creaNumberFormatter(MAX_QUANTITA) + " Prodotti ");
 
     }
 
@@ -882,7 +982,7 @@ public class ClientNegozioInterfaccia extends JFrame {
         svuotaTabella(tblNegozio);
         progressBarTransazioni.setValue(0);
         progressBarTransazioni.setString(null);
-        labelQuantitaTot.setText(0 + "/" + creaNumberFormatter(MAX_QUANTITA) + " prodotti");
+        labelQuantitaTot.setText("(+0) " + 0 + "/" + creaNumberFormatter(MAX_QUANTITA) + " Prodotti ");
     }
 
     private void svuotaTabella(JTable table) {

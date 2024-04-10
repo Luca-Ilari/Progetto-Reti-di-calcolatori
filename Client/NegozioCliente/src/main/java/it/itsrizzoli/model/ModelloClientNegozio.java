@@ -61,6 +61,7 @@ public class ModelloClientNegozio {
     public void rimuoviTransazioneAcquisto(Transazione transazione) {
         listaTransazioneAcquisto.remove(transazione);
     }
+
     public void rimuoviTransazioneVendita(Transazione transazione) {
         listaTransazioneVendita.remove(transazione);
     }

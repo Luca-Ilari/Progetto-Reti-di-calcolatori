@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Client" type="Application" factoryName="Application" singleton="false">
     <option name="MAIN_CLASS_NAME" value="it.itsrizzoli.App" />
-    <module name="NegozioCliente" />
+    <module name="Client" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
