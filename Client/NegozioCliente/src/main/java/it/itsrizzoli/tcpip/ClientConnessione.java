@@ -98,6 +98,7 @@ public class ClientConnessione {
         } catch (IOException e) {
             logger.severe(e.getMessage());
         }
+        controllerClientNegozio.azzeraDati();
 
     }
 
