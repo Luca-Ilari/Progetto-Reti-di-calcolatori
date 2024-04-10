@@ -8,7 +8,7 @@ public class Transazione {
     private final int idTransazione;
     private int idProdotto;
     private int quantita;
-    private static int contaTransazione = 0;
+    public static int contaTransazione = 0;
 
     public Transazione(int idProdotto, int quantita) {
         contaTransazione = contaTransazione + 1;

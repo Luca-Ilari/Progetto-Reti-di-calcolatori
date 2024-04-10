@@ -23,7 +23,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     private JTable tblCarrello;
     private JTable tblNegozio;
     private JTable tblTransazioniAcquisto;
-    private JButton btnChangeIP;
+    private JButton btnAggiornaIP;
     private JLabel labelStatoServer;
     private JScrollPane scrolPanelNegozio;
     private JScrollPane scrollPanelCarrello;
@@ -148,7 +148,7 @@ public class ClientNegozioInterfaccia extends JFrame {
         Dimension labelSize = new Dimension(200, 30);
         Font smallFont = new Font("Arial", Font.BOLD, 14);
         setLabelProperties(labelStatoServer, labelSize, smallFont);
-        setProprietaButton(Color.WHITE, Color.BLACK, btnChangeIP);
+        setProprietaButton(Color.WHITE, Color.BLACK, btnAggiornaIP);
         setProprietaButton(Color.WHITE, Color.BLACK, btnCreaTransazioni); // new Color(0, 102, 204)
         setProprietaButton(Color.WHITE, Color.BLACK, btnInviaTransazione);//new Color(0, 153, 0)
         setProprietaButton(Color.WHITE, Color.BLACK, btnStopTransazioni);
@@ -161,17 +161,19 @@ public class ClientNegozioInterfaccia extends JFrame {
 
         impostaListerTextField(inputNumeroTransazioni);
         impostaListerTextField(inputQuantita);
+        addNumericFilter(inputIdProdotto);
+        addNumericFilter(inputQuantita);
+        addNumericFilter(inputNumeroTransazioni);
 
         labelQuantitaTot.setText("(+0) " + 0 + " / " + MAX_QUANTITA_FORMATTER + " Prodotti ");
         labelQuantitaTot.setForeground(Color.GRAY);
+
         attivaListenereTextField(inputIdProdotto, "ID Prodotto");
         attivaListenereTextField(inputNome, "Nome Prodotto");
         attivaListenereTextField(inputQuantita, "Quantità");
         attivaListenereTextField(inputNumeroTransazioni, "Numero Transazioni");
 
 
-        addNumericFilter(inputQuantita);
-        addNumericFilter(inputNumeroTransazioni);
         pack();
         setLocationRelativeTo(null);
 
@@ -225,8 +227,6 @@ public class ClientNegozioInterfaccia extends JFrame {
                 if (textField.getText().equals(placeholder)) {
                     textField.setText("");
                     textField.setForeground(Color.BLACK);
-                } else {
-                    textField.setText(textField.getText().replaceAll("[^0-9]", ""));
                 }
             }
 
@@ -235,8 +235,6 @@ public class ClientNegozioInterfaccia extends JFrame {
                 if (textField.getText().isBlank()) {
                     textField.setText(placeholder);
                     textField.setForeground(Color.GRAY);
-                } else {
-                    textField.setText(textField.getText().replaceAll("[^0-9]", ""));
                 }
             }
 
@@ -399,7 +397,7 @@ public class ClientNegozioInterfaccia extends JFrame {
     }
 
     private void attivaListenerBtn() {
-        btnChangeIP.addActionListener(e -> {
+        btnAggiornaIP.addActionListener(e -> {
             setEnabled(false);
             new ChangeIP(controllerClientNegozio.getClientConnessione(), this);
             System.out.println(" CLICK: CHANGE btn IP");
@@ -472,9 +470,9 @@ public class ClientNegozioInterfaccia extends JFrame {
             List<Prodotto> prodotti = isVendita ? controllerClientNegozio.getProdottiCarrello() :
                     controllerClientNegozio.getProdottiNegozio();
             for (Prodotto prodotto : prodotti) {
-                if ((isVendita && prodotto.getNome().equals(nomeProdotto)) || (prodotto.getIdProdotto() == idProdotto && prodotto.getNome().equals(nomeProdotto))) {
+                if ((isVendita && prodotto.getNome().equals(nomeProdotto)) || (prodotto.getId() == idProdotto && prodotto.getNome().equals(nomeProdotto))) {
                     trovatoProdotto = true;
-                    idProdotto = prodotto.getIdProdotto();
+                    idProdotto = prodotto.getId();
                     break;
                 }
             }
@@ -643,7 +641,7 @@ public class ClientNegozioInterfaccia extends JFrame {
             DefaultTableModel model = (DefaultTableModel) tblTransazioniAcquisto.getModel();
 
             for (Prodotto prodotto : prodottiNegozio) {
-                if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
+                if (prodotto.getId() == transazione.getIdProdotto()) {
                     Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(), prodotto.getPrezzo() +
                             "€", transazione.getQuantita(), EStato.IN_ATTESA_DI_CONFERMA.getValue()};
                     model.addRow(rowData);
@@ -661,7 +659,7 @@ public class ClientNegozioInterfaccia extends JFrame {
             DefaultTableModel model = (DefaultTableModel) tblTransazioniVendita.getModel();
 
             for (Prodotto prodotto : prodottiCarrello) {
-                if (prodotto.getIdProdotto() == transazione.getIdProdotto()) {
+                if (prodotto.getId() == transazione.getIdProdotto()) {
                     Object[] rowData = {transazione.getIdTransazione(), prodotto.getNome(), prodotto.getPrezzo() +
                             "€", transazione.getQuantita(), EStato.IN_ATTESA_DI_CONFERMA.getValue()};
                     model.addRow(rowData);
@@ -933,7 +931,7 @@ public class ClientNegozioInterfaccia extends JFrame {
             model.setRowCount(0);
             // Aggiungi righe per ciascun prodotto nella lista
             for (Prodotto product : newProdottiNegozio) {
-                Object[] rowData = {product.getIdProdotto(), product.getNome(), product.getPrezzo() + "€",
+                Object[] rowData = {product.getId(), product.getNome(), product.getPrezzo() + "€",
                         product.getQuantitaDisponibile()};
                 model.addRow(rowData);
             }
@@ -950,7 +948,7 @@ public class ClientNegozioInterfaccia extends JFrame {
 
     private Prodotto trovaProdottoLista(int idProdotto, List<Prodotto> prodotti) {
         for (Prodotto prodotto : prodotti) {
-            if (prodotto.getIdProdotto() == idProdotto) {
+            if (prodotto.getId() == idProdotto) {
                 return prodotto;
             }
         }

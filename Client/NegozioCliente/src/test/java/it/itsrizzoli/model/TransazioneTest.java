@@ -1,7 +1,6 @@
 package it.itsrizzoli.model;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +47,7 @@ class TransazioneTest {
         boolean idProdottoPresente = false;
         for (Transazione transazione : transazioni) {
             for (Prodotto prodotto : prodotti) {
-                if (transazione.getIdProdotto() == prodotto.getIdProdotto()) {
+                if (transazione.getIdProdotto() == prodotto.getId()) {
                     idProdottoPresente = true;
                     break;
                 }
