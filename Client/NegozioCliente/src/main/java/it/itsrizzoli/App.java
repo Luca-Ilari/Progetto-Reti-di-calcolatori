@@ -16,7 +16,8 @@ public class App {
         try {
             // Imposta il look and feel di sistema (di default)
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
+                 UnsupportedLookAndFeelException e) {
             System.out.println(e.getMessage());
         }
 
