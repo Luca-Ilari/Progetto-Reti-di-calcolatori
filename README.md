@@ -8,12 +8,21 @@ Il progetto consiste in un server che gestisce parallamente le connessioni e le 
 ### Server
 Scaricare l'ultima versione del server per il proprio sistema operativo da questa pagina [release](https://github.com/Luca-Ilari/Progetto-Reti-di-calcolatori/releases)
 
-Una volta scaricato decomprimere l'archivio e utilizzando il terminale avviare il server.
+Una volta scaricato decomprimere l'archivio.
 
 Esempio con linux: 
 ```
 ./Server-Linux 5555 8080
 ```
+
+Se su mac o linux utilizzano questo comando il server non parte rendere il server un eseguibile con il comando:
+```
+Mac:
+chmod +x ServerMacOs
+Linux:
+chmod +x ServerLinux
+```
+
 ### Client
 Scaricare l'ultima versione del `Client.jar` da questa pagina [release](https://github.com/Luca-Ilari/Progetto-Reti-di-calcolatori/releases) e avviarlo utilizando java.
 
